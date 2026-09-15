@@ -1560,7 +1560,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             </div>
           )}
           <div><Label req>Periode</Label><PeriodeRange awal={state.rewardPeriodeAwal} akhir={state.rewardPeriodeAkhir} onAwal={(v) => setField('rewardPeriodeAwal', v)} onAkhir={(v) => setField('rewardPeriodeAkhir', v)} /></div>
-          <div><Label>Keterangan (opsional)</Label><input type="text" value={state.rewardKeterangan} onChange={(e) => setField('rewardKeterangan', e.target.value)} className={inp} placeholder="Catatan tambahan terkait reward/insentif..." /></div>
+          <div><Label req>Keterangan</Label><input type="text" value={state.rewardKeterangan} onChange={(e) => setField('rewardKeterangan', e.target.value)} className={inp} placeholder="Catatan tambahan terkait reward/insentif..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
               <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
