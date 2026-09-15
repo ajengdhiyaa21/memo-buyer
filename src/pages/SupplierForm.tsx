@@ -1471,9 +1471,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             <FieldError message={errors.sewaProducts} />
           </div>
           <ProductQtyTable products={state.sewaProducts} rows={state.sewaProductRows} onChange={updateSewaProductRow} onRemove={removeSewaProduct} error={errors.sewaProductRows} />
-          {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label req>Nilai Sewa / Pengganti Biaya (Rp)</Label><input type="number" min={0} value={state.sewaNominal || ''} onChange={(e) => setField('sewaNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" /></div>
-          </div> */}
+        
           <div><Label req>Periode Sewa</Label><PeriodeRange awal={state.sewaPeriodeAwal} akhir={state.sewaPeriodeAkhir} onAwal={(v) => setField('sewaPeriodeAwal', v)} onAkhir={(v) => setField('sewaPeriodeAkhir', v)} /></div>
           <div><Label req>Keterangan</Label><input type="text" value={state.sewaKeterangan} onChange={(e) => setField('sewaKeterangan', e.target.value)} className={inp} placeholder="Catatan tambahan terkait sewa/visibility..." /></div>
           <div className="border-t border-slate-100 pt-5">
