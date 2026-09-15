@@ -1,0 +1,10 @@
+{
+  "description": "Streamline buyer memo and sell-out management with an intuitive dashboard, enabling efficient data handling, reporting, and collaboration for businesses.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
