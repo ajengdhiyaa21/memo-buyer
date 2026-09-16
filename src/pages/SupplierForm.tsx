@@ -2247,7 +2247,7 @@ function SuccessScreen({
         </div>
 
         <div className="grid grid-cols-2 gap-12 mt-10 text-center text-[12px]">
-          <div><p className="font-bold">Buyer</p><div className="h-20 border-b border-slate-400" /><p className="mt-2 text-slate-500">Nama & Tanda Tangan</p></div>
+          <div><p className="font-bold">Buyer</p><div className="h-20 border-b border-slate-400" /><p className="mt-2 text-slate-500"></p></div>
           <div><p className="font-bold">Supplier</p><div className="h-20 border-b border-slate-400 flex items-end justify-center">{signature && <img src={signature} alt="Tanda tangan supplier" className="max-h-16 max-w-48 object-contain" />}</div><p className="mt-2 text-slate-500">{identity?.picName || 'Nama & Tanda Tangan'}</p></div>
         </div>
 
