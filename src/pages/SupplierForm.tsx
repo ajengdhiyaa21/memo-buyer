@@ -89,7 +89,7 @@ const PRODUK_UPDATE_FIELDS = [
   { key: 'plu', label: 'PLU' },
   { key: 'nama', label: 'Nama Produk' },
   { key: 'gramasi', label: 'Gramasi' },
-  { key: 'hargaBeli', label: 'Harga Beli Include PPN' },
+  { key: 'hargaBeli', label: 'Harga Beli' },
   { key: 'diskonReguler', label: 'Diskon Reguler (%)' },
   { key: 'konversi', label: 'Konversi' },
   { key: 'jatuhTempo', label: 'Jatuh Tempo' },
