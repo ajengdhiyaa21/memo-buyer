@@ -4,8 +4,9 @@ import {
   FileText, Building2, Tag, Info, Send, AlertCircle,
   ScanLine, IdCard, ArrowLeft, ArrowRight, ShieldCheck,
   RotateCcw, PenLine, Package, UserCog, Wallet, Store,
-  Gift, Megaphone, Receipt, Layers, Printer,
+  Gift, Megaphone, Receipt, Layers, Printer, Calendar,
 } from 'lucide-react';
+import mannaKampusLogo from '../../logo.png';
 
 /* ───────────────────────── Data ───────────────────────── */
 const ALL_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3'];
@@ -80,26 +81,30 @@ const MOCK_ID_CARDS: IdCardData[] = [
 
 const BANK_OPTIONS = ['BCA', 'Bank Mandiri', 'BNI', 'BRI', 'CIMB Niaga', 'Bank Permata', 'BTN', 'Bank Danamon', 'BSI', 'Bank Jateng'];
 
-const GRAMASI_UNIT_OPTIONS = ['gram', 'kg', 'ml', 'liter'];
-const KONVERSI_UNIT_OPTIONS = ['PCS', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK'];
+const GRAMASI_UNIT_OPTIONS = ['gram', 'kg', 'ml', 'liter', 'PCS', 'PC', 'CR', 'KARTON', 'DUS', 'BOX', 'PACK', 'LUSIN', 'BTL', 'SACHET', 'RENCENG'];
+const KONVERSI_UNIT_OPTIONS = ['PC', 'PCS', 'CR', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK', 'BTL', 'SACHET', 'RENCENG'];
 
 const PRODUK_UPDATE_FIELDS = [
+  { key: 'barcode', label: 'Barcode' },
+  { key: 'plu', label: 'PLU' },
   { key: 'nama', label: 'Nama Produk' },
   { key: 'gramasi', label: 'Gramasi' },
-  { key: 'hargaBeli', label: 'Harga Beli' },
+  { key: 'hargaBeli', label: 'Harga Beli Include PPN' },
+  { key: 'diskonReguler', label: 'Diskon Reguler (%)' },
   { key: 'konversi', label: 'Konversi' },
   { key: 'jatuhTempo', label: 'Jatuh Tempo' },
 ];
 const VENDOR_UPDATE_FIELDS = [
-  { key: 'picName', label: 'Nama PIC' },
-  { key: 'picPhone', label: 'Kontak PIC' },
-  { key: 'noRekening', label: 'Nomor Rekening Bank' },
+  { key: 'picList', label: 'PIC Vendor' },
+  { key: 'alamat', label: 'Alamat Vendor' },
+  { key: 'npwp', label: 'NPWP' },
+  { key: 'email', label: 'Email Vendor' },
 ];
 
 const JENIS_MEMO_OPTIONS = [
   { key: 'update-informasi', label: 'Update Informasi', desc: 'Perbarui data produk atau profil vendor', icon: FileText },
   { key: 'memo-program', label: 'Memo Program', desc: 'Diskon on faktur, off faktur, dan/atau budget', icon: Tag },
-  { key: 'pendapatan-lain', label: 'Memo Pendapatan Lain-lain', desc: 'Sewa/visibility, reward, promosi, listing', icon: Building2 },
+  { key: 'pendapatan-lain', label: 'Memo Lain-lain', desc: 'Sewa/visibility, reward, promosi, listing, event & BLBMS', icon: Building2 },
 ] as const;
 
 const PROGRAM_TIPE_OPTIONS = [
@@ -116,6 +121,7 @@ const PENDAPATAN_OPTIONS = [
   { key: 'reward-insentif', label: 'Reward / Rabat / Insentif', desc: 'Insentif yang melekat pada pencapaian target', icon: Gift },
   { key: 'promosi', label: 'Promosi (Media Cetak/Digital)', desc: 'Kerja sama promosi melalui media cetak atau digital', icon: Megaphone },
   { key: 'listing', label: 'Listing', desc: 'Pendaftaran produk baru beserta syarat & ketentuan', icon: Receipt },
+  { key: 'event-blbms', label: 'Event dan BLBMS', desc: 'Sewa area/kegiatan untuk event outlet atau BLBMS', icon: Calendar },
 ] as const;
 
 const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Showroom Motor'];
@@ -124,14 +130,24 @@ const REWARD_JENIS_OPTIONS = ['Reward', 'Rabate', 'Insentif'];
 const REWARD_BENTUK_OPTIONS = ['Uang', 'Hadiah'];
 const REWARD_PEMBAYARAN_OPTIONS = ['Tunai', 'Non Tunai'];
 
+/** Sentinel value for "pilihan lainnya" on Jenis Event — selecting it reveals a free-text input. */
+const EVENT_JENIS_LAINNYA = 'Lainnya';
+const EVENT_JENIS_OPTIONS = ['Grand Opening', 'Ulang Tahun Outlet', 'Event Musiman (Lebaran/Natal/Tahun Baru)', 'Bazaar/Pameran Produk', 'BLBMS', EVENT_JENIS_LAINNYA];
+
+/** Bentuk/fasilitas yang dipilih setelah Jenis Event — gabungan Reward/Insentif, Promosi, dan Sewa/Visibility. */
+const EVENT_BENTUK_OPTIONS = ['Reward', 'Insentif', ...PROMOSI_MEDIA_OPTIONS, ...SEWA_VISIBILITY_JENIS];
+
 const SATUAN_OPTIONS = ['PCS', 'BANDED', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK'];
 
 function getProdukOldValue(product: Product | null, field: string): string {
   if (!product) return '';
   switch (field) {
     case 'nama': return product.nama;
+    case 'barcode': return '-';
+    case 'plu': return product.plu;
     case 'gramasi': return product.gramasi || '-';
-    case 'hargaBeli': return product.hargaBeli ? `Rp ${product.hargaBeli.toLocaleString('id-ID')}` : '-';
+    case 'hargaBeli': return product.hargaBeli ? `Rp ${product.hargaBeli.toLocaleString('id-ID')} include PPN` : '-';
+    case 'diskonReguler': return '-';
     case 'konversi': return product.konversi || '-';
     case 'jatuhTempo': return product.jatuhTempo || '-';
     default: return '-';
@@ -140,9 +156,10 @@ function getProdukOldValue(product: Product | null, field: string): string {
 function getVendorOldValue(identity: IdCardData | null, field: string): string {
   if (!identity) return '';
   switch (field) {
-    case 'picName': return identity.picName;
-    case 'picPhone': return identity.picPhone;
-    case 'noRekening': return identity.noRekening || '-';
+    case 'picList': return ['Andi Wijaya (0857-6633-2210)', 'Maya Putri (0856-1122-3344)', 'Rian Hakim (0878-9900-1122)'].join('\n');
+    case 'alamat': return '-';
+    case 'npwp': return '-';
+    case 'email': return '-';
     default: return '-';
   }
 }
@@ -174,6 +191,11 @@ function getSteps(jenisMemo: JenisMemo, tipeProgram: string[]): StepDef[] {
 }
 
 type FormErrors = Record<string, string>;
+
+interface VendorPicRow {
+  nama: string;
+  kontak: string;
+}
 
 /* ───────────────────────── Shared UI ───────────────────────── */
 const inp = "w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-700";
@@ -496,7 +518,7 @@ function OutletStep({ outlets, outletScope, applyOutletScope, toggleOutlet, erro
           </button>
           <button type="button" onClick={() => applyOutletScope('all-mk-godean')}
             className={`flex-1 text-left rounded-2xl border p-4 transition-all ${outletScope === 'all-mk-godean' ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-            <p className="text-[13px] font-bold text-slate-800">All MK Godean</p>
+            <p className="text-[13px] font-bold text-slate-800">PT Mirota Godean</p>
             <p className="text-[11px] text-slate-500 mt-1">Berlaku untuk MK5, MK6, MK7</p>
           </button>
           <button type="button" onClick={() => applyOutletScope('custom')}
@@ -580,11 +602,49 @@ const emptyListingConversionRow = (): ListingConversionRow => ({
 
 function formatListingConversion(row?: ListingConversionRow) {
   if (!row) return '';
+  if (row.qty1 && row.satuan1 && row.qty2 && row.satuan2 && row.qty3 && row.satuan3) {
+    return `1 ${row.satuan1} = ${row.qty2} ${row.satuan2}; 1 ${row.satuan2} = ${row.qty3} ${row.satuan3}; total 1 ${row.satuan1} = ${(row.qty2 || 0) * (row.qty3 || 0)} ${row.satuan3}`;
+  }
+  if (row.qty1 && row.satuan1 && row.qty3 && row.satuan3) {
+    return `1 ${row.satuan1} = ${row.qty3} ${row.satuan3}`;
+  }
   return [
     row.qty1 && row.satuan1 ? `${row.qty1} ${row.satuan1}` : '',
     row.qty2 && row.satuan2 ? `${row.qty2} ${row.satuan2}` : '',
     row.qty3 && row.satuan3 ? `${row.qty3} ${row.satuan3}` : '',
   ].filter(Boolean).join(' -> ');
+}
+
+function parseVendorPicRows(value?: string): VendorPicRow[] {
+  if (!value) return [{ nama: '', kontak: '' }];
+  try {
+    const parsed = JSON.parse(value) as VendorPicRow[];
+    return parsed.length > 0 ? parsed.map((row) => ({ nama: row.nama || '', kontak: row.kontak || '' })) : [{ nama: '', kontak: '' }];
+  } catch {
+    return value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [nama = '', kontak = ''] = line.split(/\s+-\s+/, 2);
+        return { nama, kontak };
+      });
+  }
+}
+
+function formatVendorPicRows(value?: string) {
+  const rows = parseVendorPicRows(value).filter((row) => row.nama.trim() || row.kontak.trim());
+  return rows.map((row, index) => `PIC ${index + 1}: ${row.nama || '-'}${row.kontak ? ` (${row.kontak})` : ''}`).join('\n');
+}
+
+function MannaKampusLogo({ compact = false }: { compact?: boolean }) {
+  return (
+    <img
+      src={mannaKampusLogo}
+      alt="Manna Kampus"
+      className={compact ? 'h-8 w-auto object-contain' : 'h-9 w-auto max-w-[180px] object-contain'}
+    />
+  );
 }
 
 function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, errors }: {
@@ -600,7 +660,26 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
       [key]: { ...(state.produkKonversi[key] || emptyListingConversionRow()), [field]: value },
     });
   };
+  const setProdukKonversiRow = (plu: string, patch: Partial<ListingConversionRow>) => {
+    const key = `${plu}::konversi`;
+    setField('produkKonversi', {
+      ...state.produkKonversi,
+      [key]: { ...(state.produkKonversi[key] || emptyListingConversionRow()), ...patch },
+    });
+  };
   const setVendorValue = (field: string, value: string) => setField('vendorValues', { ...state.vendorValues, [field]: value });
+  const vendorPicRows = parseVendorPicRows(state.vendorValues.picList);
+  const setVendorPicRows = (rows: VendorPicRow[]) => setVendorValue('picList', JSON.stringify(rows));
+  const updateVendorPicRow = (index: number, field: keyof VendorPicRow, value: string) => {
+    const rows = [...vendorPicRows];
+    rows[index] = { ...rows[index], [field]: value };
+    setVendorPicRows(rows);
+  };
+  const addVendorPicRow = () => setVendorPicRows([...vendorPicRows, { nama: '', kontak: '' }]);
+  const removeVendorPicRow = (index: number) => {
+    const rows = vendorPicRows.filter((_, rowIndex) => rowIndex !== index);
+    setVendorPicRows(rows.length > 0 ? rows : [{ nama: '', kontak: '' }]);
+  };
 
   return (
     <Card title="Update Informasi" icon={FileText} subtitle="Perbarui data produk atau profil vendor Anda — data yang diupdate boleh lebih dari satu">
@@ -615,7 +694,7 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
           <button type="button" onClick={() => onJenisUpdateChange('vendor')}
             className={`flex items-center gap-3 text-left rounded-2xl border p-4 transition-all ${state.jenisUpdate === 'vendor' ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${state.jenisUpdate === 'vendor' ? 'bg-amber-600' : 'bg-slate-100'}`}><UserCog className={`w-4 h-4 ${state.jenisUpdate === 'vendor' ? 'text-white' : 'text-slate-400'}`} /></div>
-            <div><p className="text-[13px] font-bold text-slate-800">Update Profil Vendor</p><p className="text-[11px] text-slate-500 mt-0.5">Ubah data PIC / rekening</p></div>
+            <div><p className="text-[13px] font-bold text-slate-800">Update Profil Vendor</p><p className="text-[11px] text-slate-500 mt-0.5">Ubah alamat, NPWP, email, dan daftar PIC</p></div>
           </button>
         </div>
         <FieldError message={errors.jenisUpdate} />
@@ -654,6 +733,23 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
                             unit={state.produkUnits[key] || ''} onUnitChange={(u) => setProdukUnit(product.plu, field, u)}
                             unitOptions={GRAMASI_UNIT_OPTIONS} numberPlaceholder="cth: 85"
                           />
+                        ) : field === 'hargaBeli' ? (
+                          <div>
+                            <ChangeField
+                              oldValue={getProdukOldValue(product, field)}
+                              newValue={state.produkValues[key] || ''}
+                              onChange={(v) => setProdukValue(product.plu, field, v)}
+                              placeholder="Harga pokok per pcs sebelum diskon/reguler"
+                            />
+                            <p className="mt-1.5 text-[11px] text-slate-400">Harga pokok per PCS, sudah termasuk PPN, dan merupakan harga sebelum diskon/reguler.</p>
+                          </div>
+                        ) : field === 'diskonReguler' ? (
+                          <ChangeField
+                            oldValue={getProdukOldValue(product, field)}
+                            newValue={state.produkValues[key] || ''}
+                            onChange={(v) => setProdukValue(product.plu, field, v)}
+                            placeholder="cth: 10"
+                          />
                         ) : field === 'konversi' ? (
                           <div className="grid grid-cols-1 lg:grid-cols-[240px_auto_1fr] gap-4 lg:items-start">
                             <div>
@@ -665,40 +761,91 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
                             <ArrowRight className="w-4 h-4 text-slate-300 hidden lg:block mt-8" />
                             <div>
                               <Label req>Data Baru</Label>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {[
-                                  { qty: 'qty1', satuan: 'satuan1', label: 'Level 1', placeholder: 'cth: 1' },
-                                  { qty: 'qty2', satuan: 'satuan2', label: 'Level 2', placeholder: 'cth: 12' },
-                                  { qty: 'qty3', satuan: 'satuan3', label: 'UOM Terkecil', placeholder: 'cth: 24' },
-                                ].map((item) => {
+                              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-4">
+                                {(() => {
                                   const row = state.produkKonversi[key] || emptyListingConversionRow();
+                                  const satuanBesar = row.satuan1 || 'kemasan besar';
+                                  const satuanAntara = row.satuan2 || 'kemasan antara';
+                                  const satuanKecil = row.satuan3 || 'satuan kecil';
+                                  const hasMiddle = Boolean(row.qty2 && row.satuan2);
+                                  const totalKecil = hasMiddle ? (row.qty2 || 0) * (row.qty3 || 0) : row.qty3 || 0;
+                                  const preview = formatListingConversion(row) || 'Lengkapi konversi dari kemasan terbesar sampai satuan terkecil';
+
                                   return (
-                                    <div key={item.qty} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">{item.label}</p>
-                                      <div className="space-y-2">
-                                        <input
-                                          type="number"
-                                          min={0}
-                                          value={(row[item.qty as keyof ListingConversionRow] as number) || ''}
-                                          onChange={(e) => setProdukKonversi(product.plu, item.qty as keyof ListingConversionRow, parseInt(e.target.value) || 0)}
-                                          className={inp}
-                                          placeholder={item.placeholder}
-                                        />
-                                        <div className="relative">
+                                    <div className="space-y-4">
+                                      <div className="rounded-lg border border-amber-300 bg-white px-3 py-2">
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Preview Konversi</p>
+                                        <p className="mt-1 text-[14px] font-black text-slate-800">{preview}</p>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div>
+                                          <p className="mb-1.5 text-[11px] font-bold text-slate-600">1. Satuan terbesar</p>
                                           <select
-                                            value={(row[item.satuan as keyof ListingConversionRow] as string) || ''}
-                                            onChange={(e) => setProdukKonversi(product.plu, item.satuan as keyof ListingConversionRow, e.target.value)}
-                                            className={`${inp} appearance-none pr-8 cursor-pointer`}
+                                            value={row.satuan1 || ''}
+                                            onChange={(e) => setProdukKonversiRow(product.plu, { qty1: 1, satuan1: e.target.value })}
+                                            className={`${inp} cursor-pointer`}
                                           >
-                                            <option value="">Satuan...</option>
+                                            <option value="">Pilih, misal KARTON</option>
                                             {KONVERSI_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
                                           </select>
-                                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                                         </div>
+                                        <div>
+                                          <p className="mb-1.5 text-[11px] font-bold text-slate-600">2. Isi antara (opsional)</p>
+                                          <div className="grid grid-cols-[72px_1fr] gap-2">
+                                            <input
+                                              type="number"
+                                              min={0}
+                                              value={row.qty2 || ''}
+                                              onChange={(e) => setProdukKonversiRow(product.plu, { qty1: 1, qty2: parseInt(e.target.value) || 0 })}
+                                              className={inp}
+                                              placeholder="12"
+                                            />
+                                            <select
+                                              value={row.satuan2 || ''}
+                                              onChange={(e) => setProdukKonversiRow(product.plu, { qty1: 1, satuan2: e.target.value })}
+                                              className={`${inp} cursor-pointer`}
+                                            >
+                                              <option value="">Misal POUCH</option>
+                                              {KONVERSI_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                                            </select>
+                                          </div>
+                                          <p className="mt-1 text-[10px] text-slate-400">Kosongkan kalau langsung ke satuan terkecil.</p>
+                                        </div>
+                                        <div>
+                                          <p className="mb-1.5 text-[11px] font-bold text-slate-600">3. Isi satuan terkecil</p>
+                                          <div className="grid grid-cols-[72px_1fr] gap-2">
+                                            <input
+                                              type="number"
+                                              min={1}
+                                              value={row.qty3 || ''}
+                                              onChange={(e) => setProdukKonversiRow(product.plu, { qty1: 1, qty3: parseInt(e.target.value) || 0 })}
+                                              className={inp}
+                                              placeholder={hasMiddle ? '10' : '48'}
+                                            />
+                                            <select
+                                              value={row.satuan3 || ''}
+                                              onChange={(e) => setProdukKonversiRow(product.plu, { qty1: 1, satuan3: e.target.value })}
+                                              className={`${inp} cursor-pointer`}
+                                            >
+                                              <option value="">Misal PCS</option>
+                                              {KONVERSI_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                                            </select>
+                                          </div>
+                                          <p className="mt-1 text-[10px] text-slate-400">{hasMiddle ? `Isi 1 ${satuanAntara} berapa ${satuanKecil}.` : `Isi 1 ${satuanBesar} berapa ${satuanKecil}.`}</p>
+                                        </div>
+                                      </div>
+
+                                      <div className="rounded-lg bg-slate-900 px-3 py-2 text-[12px] text-white">
+                                        {hasMiddle ? (
+                                          <>Artinya: <span className="font-bold">1 {satuanBesar}</span> berisi <span className="font-bold">{row.qty2 || '...'} {satuanAntara}</span>, dan <span className="font-bold">1 {satuanAntara}</span> berisi <span className="font-bold">{row.qty3 || '...'} {satuanKecil}</span>. Total <span className="font-bold">1 {satuanBesar}</span> = <span className="font-bold">{totalKecil || '...'} {satuanKecil}</span>.</>
+                                        ) : (
+                                          <>Artinya: <span className="font-bold">1 {satuanBesar}</span> langsung berisi <span className="font-bold">{row.qty3 || '...'} {satuanKecil}</span>.</>
+                                        )}
                                       </div>
                                     </div>
                                   );
-                                })}
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -729,35 +876,64 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
           </div>
           {state.vendorFields.map((field) => (
             <div key={field}>
-              {field === 'noRekening' ? (
-                <div>
-                  <Label req>Nomor Rekening Bank</Label>
-                  <div className="px-3.5 py-2.5 rounded-xl text-[13px] bg-slate-50 border border-slate-200 text-slate-500 mb-3">
-                    {getVendorOldValue(identity, 'noRekening') || <span className="italic text-slate-400">Belum ada data</span>}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label req>Bank</Label>
-                      <div className="relative">
-                        <select value={state.vendorBank} onChange={(e) => setField('vendorBank', e.target.value)} className={`${inp} appearance-none pr-9 cursor-pointer`}>
-                          <option value="">Pilih bank...</option>
-                          {BANK_OPTIONS.map((b) => <option key={b}>{b}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <Label req>Nomor Rekening Baru</Label>
-                      <input type="text" value={state.vendorRekening} onChange={(e) => setField('vendorRekening', e.target.value)} className={inp} placeholder="Masukkan nomor rekening..." />
+              <Label req>{VENDOR_UPDATE_FIELDS.find((f) => f.key === field)?.label}</Label>
+              {field === 'picList' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 sm:items-start">
+                  <div>
+                    <Label>Data Sebelumnya</Label>
+                    <div className="px-3.5 py-2.5 rounded-xl text-[13px] leading-relaxed whitespace-pre-line bg-slate-50 border border-slate-200 text-slate-600">
+                      {getVendorOldValue(identity, field) || <span className="italic text-slate-400">Belum ada data</span>}
                     </div>
                   </div>
-                  <FieldError message={errors.vendorRekening} />
+                  <ArrowRight className="w-4 h-4 text-slate-300 hidden sm:block mt-9" />
+                  <div>
+                    <Label req>Data Baru (bisa lebih dari satu PIC)</Label>
+                    <div className="space-y-3">
+                      {vendorPicRows.map((pic, index) => (
+                        <div key={index} className="rounded-xl border border-slate-200 bg-white p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">PIC {index + 1}</p>
+                            <button
+                              type="button"
+                              onClick={() => removeVendorPicRow(index)}
+                              disabled={vendorPicRows.length === 1}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                              aria-label={`Hapus PIC ${index + 1}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input
+                              type="text"
+                              value={pic.nama}
+                              onChange={(e) => updateVendorPicRow(index, 'nama', e.target.value)}
+                              className={inp}
+                              placeholder="Nama PIC"
+                            />
+                            <input
+                              type="text"
+                              value={pic.kontak}
+                              onChange={(e) => updateVendorPicRow(index, 'kontak', e.target.value)}
+                              className={inp}
+                              placeholder="No. telepon / WhatsApp"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addVendorPicRow}
+                        className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-white py-3 text-[13px] font-semibold text-slate-500 transition-all hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700 inline-flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />Tambah PIC
+                      </button>
+                      <p className="text-[11px] leading-relaxed text-slate-400">Daftar ini akan menggantikan daftar PIC sebelumnya. Hapus PIC yang sudah tidak aktif dan tambahkan PIC baru bila perlu.</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div>
-                  <Label req>{VENDOR_UPDATE_FIELDS.find((f) => f.key === field)?.label}</Label>
-                  <ChangeField oldValue={getVendorOldValue(identity, field)} newValue={state.vendorValues[field] || ''} onChange={(v) => setVendorValue(field, v)} />
-                </div>
+                <ChangeField oldValue={getVendorOldValue(identity, field)} newValue={state.vendorValues[field] || ''} onChange={(v) => setVendorValue(field, v)} />
               )}
             </div>
           ))}
@@ -1405,6 +1581,14 @@ interface PendapatanState {
   listingTempoPembayaran: string; listingCaraPembayaran: string;
   listingPpnAktif: boolean; listingPpnRate: string;
   listingPphAktif: boolean; listingPphRate: string;
+  // Event dan BLBMS
+  eventJenis: string; eventJenisLainnya: string;
+  eventBentuk: string;
+  eventNominal: number;
+  eventPeriodeAwal: string; eventPeriodeAkhir: string;
+  eventKeterangan: string;
+  eventPpnAktif: boolean; eventPpnRate: string;
+  eventPphAktif: boolean; eventPphRate: string;
 }
 
 function PendapatanStep({ state, setField, errors }: { state: PendapatanState; setField: <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => void; errors: FormErrors }) {
@@ -1438,7 +1622,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
   const removeListingRow = (index: number) => setField('listingProducts', state.listingProducts.filter((_, i) => i !== index));
 
   return (
-    <Card title="Memo Pendapatan Lain-lain" icon={Building2} subtitle="Pilih satu jenis program pendapatan lain-lain">
+    <Card title="Memo Lain-lain" icon={Building2} subtitle="Pilih satu jenis program lain-lain">
       <div><Label req>Nama Program / Kegiatan</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={inp} placeholder="cth: Sewa Gondola Ujung MK3" /></div>
 
       <div>
@@ -1677,6 +1861,52 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
           </div>
         </div>
       )}
+
+      {state.jenis === 'event-blbms' && (
+        <div className="border-t border-slate-100 pt-5 space-y-4">
+          <div>
+            <Label req>Jenis Event</Label>
+            <SingleChoiceChips
+              options={EVENT_JENIS_OPTIONS.map((s) => ({ key: s, label: s }))}
+              value={state.eventJenis}
+              onChange={(v) => {
+                setField('eventJenis', v);
+                if (v !== EVENT_JENIS_LAINNYA) setField('eventJenisLainnya', '');
+              }}
+            />
+            <FieldError message={errors.eventJenis} />
+          </div>
+          {state.eventJenis === EVENT_JENIS_LAINNYA && (
+            <div>
+              <Label req>Nama Event Lainnya</Label>
+              <input type="text" value={state.eventJenisLainnya} onChange={(e) => setField('eventJenisLainnya', e.target.value)} className={inp} placeholder="Tuliskan nama event..." />
+              <FieldError message={errors.eventJenisLainnya} />
+            </div>
+          )}
+          <div>
+            <Label req>Bentuk / Fasilitas Event</Label>
+            <SingleChoiceChips options={EVENT_BENTUK_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.eventBentuk} onChange={(v) => setField('eventBentuk', v)} />
+            <FieldError message={errors.eventBentuk} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><Label req>Nilai Sewa (Rp)</Label><input type="number" min={0} value={state.eventNominal || ''} onChange={(e) => setField('eventNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" /></div>
+          </div>
+          <div><Label req>Periode Sewa</Label><PeriodeRange awal={state.eventPeriodeAwal} akhir={state.eventPeriodeAkhir} onAwal={(v) => setField('eventPeriodeAwal', v)} onAkhir={(v) => setField('eventPeriodeAkhir', v)} /></div>
+          <div><Label req>Keterangan</Label><textarea rows={3} value={state.eventKeterangan} onChange={(e) => setField('eventKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait event/BLBMS..." /></div>
+          <div className="border-t border-slate-100 pt-5">
+            <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
+              <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
+              Ketentuan Pajak
+            </p>
+            <p className="text-[11px] text-slate-400 mb-3">Event/BLBMS adalah objek jasa/sewa — tentukan pajak yang berlaku</p>
+            <KetentuanPajakSection
+              ppnAktif={state.eventPpnAktif} ppnRate={state.eventPpnRate} onPpnAktif={(v) => setField('eventPpnAktif', v)} onPpnRate={(v) => setField('eventPpnRate', v)}
+              pphAktif={state.eventPphAktif} pphRate={state.eventPphRate} onPphAktif={(v) => setField('eventPphAktif', v)} onPphRate={(v) => setField('eventPphRate', v)}
+              errors={{ ppnRate: errors.eventPpnRate, pphRate: errors.eventPphRate }}
+            />
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
@@ -1786,8 +2016,11 @@ function ReviewStep({
     const unit = updateInfo.produkUnits[key];
     if (f === 'gramasi') return value ? `${value}${unit ? ` ${unit}` : ''}` : '';
     if (f === 'konversi') return formatListingConversion(updateInfo.produkKonversi[key]);
+    if (f === 'hargaBeli' && value) return `Rp ${Number(value).toLocaleString('id-ID')} / PCS, include PPN, sebelum diskon/reguler`;
+    if (f === 'diskonReguler' && value) return `${value}%`;
     return value;
   };
+  const vendorFieldDisplay = (field: string) => field === 'picList' ? formatVendorPicRows(updateInfo.vendorValues[field]) : updateInfo.vendorValues[field];
 
   return (
     <div className="space-y-6">
@@ -1834,10 +2067,8 @@ function ReviewStep({
               </div>
             ) : (
               <div className="rounded-xl border border-slate-200 p-4 divide-y divide-slate-100">
-                {updateInfo.vendorFields.map((f) => f === 'noRekening' ? (
-                  <Row key={f} label="Nomor Rekening Bank" value={updateInfo.vendorBank ? `${updateInfo.vendorBank} - ${updateInfo.vendorRekening}` : ''} />
-                ) : (
-                  <Row key={f} label={VENDOR_UPDATE_FIELDS.find((x) => x.key === f)?.label} value={updateInfo.vendorValues[f]} />
+                {updateInfo.vendorFields.map((f) => (
+                  <Row key={f} label={VENDOR_UPDATE_FIELDS.find((x) => x.key === f)?.label} value={vendorFieldDisplay(f)} />
                 ))}
               </div>
             )}
@@ -1910,7 +2141,9 @@ function ReviewStep({
         {jenisMemo === 'pendapatan-lain' && (
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              {pendapatan.jenis === 'sewa-visibility' ? 'Detail Sewa / Visibility' : 'Detail Pendapatan Lain-lain'}
+              {pendapatan.jenis === 'sewa-visibility' ? 'Detail Sewa / Visibility'
+                : pendapatan.jenis === 'event-blbms' ? 'Detail Event / BLBMS'
+                  : 'Detail Lain-lain'}
             </p>
             <div className="rounded-xl border border-slate-200 p-4 divide-y divide-slate-100">
               <Row label="Nama Program" value={pendapatan.namaProgram} />
@@ -1949,6 +2182,17 @@ function ReviewStep({
                   <Row label="Cara Pembayaran" value={pendapatan.listingCaraPembayaran} />
                   <Row label="PPN" value={pendapatan.listingPpnAktif ? pendapatan.listingPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.listingPphAktif ? pendapatan.listingPphRate || 'Aktif' : 'Tidak dikenakan'} />
+                </>
+              )}
+              {pendapatan.jenis === 'event-blbms' && (
+                <>
+                  <Row label="Jenis Event" value={pendapatan.eventJenis === EVENT_JENIS_LAINNYA ? pendapatan.eventJenisLainnya : pendapatan.eventJenis} />
+                  <Row label="Bentuk / Fasilitas" value={pendapatan.eventBentuk} />
+                  <Row label="Nilai Sewa" value={pendapatan.eventNominal ? `Rp ${pendapatan.eventNominal.toLocaleString('id-ID')}` : ''} />
+                  <Row label="Periode" value={pendapatan.eventPeriodeAwal && pendapatan.eventPeriodeAkhir ? `${pendapatan.eventPeriodeAwal} s/d ${pendapatan.eventPeriodeAkhir}` : ''} />
+                  <Row label="Keterangan" value={pendapatan.eventKeterangan} />
+                  <Row label="PPN" value={pendapatan.eventPpnAktif ? pendapatan.eventPpnRate || 'Aktif' : 'Tidak dikenakan'} />
+                  <Row label="PPh" value={pendapatan.eventPphAktif ? pendapatan.eventPphRate || 'Aktif' : 'Tidak dikenakan'} />
                 </>
               )}
             </div>
@@ -2035,7 +2279,7 @@ function printRows(jenisMemo: JenisMemo, updateInfo: UpdateInfoState, onProducts
     return pendapatan.listingProducts.map((r, i) => ({ plu: r.barcodePcs || '-', nama: r.namaProduk || `Produk #${i + 1}`, qty: formatListingConversion({ qty1: r.konversiQty1, satuan1: r.konversiSatuan1, qty2: r.konversiQty2, satuan2: r.konversiSatuan2, qty3: r.konversiQty3, satuan3: r.konversiSatuan3 }) || '-', potongan: r.diskonReguler ? `${r.diskonReguler}%` : '-', total: r.hargaPerPcs ? `Rp ${r.hargaPerPcs.toLocaleString('id-ID')}` : '-' }));
   }
   if (jenisMemo === 'pendapatan-lain') {
-    const total = pendapatan.sewaNominal || pendapatan.rewardNominal || 0;
+    const total = pendapatan.sewaNominal || pendapatan.rewardNominal || pendapatan.eventNominal || 0;
     return [{ plu: '-', nama: pendapatan.namaProgram || programMethodLabel(jenisMemo, INITIAL_PROGRAM_INFO, pendapatan), qty: '-', potongan: '-', total: total ? `Rp ${total.toLocaleString('id-ID')}` : '-' }];
   }
   return updateInfo.selectedProducts.map((p) => ({ plu: p.plu, nama: p.nama, qty: '-', potongan: updateInfo.produkFields.join(', '), total: '-' }));
@@ -2073,7 +2317,7 @@ function SuccessScreen({
   const rows = printRows(jenisMemo, updateInfo, onProducts, onRows, offProducts, offRows, budgetLink, pendapatan);
   const periode = jenisMemo === 'memo-program'
     ? [programInfo.periodeAwal, programInfo.periodeAkhir].filter(Boolean).join(' s/d ')
-    : [pendapatan.sewaPeriodeAwal || pendapatan.rewardPeriodeAwal, pendapatan.sewaPeriodeAkhir || pendapatan.rewardPeriodeAkhir].filter(Boolean).join(' s/d ') || '-';
+    : [pendapatan.sewaPeriodeAwal || pendapatan.rewardPeriodeAwal || pendapatan.eventPeriodeAwal, pendapatan.sewaPeriodeAkhir || pendapatan.rewardPeriodeAkhir || pendapatan.eventPeriodeAkhir].filter(Boolean).join(' s/d ') || '-';
   const programName = programInfo.namaProgram || pendapatan.namaProgram || memoTypeLabel(jenisMemo);
   const credential = `KREDENSIAL KEASLIAN DOKUMEN | ${memoNo} | Supplier: ${identity?.supplier?.name || '-'} | Program: ${programName} | Periode: ${periode} | Outlet: ${outlets.join(', ') || '-'}`;
   const qrCells = makeQrCells(credential);
@@ -2082,13 +2326,16 @@ function SuccessScreen({
     const key = `${product.plu}::${field}`;
     if (field === 'gramasi') return `${updateInfo.produkValues[key] || ''} ${updateInfo.produkUnits[key] || ''}`.trim();
     if (field === 'konversi') return formatListingConversion(updateInfo.produkKonversi[key]);
-    if (field === 'hargaBeli' && updateInfo.produkValues[key]) return `Rp ${Number(updateInfo.produkValues[key]).toLocaleString('id-ID')}`;
+    if (field === 'hargaBeli' && updateInfo.produkValues[key]) return `Rp ${Number(updateInfo.produkValues[key]).toLocaleString('id-ID')} / PCS, include PPN, sebelum diskon/reguler`;
+    if (field === 'diskonReguler' && updateInfo.produkValues[key]) return `${updateInfo.produkValues[key]}%`;
     return updateInfo.produkValues[key] || '-';
   };
+  const vendorFieldValue = (field: string) => field === 'picList' ? formatVendorPicRows(updateInfo.vendorValues[field]) : updateInfo.vendorValues[field];
   const detailTitle = jenisMemo === 'update-informasi' ? 'Detail Update Informasi'
     : jenisMemo === 'memo-program' ? 'Detail Program'
       : pendapatan.jenis === 'sewa-visibility' ? 'Detail Sewa / Visibility'
-        : 'Detail Pendapatan Lain-lain';
+        : pendapatan.jenis === 'event-blbms' ? 'Detail Event / BLBMS'
+          : 'Detail Lain-lain';
 
   return (
     <div className="min-h-screen p-6 bg-[#EDF1F8]">
@@ -2158,7 +2405,7 @@ function SuccessScreen({
                 {updateInfo.jenisUpdate === 'vendor' && (
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
                     {updateInfo.vendorFields.map((field) => (
-                      <PrintInfoRow key={field} label={VENDOR_UPDATE_FIELDS.find((f) => f.key === field)?.label || field} value={field === 'noRekening' ? `${updateInfo.vendorBank} - ${updateInfo.vendorRekening}` : updateInfo.vendorValues[field]} />
+                      <PrintInfoRow key={field} label={VENDOR_UPDATE_FIELDS.find((f) => f.key === field)?.label || field} value={vendorFieldValue(field)} />
                     ))}
                   </div>
                 )}
@@ -2223,6 +2470,15 @@ function SuccessScreen({
                   </div>
                 )}
                 {pendapatan.jenis === 'promosi' && <div className="memo-detail-card rounded border border-slate-200 p-3"><PrintInfoRow label="Media" value={pendapatan.mediaTipe} /><PrintInfoRow label="Keterangan" value={pendapatan.mediaKeterangan} /></div>}
+                {pendapatan.jenis === 'event-blbms' && (
+                  <div className="memo-detail-card rounded border border-slate-200 p-3">
+                    <PrintInfoRow label="Jenis Event" value={pendapatan.eventJenis === EVENT_JENIS_LAINNYA ? pendapatan.eventJenisLainnya : pendapatan.eventJenis} />
+                    <PrintInfoRow label="Bentuk / Fasilitas" value={pendapatan.eventBentuk} />
+                    <PrintInfoRow label="Nominal" value={`Rp ${pendapatan.eventNominal.toLocaleString('id-ID')}`} />
+                    <PrintInfoRow label="Periode" value={`${pendapatan.eventPeriodeAwal} s/d ${pendapatan.eventPeriodeAkhir}`} />
+                    <PrintInfoRow label="Keterangan" value={pendapatan.eventKeterangan || '-'} />
+                  </div>
+                )}
                 {pendapatan.jenis === 'listing' && pendapatan.listingProducts.map((row, i) => (
                   <div key={i} className="memo-detail-card rounded border border-slate-200 p-3">
                     <p className="mb-2 text-[12px] font-black">{row.namaProduk || `Produk #${i + 1}`}</p>
@@ -2276,6 +2532,8 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   listingProducts: [emptyListingProductRow()],
   listingPkp: null, listingReturn: null, listingBiayaLabel: null, listingTempoPembayaran: '', listingCaraPembayaran: '',
   listingPpnAktif: false, listingPpnRate: '', listingPphAktif: false, listingPphRate: '',
+  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventNominal: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
+  eventPpnAktif: false, eventPpnRate: '', eventPphAktif: false, eventPphRate: '',
 };
 
 export default function SupplierMemoWizard() {
@@ -2377,7 +2635,9 @@ export default function SupplierMemoWizard() {
             const key2 = `${p.plu}::${f}`;
             if (f === 'konversi') {
               const row = updateInfo.produkKonversi[key2];
-              return Boolean(row && row.qty1 > 0 && row.satuan1 && row.qty2 > 0 && row.satuan2 && row.qty3 > 0 && row.satuan3);
+              const middleEmpty = !row?.qty2 && !row?.satuan2;
+              const middleComplete = Boolean(row?.qty2 && row?.satuan2);
+              return Boolean(row && row.qty1 > 0 && row.satuan1 && row.qty3 > 0 && row.satuan3 && (middleEmpty || middleComplete));
             }
             const valOk = (updateInfo.produkValues[key2] || '').trim();
             const unitOk = f === 'gramasi' ? (updateInfo.produkUnits[key2] || '').trim() : true;
@@ -2387,10 +2647,14 @@ export default function SupplierMemoWizard() {
       }
       if (updateInfo.jenisUpdate === 'vendor') {
         if (updateInfo.vendorFields.length === 0) e.vendorFields = 'Pilih minimal satu data yang akan diupdate.';
-        const nonBankFields = updateInfo.vendorFields.filter((f) => f !== 'noRekening');
-        const nonBankFilled = nonBankFields.every((f) => (updateInfo.vendorValues[f] || '').trim());
-        if (updateInfo.vendorFields.length > 0 && !nonBankFilled) e.vendorValues = 'Lengkapi seluruh data baru.';
-        if (updateInfo.vendorFields.includes('noRekening') && (!updateInfo.vendorBank || !updateInfo.vendorRekening.trim())) e.vendorRekening = 'Lengkapi bank dan nomor rekening baru.';
+        const vendorFilled = updateInfo.vendorFields.every((f) => {
+          if (f === 'picList') {
+            const picRows = parseVendorPicRows(updateInfo.vendorValues[f]);
+            return picRows.length > 0 && picRows.every((row) => row.nama.trim() && row.kontak.trim());
+          }
+          return (updateInfo.vendorValues[f] || '').trim();
+        });
+        if (updateInfo.vendorFields.length > 0 && !vendorFilled) e.vendorValues = 'Lengkapi seluruh data baru.';
       }
     }
     if (key === 'program-info') {
@@ -2479,6 +2743,16 @@ export default function SupplierMemoWizard() {
         if (pendapatan.listingPpnAktif && !pendapatan.listingPpnRate) e.listingPpnRate = 'Pilih tarif PPN.';
         if (pendapatan.listingPphAktif && !pendapatan.listingPphRate) e.listingPphRate = 'Pilih tarif PPh.';
       }
+      if (pendapatan.jenis === 'event-blbms') {
+        if (!pendapatan.eventJenis) e.eventJenis = 'Pilih jenis event.';
+        if (pendapatan.eventJenis === EVENT_JENIS_LAINNYA && !pendapatan.eventJenisLainnya.trim()) e.eventJenisLainnya = 'Tuliskan nama event.';
+        if (!pendapatan.eventBentuk) e.eventBentuk = 'Pilih bentuk/fasilitas event.';
+        if (!pendapatan.eventNominal) e.eventJenis = e.eventJenis || 'Lengkapi nilai sewa.';
+        if (!pendapatan.eventPeriodeAwal || !pendapatan.eventPeriodeAkhir) e.eventJenis = e.eventJenis || 'Lengkapi periode sewa.';
+        if (!pendapatan.eventPpnAktif && !pendapatan.eventPphAktif) e.eventPpnRate = 'Aktifkan PPN dan/atau PPh untuk event/BLBMS ini.';
+        if (pendapatan.eventPpnAktif && !pendapatan.eventPpnRate) e.eventPpnRate = 'Pilih tarif PPN.';
+        if (pendapatan.eventPphAktif && !pendapatan.eventPphRate) e.eventPphRate = 'Pilih tarif PPh.';
+      }
     }
     if (key === 'tinjau') {
       if (!signature) e.signature = 'Tanda tangan wajib diisi.';
@@ -2534,7 +2808,7 @@ export default function SupplierMemoWizard() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-[11px] bg-gradient-to-br from-amber-700 to-amber-600 shadow-md">BM</div>
+            <MannaKampusLogo />
             <div className="leading-tight">
               <p className="text-[13px] font-bold text-slate-800">Buyer Memo System</p>
               <p className="text-[10px] text-slate-400">Formulir Pengajuan Memo Supplier</p>

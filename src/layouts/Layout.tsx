@@ -11,8 +11,19 @@ import { OutletHeaderBadge } from '../components/OutletBar';
 import { useApp } from '../context/AppContext';
 import { memos } from '../data/memoData';
 import { reports } from '../data/sellOutData';
+import mannaKampusLogo from '../../logo.png';
 
 const pendingStatuses = ['Menunggu Buyer', 'Menunggu Checker', 'Setting Harga'];
+
+function MannaKampusLogo({ compact = false }: { compact?: boolean }) {
+  return (
+    <img
+      src={mannaKampusLogo}
+      alt="Manna Kampus"
+      className={compact ? 'h-8 w-auto max-w-[92px] object-contain' : 'h-9 w-auto object-contain'}
+    />
+  );
+}
 
 function buildNotifications(selectedOutlet: string | null) {
   const filteredMemos = selectedOutlet
@@ -423,9 +434,7 @@ export function Layout() {
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden lg:flex w-[250px] shrink-0 flex-col h-screen border-r border-slate-200 bg-white shadow-sm z-20">
         <div className="h-16 flex items-center gap-3 px-5 shrink-0 border-b border-slate-100">
-          <div className="w-8 h-8 rounded-xl bg-amber-600 flex items-center justify-center text-white font-bold text-[11px] shrink-0 shadow-sm">
-            BM
-          </div>
+          <MannaKampusLogo compact />
           <div>
             <p className="font-bold text-[14px] leading-tight text-slate-800">BM Portal</p>
             <p className="text-[10px] leading-tight text-slate-500">Buyer Memo System</p>
@@ -453,9 +462,7 @@ export function Layout() {
           <aside className="fixed left-0 top-0 h-full w-[260px] z-50 flex flex-col bg-white border-r border-slate-200 shadow-2xl lg:hidden">
             <div className="h-16 flex items-center justify-between px-5 shrink-0 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-600 flex items-center justify-center text-white font-bold text-[11px] shrink-0">
-                  BM
-                </div>
+                <MannaKampusLogo compact />
                 <div>
                   <p className="font-bold text-[14px] leading-tight text-slate-800">ERP Portal</p>
                   <p className="text-[10px] leading-tight text-slate-500">Buyer Memo System</p>

@@ -592,7 +592,7 @@ export function CreateMemo() {
               </button>
               <button type="button" onClick={() => applyOutletScope('all-mk-godean')}
                 className={`text-left rounded-lg border p-4 transition-all ${outletScope === 'all-mk-godean' ? 'border-amber-300 bg-amber-50' : 'border-border bg-card hover:border-amber-200'}`}>
-                <p className="text-[13px] font-bold text-foreground">All MK Godean</p>
+                <p className="text-[13px] font-bold text-foreground">PT Mirota Godean</p>
                 <p className="text-[11px] text-muted-foreground mt-1">MK5, MK6, MK7, MINI1, MINI2</p>
               </button>
               <button type="button" onClick={() => applyOutletScope('all-mk')}
