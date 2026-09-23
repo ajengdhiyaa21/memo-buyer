@@ -53,6 +53,29 @@ body {
 /* Focus ring utility */
 .ring-primary { box-shadow: 0 0 0 3px var(--ring); }
 
+@keyframes warning-info-wiggle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    opacity: 0.35;
+    transform: scale(1.18) rotate(-8deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08) rotate(8deg);
+  }
+  75% {
+    opacity: 0.45;
+    transform: scale(1.18) rotate(-4deg);
+  }
+}
+
+.warning-info-animate {
+  animation: warning-info-wiggle 0.9s ease-in-out infinite;
+}
+
 .memo-print-page {
   font-family: "Inter", sans-serif;
   border: 1px solid #d8dee8;
@@ -86,6 +109,20 @@ body {
   background: #ffffff;
 }
 
+.memo-print-page .memo-print-info-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.memo-print-page .memo-print-info-value {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.45;
+}
+
 @media screen {
   .memo-preview-scroll .memo-print-page {
     transform: scale(0.86);
@@ -97,11 +134,19 @@ body {
 @media print {
   @page {
     size: A4;
-    margin: 0;
+    margin: 12mm;
   }
 
   body {
     background: #ffffff !important;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
   body * {
@@ -114,25 +159,71 @@ body {
   }
 
   .sellout-print-page {
-    position: fixed !important;
-    inset: 0 auto auto 0 !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    min-height: auto !important;
     margin: 0 !important;
-    padding: 14mm !important;
+    padding: 0 !important;
     box-shadow: none !important;
     transform: none !important;
+    page-break-after: auto !important;
   }
 
   .memo-preview-modal,
   .memo-preview-scroll {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: none !important;
     transform: none !important;
     margin: 0 !important;
+    padding: 0 !important;
     display: block !important;
     overflow: visible !important;
+    background: transparent !important;
   }
 
   .memo-print-page {
     border: none !important;
+    width: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .memo-detail-card,
+  .memo-print-section,
+  table,
+  tr {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .memo-print-page table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .memo-print-page th,
+  .memo-print-page td {
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    vertical-align: top !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  .memo-print-logo {
+    width: 72px !important;
+    height: 72px !important;
   }
 }

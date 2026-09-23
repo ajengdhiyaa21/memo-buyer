@@ -85,15 +85,16 @@ const GRAMASI_UNIT_OPTIONS = ['gram', 'kg', 'ml', 'liter', 'PCS', 'PC', 'CR', 'K
 const KONVERSI_UNIT_OPTIONS = ['PC', 'PCS', 'CR', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK', 'BTL', 'SACHET', 'RENCENG'];
 
 const PRODUK_UPDATE_FIELDS = [
-  { key: 'barcode', label: 'Barcode' },
+  { key: 'barcodeKarton', label: 'Barcode Karton' },
+  { key: 'barcodePlu', label: 'Barcode PLU' },
   { key: 'plu', label: 'PLU' },
   { key: 'nama', label: 'Nama Produk' },
   { key: 'gramasi', label: 'Gramasi' },
-  { key: 'hargaBeli', label: 'Harga Beli' },
+  { key: 'hargaBeli', label: 'Harga Pokok' },
   { key: 'diskonReguler', label: 'Diskon Reguler (%)' },
   { key: 'konversi', label: 'Konversi' },
   { key: 'jatuhTempo', label: 'Jatuh Tempo' },
-];
+];    
 const VENDOR_UPDATE_FIELDS = [
   { key: 'picList', label: 'PIC Vendor' },
   { key: 'alamat', label: 'Alamat Vendor' },
@@ -103,39 +104,49 @@ const VENDOR_UPDATE_FIELDS = [
 
 const JENIS_MEMO_OPTIONS = [
   { key: 'update-informasi', label: 'Update Informasi', desc: 'Perbarui data produk atau profil vendor', icon: FileText },
-  { key: 'memo-program', label: 'Memo Program', desc: 'Diskon on faktur, off faktur, dan/atau budget', icon: Tag },
+  { key: 'memo-program', label: 'Memo Program', desc: 'On Faktur dan Off Faktur', icon: Tag },
   { key: 'pendapatan-lain', label: 'Memo Lain-lain', desc: 'Sewa/visibility, reward, promosi, listing, event & BLBMS', icon: Building2 },
 ] as const;
 
 const PROGRAM_TIPE_OPTIONS = [
   { key: 'on-faktur', label: 'On Faktur', icon: Receipt },
   { key: 'off-faktur', label: 'Off Faktur', icon: FileText },
-  { key: 'budget', label: 'Budget', icon: Wallet },
 ];
 
-const PPN_RATE_OPTIONS = ['PPN 10% (sebelum 2022)', 'PPN 11%', 'PPN 12%'];
-const PPH_RATE_OPTIONS = ['PPh Pasal 22 — 1.5%', 'PPh Pasal 23 — 2%', 'PPh Final — 0.5%', 'PPh 22 Impor — 7.5%'];
+const PPN_RATE_OPTIONS = ['PPN 11%'];
+const CARA_PEMBAYARAN_OPTIONS = ['Tunai', 'Transfer', 'Potong Tagihan'];
+const DISKON_BASIS_OPTIONS = [
+  { key: 'cbp', label: 'Harga Jual (CBP)' },
+  { key: 'rbp', label: 'Harga Pokok (RBP)' },
+];
+const STRATA_UNIT_OPTIONS = ['PCS', 'KARTON'];
+const PPH_RATE_OPTIONS = ['PPh Pasal 23 - 15%', 'PPh Pasal 23 - 2%'];
+const SEWA_PPH_RATE_OPTIONS = ['PPh Pasal 23 - 2%', 'PPh Final 4 Ayat 2 - 10%'];
+const SEWA_CARA_PEMBAYARAN_OPTIONS = ['Transfer', 'Tunai', 'Potong Tagihan'];
 
 const PENDAPATAN_OPTIONS = [
+  { key: 'event-blbms', label: 'Event dan BLBMS', desc: 'Sewa area/kegiatan untuk event outlet atau BLBMS', icon: Calendar },
   { key: 'sewa-visibility', label: 'Sewa / Visibility', desc: 'Sewa ruang, gondola, atau media visibility', icon: Store },
   { key: 'reward-insentif', label: 'Reward / Rabat / Insentif', desc: 'Insentif yang melekat pada pencapaian target', icon: Gift },
   { key: 'promosi', label: 'Promosi (Media Cetak/Digital)', desc: 'Kerja sama promosi melalui media cetak atau digital', icon: Megaphone },
   { key: 'listing', label: 'Listing', desc: 'Pendaftaran produk baru beserta syarat & ketentuan', icon: Receipt },
-  { key: 'event-blbms', label: 'Event dan BLBMS', desc: 'Sewa area/kegiatan untuk event outlet atau BLBMS', icon: Calendar },
 ] as const;
 
-const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Showroom Motor'];
-const PROMOSI_MEDIA_OPTIONS = ['Neonbox Instore', 'Spanduk/Banner In Store', 'Spanduk/Banner Out Store', 'Banner Mobil', 'TVC/Digital Signage', 'Promo Instagram', 'Audio Promo', 'Brosur'];
+const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Open Booth', 'Clip Strip', 'Fasilitas (Air dan Listrik)', 'Dumbin/Mini Wings', 'Showroom & Tenant', 'Building'];
+const PROMOSI_MEDIA_OPTIONS = ['Neonbox Instore', 'Spanduk/Banner In Store', 'Spanduk/Banner Out Store', 'Banner Mobil', 'TVC/Digital Signage', 'Sosial Media', 'Audio Promo', 'Audio Instore', 'Rollup Banner', 'Brosur'];
 const REWARD_JENIS_OPTIONS = ['Reward', 'Rabate', 'Insentif'];
-const REWARD_BENTUK_OPTIONS = ['Uang', 'Hadiah'];
+const REWARD_BENTUK_OPTIONS = ['Uang', 'Barang', 'Hadiah', 'Trip'];
 const REWARD_PEMBAYARAN_OPTIONS = ['Tunai', 'Non Tunai'];
 
 /** Sentinel value for "pilihan lainnya" on Jenis Event — selecting it reveals a free-text input. */
-const EVENT_JENIS_LAINNYA = 'Lainnya';
-const EVENT_JENIS_OPTIONS = ['Grand Opening', 'Ulang Tahun Outlet', 'Event Musiman (Lebaran/Natal/Tahun Baru)', 'Bazaar/Pameran Produk', 'BLBMS', EVENT_JENIS_LAINNYA];
+const EVENT_JENIS_OPTIONS = ['Belanja Luar Biasa Murah Spektakuler (BLBMS)', 'Pra Ramadhan & Lebaran', 'Anniversary', 'Tahun Ajaran Baru', 'Natal dan Tahun Baru', 'Grand Opening (New Store)', 'Additional Event', 'Regular Event'];
 
 /** Bentuk/fasilitas yang dipilih setelah Jenis Event — gabungan Reward/Insentif, Promosi, dan Sewa/Visibility. */
-const EVENT_BENTUK_OPTIONS = ['Reward', 'Insentif', ...PROMOSI_MEDIA_OPTIONS, ...SEWA_VISIBILITY_JENIS];
+const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publish'];
+const EVENT_MEDIA_BY_CATEGORY: Record<string, string[]> = {
+  'Media Display Produk': ['N Gondola', 'Wing Gondola', 'Klip Strip', 'Dumbin', 'COC', 'Floor Display', 'Open Booth'],
+  'Media Branding & Publish': ['Media Cetak', 'Media Elektronik dan Digital', 'Media Indoor', 'Media Outdoor'],
+};
 
 const SATUAN_OPTIONS = ['PCS', 'BANDED', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK'];
 
@@ -143,7 +154,8 @@ function getProdukOldValue(product: Product | null, field: string): string {
   if (!product) return '';
   switch (field) {
     case 'nama': return product.nama;
-    case 'barcode': return '-';
+    case 'barcodeKarton': return '-';
+    case 'barcodePlu': return '-';
     case 'plu': return product.plu;
     case 'gramasi': return product.gramasi || '-';
     case 'hargaBeli': return product.hargaBeli ? `Rp ${product.hargaBeli.toLocaleString('id-ID')} include PPN` : '-';
@@ -180,11 +192,9 @@ function getSteps(jenisMemo: JenisMemo, tipeProgram: string[]): StepDef[] {
   if (jenisMemo === 'update-informasi') steps.push({ key: 'update-informasi', label: 'Update Info' });
   if (jenisMemo === 'memo-program') {
     steps.push({ key: 'program-info', label: 'Info Program' });
-    const hasProductTipe = tipeProgram.includes('on-faktur') || tipeProgram.includes('off-faktur');
-    if (hasProductTipe) steps.push({ key: 'cakupan-produk', label: 'Cakupan Produk' });
     steps.push({ key: 'program-detail', label: 'Detail Program' });
   }
-  if (jenisMemo === 'pendapatan-lain') steps.push({ key: 'pendapatan', label: 'Pendapatan Lain' });
+  if (jenisMemo === 'pendapatan-lain') steps.push({ key: 'pendapatan', label: 'Program Lain' });
   steps.push({ key: 'catatan', label: 'Catatan' });
   steps.push({ key: 'tinjau', label: 'Tinjau & TTD' });
   return steps;
@@ -265,7 +275,16 @@ function OutletChip({ label, active, onClick }: { label: string; active: boolean
 }
 
 /** Single-select radio chips — use for fields where only ONE option can apply. */
-function SingleChoiceChips({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (v: string) => void }) {
+type ChipTone = 'amber' | 'emerald' | 'rose' | 'sky' | 'slate';
+const chipToneClass: Record<ChipTone, string> = {
+  amber: 'bg-amber-600 border-amber-600 text-white shadow-sm',
+  emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-sm',
+  rose: 'bg-rose-600 border-rose-600 text-white shadow-sm',
+  sky: 'bg-sky-600 border-sky-600 text-white shadow-sm',
+  slate: 'bg-slate-700 border-slate-700 text-white shadow-sm',
+};
+
+function SingleChoiceChips({ options, value, onChange }: { options: { key: string; label: string; tone?: ChipTone }[]; value: string; onChange: (v: string) => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((o) => {
@@ -273,7 +292,7 @@ function SingleChoiceChips({ options, value, onChange }: { options: { key: strin
         return (
           <button key={o.key} type="button" onClick={() => onChange(o.key)}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[12px] font-semibold transition-all ${
-              active ? 'bg-amber-600 border-amber-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+              active ? chipToneClass[o.tone || 'amber'] : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
             }`}>
             <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-white' : 'border-slate-300'}`}>
               {active && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
@@ -339,7 +358,7 @@ function DiskonModeToggle({ value, onChange }: { value: DiskonMode; onChange: (v
       {(['persen', 'rp'] as const).map((m) => (
         <button key={m} type="button" onClick={() => onChange(m)}
           className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${value === m ? 'bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
-          {m === 'persen' ? 'Persentase (%)' : 'Rupiah (Rp)'}
+          {m === 'persen' ? '%' : 'Rp'}
         </button>
       ))}
     </div>
@@ -360,6 +379,27 @@ function ChangeField({ oldValue, newValue, onChange, placeholder }: { oldValue: 
       <div>
         <Label req>Data Baru</Label>
         <input type="text" value={newValue} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || 'Masukkan data baru...'} className={inp} />
+      </div>
+    </div>
+  );
+}
+
+function ChangeFieldWithSuffix({ oldValue, newValue, onChange, placeholder, suffix }: { oldValue: string; newValue: string; onChange: (v: string) => void; placeholder?: string; suffix: string }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 sm:items-end">
+      <div>
+        <Label>Data Sebelumnya</Label>
+        <div className="px-3.5 py-2.5 rounded-xl text-[13px] bg-slate-50 border border-slate-200 text-slate-500">
+          {oldValue || <span className="italic text-slate-400">Belum ada data</span>}
+        </div>
+      </div>
+      <ArrowRight className="w-4 h-4 text-slate-300 hidden sm:block mb-3" />
+      <div>
+        <Label req>Data Baru</Label>
+        <div className="relative">
+          <input type="number" min={0} value={newValue} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || '0'} className={`${inp} pr-14`} />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">{suffix}</span>
+        </div>
       </div>
     </div>
   );
@@ -615,6 +655,19 @@ function formatListingConversion(row?: ListingConversionRow) {
   ].filter(Boolean).join(' -> ');
 }
 
+function sewaPeriodLabel(start: string, months: number) {
+  if (!start && !months) return '';
+  if (!start) return months ? `${months} bulan` : '';
+  if (!months) return `Mulai ${start}`;
+  const startDate = new Date(`${start}T00:00:00`);
+  if (Number.isNaN(startDate.getTime())) return `${start} selama ${months} bulan`;
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + months);
+  endDate.setDate(endDate.getDate() - 1);
+  const end = endDate.toISOString().slice(0, 10);
+  return `${start} s/d ${end} (${months} bulan)`;
+}
+
 function parseVendorPicRows(value?: string): VendorPicRow[] {
   if (!value) return [{ nama: '', kontak: '' }];
   try {
@@ -626,6 +679,8 @@ function parseVendorPicRows(value?: string): VendorPicRow[] {
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => {
+        const bracketMatch = line.match(/^(.*?)\s*\((.*?)\)\s*$/);
+        if (bracketMatch) return { nama: bracketMatch[1].trim(), kontak: bracketMatch[2].trim() };
         const [nama = '', kontak = ''] = line.split(/\s+-\s+/, 2);
         return { nama, kontak };
       });
@@ -668,7 +723,7 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
     });
   };
   const setVendorValue = (field: string, value: string) => setField('vendorValues', { ...state.vendorValues, [field]: value });
-  const vendorPicRows = parseVendorPicRows(state.vendorValues.picList);
+  const vendorPicRows = parseVendorPicRows(state.vendorValues.picList || getVendorOldValue(identity, 'picList'));
   const setVendorPicRows = (rows: VendorPicRow[]) => setVendorValue('picList', JSON.stringify(rows));
   const updateVendorPicRow = (index: number, field: keyof VendorPicRow, value: string) => {
     const rows = [...vendorPicRows];
@@ -744,11 +799,20 @@ function UpdateInformasiStep({ state, setField, onJenisUpdateChange, identity, e
                             <p className="mt-1.5 text-[11px] text-slate-400">Harga pokok per PCS, sudah termasuk PPN, dan merupakan harga sebelum diskon/reguler.</p>
                           </div>
                         ) : field === 'diskonReguler' ? (
-                          <ChangeField
+                          <ChangeFieldWithSuffix
                             oldValue={getProdukOldValue(product, field)}
                             newValue={state.produkValues[key] || ''}
                             onChange={(v) => setProdukValue(product.plu, field, v)}
                             placeholder="cth: 10"
+                            suffix="%"
+                          />
+                        ) : field === 'jatuhTempo' ? (
+                          <ChangeFieldWithSuffix
+                            oldValue={getProdukOldValue(product, field)}
+                            newValue={state.produkValues[key] || ''}
+                            onChange={(v) => setProdukValue(product.plu, field, v)}
+                            placeholder="cth: 30"
+                            suffix="hari"
                           />
                         ) : field === 'konversi' ? (
                           <div className="grid grid-cols-1 lg:grid-cols-[240px_auto_1fr] gap-4 lg:items-start">
@@ -973,7 +1037,7 @@ function PluMultiSelect({ selected, onChange, showSelectedList = true }: { selec
           {selected.length > 0 && <span className="mr-3 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700">{selected.length} dipilih</span>}
         </div>
         {open && (
-          <div className="absolute left-0 top-full mt-1.5 w-full z-50 bg-white rounded-xl border border-slate-200 shadow-2xl max-h-52 overflow-y-auto divide-y divide-slate-100">
+          <div className="absolute left-0 top-full mt-1.5 w-full z-[9999] bg-white rounded-xl border border-slate-200 shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-100">
             {suggestions.length === 0 ? (
               <div className="px-4 py-3 text-[12px] text-slate-400 text-center">{query ? 'Produk tidak ditemukan' : 'Semua produk sudah dipilih'}</div>
             ) : suggestions.map((p) => (
@@ -991,6 +1055,7 @@ function PluMultiSelect({ selected, onChange, showSelectedList = true }: { selec
           {selected.map((p) => (
             <span key={p.plu} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-medium text-slate-600">
               {p.nama}
+              <span className="font-mono text-[10px] text-slate-400">({p.plu})</span>
               <button type="button" onClick={() => remove(p.plu)} className="p-0.5 rounded hover:bg-red-50 hover:text-red-500"><Trash2 className="w-3 h-3" /></button>
             </span>
           ))}
@@ -1013,6 +1078,14 @@ function ProductScopeStep({ title, productScope, setProductScope, selectedSubCat
   supplierId?: string;
   error?: string;
 }) {
+  useEffect(() => {
+    if (productScope !== 'per-plu') {
+      setProductScope('per-plu');
+      setProducts([]);
+      setSelectedSubCategory('');
+    }
+  }, [productScope, setProductScope, setProducts, setSelectedSubCategory]);
+
   const applyScope = (scope: ProductScope) => {
     setProductScope(scope);
     if (scope === 'all-supplier') { setProducts(PRODUCT_CATALOG.filter((p) => supplierId && p.supplierId === supplierId)); setSelectedSubCategory(''); }
@@ -1028,39 +1101,16 @@ function ProductScopeStep({ title, productScope, setProductScope, selectedSubCat
     <Card title={title || 'Cakupan Produk'} icon={Package} subtitle="Tentukan produk mana saja yang termasuk dalam program ini">
       <div>
         <Label req>Cakupan</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {[
-            { value: 'all-supplier' as const, label: 'All Produk Supplier' },
-            { value: 'sub-category' as const, label: 'All Sub Kategori' },
-            { value: 'per-plu' as const, label: 'Per PLU' },
-          ].map((opt) => (
-            <button key={opt.value} type="button" onClick={() => applyScope(opt.value)}
-              className={`rounded-xl border px-4 py-3 text-left text-[13px] font-semibold transition-all ${productScope === opt.value ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-              {opt.label}
-            </button>
-          ))}
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+          <p className="text-[13px] font-bold text-amber-800">Per PLU</p>
+          <p className="mt-1 text-[11px] text-amber-700">Program wajib memilih produk satu per satu berdasarkan PLU.</p>
         </div>
       </div>
 
-      {productScope === 'sub-category' && (
-        <div className="max-w-sm">
-          <Label req>Sub Kategori</Label>
-          <div className="relative">
-            <select value={selectedSubCategory} onChange={(e) => applySubCategory(e.target.value)} className={`${inp} appearance-none pr-9 cursor-pointer`}>
-              <option value="">Pilih sub kategori...</option>
-              {subCategories.map((c) => <option key={c}>{c}</option>)}
-            </select>
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
-      )}
-
-      {productScope === 'per-plu' && (
-        <div>
-          <Label req>Pilih Produk</Label>
-          <PluMultiSelect selected={products} onChange={setProducts} />
-        </div>
-      )}
+      <div>
+        <Label req>Pilih Produk</Label>
+        <PluMultiSelect selected={products} onChange={setProducts} />
+      </div>
 
       <FieldError message={error} />
       {products.length > 0 && (
@@ -1122,16 +1172,18 @@ interface ProgramInfoState {
   pphAktif: boolean;
   pphRate: string;
   redaksi: string;
+  caraPembayaran: string;
   periodeAwal: string;
   periodeAkhir: string;
 }
 
 /** Independently activatable PPN + PPh chooser. Reused anywhere a transaction may be taxed:
  *  Off Faktur programs, Sewa/Visibility, Reward/Rabat/Insentif, and Listing. */
-function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAktif, pphRate, onPphAktif, onPphRate, errors }: {
+function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAktif, pphRate, onPphAktif, onPphRate, errors, ppnOptions = PPN_RATE_OPTIONS, pphOptions = PPH_RATE_OPTIONS }: {
   ppnAktif: boolean; ppnRate: string; onPpnAktif: (v: boolean) => void; onPpnRate: (v: string) => void;
   pphAktif: boolean; pphRate: string; onPphAktif: (v: boolean) => void; onPphRate: (v: string) => void;
   errors?: { ppnRate?: string; pphRate?: string };
+  ppnOptions?: string[]; pphOptions?: string[];
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1148,7 +1200,7 @@ function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAk
             <div className="relative">
               <select value={ppnRate} onChange={(e) => onPpnRate(e.target.value)} className={`${errors?.ppnRate ? inpErr : inp} appearance-none pr-9 cursor-pointer`}>
                 <option value="">Pilih tarif PPN...</option>
-                {PPN_RATE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                {ppnOptions.map((o) => <option key={o}>{o}</option>)}
               </select>
               <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -1175,7 +1227,7 @@ function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAk
             <div className="relative">
               <select value={pphRate} onChange={(e) => onPphRate(e.target.value)} className={`${errors?.pphRate ? inpErr : inp} appearance-none pr-9 cursor-pointer`}>
                 <option value="">Pilih tarif PPh...</option>
-                {PPH_RATE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                {pphOptions.map((o) => <option key={o}>{o}</option>)}
               </select>
               <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -1193,8 +1245,6 @@ function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAk
 }
 
 function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState; setField: <K extends keyof ProgramInfoState>(f: K, v: ProgramInfoState[K]) => void; errors: FormErrors }) {
-  const showPajak = state.tipe.includes('off-faktur');
-
   return (
     <Card title="Informasi Program" icon={Tag} subtitle="Program dapat mencakup lebih dari satu tipe sekaligus">
       <div><Label req>Nama Program</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={errors.namaProgram ? inpErr : inp} placeholder="cth: Program Akhir Tahun 2026" /><FieldError message={errors.namaProgram} /></div>
@@ -1203,28 +1253,46 @@ function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState;
         <Label req>Tipe Program</Label>
         <MultiChoiceChips options={PROGRAM_TIPE_OPTIONS} value={state.tipe} onChange={(v) => setField('tipe', v)} />
         <FieldError message={errors.tipe} />
-        <p className="mt-2 text-[11px] text-slate-400">Bisa memilih lebih dari satu — misalnya On Faktur sekaligus didukung Budget.</p>
+        <p className="mt-2 text-[11px] text-slate-400">Bisa memilih lebih dari satu, misalnya On Faktur dan Off Faktur dalam satu program.</p>
       </div>
 
-      {showPajak && (
-        <div className="border-t border-slate-100 pt-5">
-          <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
-            <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
-            Ketentuan Pajak
-          </p>
-          <p className="text-[11px] text-slate-400 mb-3">Karena program ini Off Faktur, tentukan pajak yang berlaku</p>
-          <KetentuanPajakSection
-            ppnAktif={state.ppnAktif} ppnRate={state.ppnRate} onPpnAktif={(v) => setField('ppnAktif', v)} onPpnRate={(v) => setField('ppnRate', v)}
-            pphAktif={state.pphAktif} pphRate={state.pphRate} onPphAktif={(v) => setField('pphAktif', v)} onPphRate={(v) => setField('pphRate', v)}
-            errors={{ ppnRate: errors.ppnRate, pphRate: errors.pphRate }}
-          />
-        </div>
-      )}
+      <div className="border-t border-slate-100 pt-5">
+        <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
+          <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
+          Ketentuan Pajak
+        </p>
+        <p className="text-[11px] text-slate-400 mb-3">PPN dan PPh bisa aktif/nonaktif masing-masing. PPN program hanya memakai tarif 11%.</p>
+        <KetentuanPajakSection
+          ppnAktif={state.ppnAktif} ppnRate={state.ppnRate} onPpnAktif={(v) => { setField('ppnAktif', v); if (v) setField('ppnRate', 'PPN 11%'); }} onPpnRate={(v) => setField('ppnRate', v)}
+          pphAktif={state.pphAktif} pphRate={state.pphRate} onPphAktif={(v) => setField('pphAktif', v)} onPphRate={(v) => setField('pphRate', v)}
+          errors={{ ppnRate: errors.ppnRate, pphRate: errors.pphRate }}
+        />
+      </div>
+
+      <div>
+        <Label req>Cara Pembayaran</Label>
+        <SingleChoiceChips options={CARA_PEMBAYARAN_OPTIONS.map((o) => ({ key: o, label: o }))} value={state.caraPembayaran} onChange={(v) => setField('caraPembayaran', v)} />
+        <FieldError message={errors.caraPembayaran} />
+      </div>
 
       <div>
         <Label req>Redaksi</Label>
-        <textarea rows={4} value={state.redaksi} onChange={(e) => setField('redaksi', e.target.value)} className={`${errors.redaksi ? inpErr : inp} min-h-28 resize-y`} placeholder="Tuliskan redaksi kesepakatan program ini..." />
+        <textarea
+          rows={4}
+          value={state.redaksi}
+          onChange={(e) => setField('redaksi', e.target.value)}
+          className={`${errors.redaksi ? inpErr : inp} min-h-28 resize-y`}
+          placeholder={'Atas Nama PT ...\nTuliskan kalimat redaksi program di sini...'}
+        />
+        <p className="mt-1.5 text-[11px] text-slate-400">Guidance: tulis Atas Nama PT terlebih dahulu, lalu lanjutkan dengan kalimat redaksi program.</p>
         <FieldError message={errors.redaksi} />
+      </div>
+
+      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+        <div className="flex items-start gap-2">
+          <Info className="warning-info-animate mt-0.5 h-4 w-4 shrink-0" />
+          <p className="text-[12px] font-semibold leading-relaxed">Batas pembayar maksimal 2 bulan setelah program berakhir.</p>
+        </div>
       </div>
 
       <div>
@@ -1239,35 +1307,80 @@ function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState;
 /* ───────────────────────── Step: Detail Program (per-produk + budget) ───────────────────────── */
 interface OnFakturProductRow {
   diskonMode: DiskonMode;
+  diskonBasis: string;
   diskonValue: number;
   bandedAktif: boolean;
   banded: string;
   strataMinQty: number;
+  strataSatuan: string;
   alokasiQty: number;
+  budgetAktif: boolean;
+  budgetNominal: number;
   keterangan: string;
 }
 const emptyOnFakturProductRow = (): OnFakturProductRow => ({
-  diskonMode: 'persen', diskonValue: 0, bandedAktif: false, banded: '', strataMinQty: 0, alokasiQty: 0, keterangan: '',
+  diskonMode: 'persen', diskonBasis: '', diskonValue: 0, bandedAktif: false, banded: '', strataMinQty: 0, strataSatuan: 'PCS', alokasiQty: 0, budgetAktif: false, budgetNominal: 0, keterangan: '',
 });
 
 interface OffFakturProductRow {
   diskonMode: DiskonMode;
+  diskonBasis: string;
   diskonValue: number;
   kuponVoucherAktif: boolean;
   kuponVoucher: string;
   freeProdukAktif: boolean;
   freeProdukKeterangan: string;
-  offAlokasiTipe: 'qty' | 'rp';
   offAlokasiQty: number;
-  offAlokasiRp: number;
+  budgetAktif: boolean;
+  budgetNominal: number;
   keterangan: string;
 }
 const emptyOffFakturProductRow = (): OffFakturProductRow => ({
-  diskonMode: 'persen', diskonValue: 0, kuponVoucherAktif: false, kuponVoucher: '', freeProdukAktif: false, freeProdukKeterangan: '',
-  offAlokasiTipe: 'qty', offAlokasiQty: 0, offAlokasiRp: 0, keterangan: '',
+  diskonMode: 'persen', diskonBasis: '', diskonValue: 0, kuponVoucherAktif: false, kuponVoucher: '', freeProdukAktif: false, freeProdukKeterangan: '',
+  offAlokasiQty: 0, budgetAktif: false, budgetNominal: 0, keterangan: '',
 });
 
 interface BudgetLinkState { keterangan: string; nominal: number; }
+
+interface OnFakturGroup {
+  id: string;
+  keterangan: string;
+  diskonMode: DiskonMode;
+  diskonBasis: string;
+  diskonValue: number;
+  products: Product[];
+  rows: Record<string, OnFakturProductRow>;
+}
+
+interface OffFakturGroup {
+  id: string;
+  keterangan: string;
+  diskonMode: DiskonMode;
+  diskonBasis: string;
+  diskonValue: number;
+  products: Product[];
+  rows: Record<string, OffFakturProductRow>;
+}
+
+const emptyOnFakturGroup = (): OnFakturGroup => ({
+  id: `on-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  keterangan: '',
+  diskonMode: 'rp',
+  diskonBasis: '',
+  diskonValue: 0,
+  products: [],
+  rows: {},
+});
+
+const emptyOffFakturGroup = (): OffFakturGroup => ({
+  id: `off-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  keterangan: '',
+  diskonMode: 'rp',
+  diskonBasis: '',
+  diskonValue: 0,
+  products: [],
+  rows: {},
+});
 
 function OnFakturProductCard({ product, row, setField }: {
   product: Product; row: OnFakturProductRow;
@@ -1284,10 +1397,16 @@ function OnFakturProductCard({ product, row, setField }: {
       <div>
         <Label req>Potongan (On Faktur)</Label>
         <div className="flex flex-col sm:flex-row gap-3">
-          <DiskonModeToggle value={row.diskonMode} onChange={(v) => setField('diskonMode', v)} />
+          <DiskonModeToggle value={row.diskonMode} onChange={(v) => { setField('diskonMode', v); if (v !== 'persen') setField('diskonBasis', ''); }} />
           <input type="number" min={0} value={row.diskonValue || ''} onChange={(e) => setField('diskonValue', parseFloat(e.target.value) || 0)}
             placeholder={row.diskonMode === 'persen' ? 'Persentase diskon...' : 'Nominal potongan (Rp)...'} className={`${inp} sm:max-w-xs`} />
         </div>
+        {row.diskonMode === 'persen' && (
+          <div className="mt-3">
+            <Label req>Basis Persentase</Label>
+            <SingleChoiceChips options={DISKON_BASIS_OPTIONS} value={row.diskonBasis} onChange={(v) => setField('diskonBasis', v)} />
+          </div>
+        )}
         <p className="mt-1.5 text-[11px] text-slate-400">Potongan tiap produk boleh berbeda — sebagian Rp, sebagian persentase.</p>
       </div>
 
@@ -1301,8 +1420,24 @@ function OnFakturProductCard({ product, row, setField }: {
             </div>
           )}
         </div>
-        <div><Label>Syarat Strata (Min. Qty Order)</Label><input type="number" min={0} value={row.strataMinQty || ''} onChange={(e) => setField('strataMinQty', parseInt(e.target.value) || 0)} className={inp} placeholder="0" /></div>
-        <div><Label>Alokasi Qty</Label><input type="number" min={0} value={row.alokasiQty || ''} onChange={(e) => setField('alokasiQty', parseInt(e.target.value) || 0)} className={inp} placeholder="0" /></div>
+        <div>
+          <Label>Syarat Strata (Min. Order)</Label>
+          <div className="grid grid-cols-[1fr_120px] gap-2">
+            <input type="number" min={0} value={row.strataMinQty || ''} onChange={(e) => setField('strataMinQty', parseInt(e.target.value) || 0)} className={inp} placeholder="0" />
+            <select value={row.strataSatuan} onChange={(e) => setField('strataSatuan', e.target.value)} className={`${inp} cursor-pointer`}>
+              {STRATA_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <div><Label>Alokasi (PCS)</Label><input type="number" min={0} value={row.alokasiQty || ''} onChange={(e) => setField('alokasiQty', parseInt(e.target.value) || 0)} className={inp} placeholder="0" /></div>
+      </div>
+
+      <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div><Label>Penggunaan Budget</Label><p className="text-[11px] text-slate-500">Nominal budget per produk dalam Rupiah.</p></div>
+          <YesNoToggle value={row.budgetAktif} onChange={(v) => { setField('budgetAktif', v); if (!v) setField('budgetNominal', 0); }} />
+        </div>
+        {row.budgetAktif && <div className="mt-3 max-w-xs"><input type="number" min={0} value={row.budgetNominal || ''} onChange={(e) => setField('budgetNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="Nominal budget Rp" /></div>}
       </div>
 
       <div><Label>Keterangan Produk</Label><textarea rows={3} value={row.keterangan} onChange={(e) => setField('keterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan khusus untuk produk ini (opsional)" /></div>
@@ -1325,10 +1460,16 @@ function OffFakturProductCard({ product, row, setField }: {
       <div>
         <Label req>Potongan (Off Faktur)</Label>
         <div className="flex flex-col sm:flex-row gap-3">
-          <DiskonModeToggle value={row.diskonMode} onChange={(v) => setField('diskonMode', v)} />
+          <DiskonModeToggle value={row.diskonMode} onChange={(v) => { setField('diskonMode', v); if (v !== 'persen') setField('diskonBasis', ''); }} />
           <input type="number" min={0} value={row.diskonValue || ''} onChange={(e) => setField('diskonValue', parseFloat(e.target.value) || 0)}
             placeholder={row.diskonMode === 'persen' ? 'Persentase diskon...' : 'Nominal potongan (Rp)...'} className={`${inp} sm:max-w-xs`} />
         </div>
+        {row.diskonMode === 'persen' && (
+          <div className="mt-3">
+            <Label req>Basis Persentase</Label>
+            <SingleChoiceChips options={DISKON_BASIS_OPTIONS} value={row.diskonBasis} onChange={(v) => setField('diskonBasis', v)} />
+          </div>
+        )}
         <p className="mt-1.5 text-[11px] text-slate-400">Potongan tiap produk boleh berbeda — sebagian Rp, sebagian persentase.</p>
       </div>
 
@@ -1351,27 +1492,14 @@ function OffFakturProductCard({ product, row, setField }: {
           </div>
         )}
       </div>
-      <div>
-        <Label>Alokasi</Label>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-fit shrink-0">
-            {(['qty', 'rp'] as const).map((tipe) => (
-              <button
-                key={tipe}
-                type="button"
-                onClick={() => setField('offAlokasiTipe', tipe)}
-                className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${row.offAlokasiTipe === tipe ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-              >
-                {tipe === 'qty' ? 'Qty' : 'Rp'}
-              </button>
-            ))}
-          </div>
-          {row.offAlokasiTipe === 'qty' ? (
-            <input type="number" min={0} value={row.offAlokasiQty || ''} onChange={(e) => setField('offAlokasiQty', parseInt(e.target.value) || 0)} className={`${inp} sm:max-w-xs`} placeholder="Jumlah qty" />
-          ) : (
-            <input type="number" min={0} value={row.offAlokasiRp || ''} onChange={(e) => setField('offAlokasiRp', parseFloat(e.target.value) || 0)} className={`${inp} sm:max-w-xs`} placeholder="Nominal Rp" />
-          )}
+      <div><Label>Alokasi (PCS)</Label><input type="number" min={0} value={row.offAlokasiQty || ''} onChange={(e) => setField('offAlokasiQty', parseInt(e.target.value) || 0)} className={`${inp} sm:max-w-xs`} placeholder="Jumlah PCS" /></div>
+
+      <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div><Label>Penggunaan Budget</Label><p className="text-[11px] text-slate-500">Nominal budget per produk dalam Rupiah.</p></div>
+          <YesNoToggle value={row.budgetAktif} onChange={(v) => { setField('budgetAktif', v); if (!v) setField('budgetNominal', 0); }} />
         </div>
+        {row.budgetAktif && <div className="mt-3 max-w-xs"><input type="number" min={0} value={row.budgetNominal || ''} onChange={(e) => setField('budgetNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="Nominal budget Rp" /></div>}
       </div>
 
       <div><Label>Keterangan Produk</Label><textarea rows={3} value={row.keterangan} onChange={(e) => setField('keterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan khusus untuk produk ini (opsional)" /></div>
@@ -1394,52 +1522,212 @@ function BudgetLinkSection({ state, setField }: { state: BudgetLinkState; setFie
   );
 }
 
+function OnFakturProductDetailCard({ product, row, setField }: {
+  product: Product; row: OnFakturProductRow;
+  setField: <K extends keyof OnFakturProductRow>(f: K, v: OnFakturProductRow[K]) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-white p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Package className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+        <p className="text-[12.5px] font-bold text-slate-800">{product.nama}</p>
+        <span className="text-[10px] font-mono text-slate-400">{product.plu}</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <Label>Banded</Label>
+          <YesNoToggle value={row.bandedAktif} onChange={(v) => { setField('bandedAktif', v); if (!v) setField('banded', ''); }} />
+          {row.bandedAktif && <div className="mt-3"><input type="text" value={row.banded} onChange={(e) => setField('banded', e.target.value)} className={inp} placeholder="cth: Beli 2 Gratis 1" /></div>}
+        </div>
+        <div>
+          <Label>Syarat Strata (Min. Order)</Label>
+          <div className="grid grid-cols-[1fr_120px] gap-2">
+            <input type="number" min={0} value={row.strataMinQty || ''} onChange={(e) => setField('strataMinQty', parseInt(e.target.value) || 0)} className={inp} placeholder="0" />
+            <select value={row.strataSatuan} onChange={(e) => setField('strataSatuan', e.target.value)} className={`${inp} cursor-pointer`}>
+              {STRATA_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <div><Label>Alokasi Produk (PCS)</Label><input type="number" min={0} value={row.alokasiQty || ''} onChange={(e) => setField('alokasiQty', parseInt(e.target.value) || 0)} className={inp} placeholder="0" /></div>
+      </div>
+      <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div><Label>Penggunaan Budget</Label><p className="text-[11px] text-slate-500">Nominal budget per PLU dalam Rupiah.</p></div>
+          <YesNoToggle value={row.budgetAktif} onChange={(v) => { setField('budgetAktif', v); if (!v) setField('budgetNominal', 0); }} />
+        </div>
+        {row.budgetAktif && <div className="mt-3 max-w-xs"><input type="number" min={0} value={row.budgetNominal || ''} onChange={(e) => setField('budgetNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="Nominal budget Rp" /></div>}
+      </div>
+      <div><Label>Keterangan Produk</Label><textarea rows={3} value={row.keterangan} onChange={(e) => setField('keterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan khusus untuk produk ini (opsional)" /></div>
+    </div>
+  );
+}
+
+function OffFakturProductDetailCard({ product, row, setField }: {
+  product: Product; row: OffFakturProductRow;
+  setField: <K extends keyof OffFakturProductRow>(f: K, v: OffFakturProductRow[K]) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-indigo-200 bg-white p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Package className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+        <p className="text-[12.5px] font-bold text-slate-800">{product.nama}</p>
+        <span className="text-[10px] font-mono text-slate-400">{product.plu}</span>
+      </div>
+      <div>
+        <Label>Kupon dan Voucher</Label>
+        <YesNoToggle value={row.kuponVoucherAktif} onChange={(v) => { setField('kuponVoucherAktif', v); if (!v) setField('kuponVoucher', ''); }} />
+        {row.kuponVoucherAktif && <div className="mt-3"><textarea rows={3} value={row.kuponVoucher} onChange={(e) => setField('kuponVoucher', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Keterangan kupon/voucher..." /></div>}
+      </div>
+      <div>
+        <Label>Free Produk</Label>
+        <YesNoToggle value={row.freeProdukAktif} onChange={(v) => setField('freeProdukAktif', v)} />
+        {row.freeProdukAktif && <div className="mt-3"><textarea rows={3} value={row.freeProdukKeterangan} onChange={(e) => setField('freeProdukKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Keterangan produk gratis..." /></div>}
+      </div>
+      <div><Label>Alokasi Produk (PCS)</Label><input type="number" min={0} value={row.offAlokasiQty || ''} onChange={(e) => setField('offAlokasiQty', parseInt(e.target.value) || 0)} className={`${inp} sm:max-w-xs`} placeholder="Jumlah PCS" /></div>
+      <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div><Label>Penggunaan Budget</Label><p className="text-[11px] text-slate-500">Nominal budget per PLU dalam Rupiah.</p></div>
+          <YesNoToggle value={row.budgetAktif} onChange={(v) => { setField('budgetAktif', v); if (!v) setField('budgetNominal', 0); }} />
+        </div>
+        {row.budgetAktif && <div className="mt-3 max-w-xs"><input type="number" min={0} value={row.budgetNominal || ''} onChange={(e) => setField('budgetNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="Nominal budget Rp" /></div>}
+      </div>
+      <div><Label>Keterangan Produk</Label><textarea rows={3} value={row.keterangan} onChange={(e) => setField('keterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan khusus untuk produk ini (opsional)" /></div>
+    </div>
+  );
+}
+
 function ProgramDetailStep({
   tipe,
-  onProducts, onRows, updateOnRow, onError,
-  offProducts, offRows, updateOffRow, offError,
-  budgetLink, setBudgetLink,
+  onGroups, updateOnGroup, updateOnGroupProducts, updateOnGroupRow, addOnGroup, removeOnGroup, onError,
+  offGroups, updateOffGroup, updateOffGroupProducts, updateOffGroupRow, addOffGroup, removeOffGroup, offError,
 }: {
   tipe: string[];
-  onProducts: Product[]; onRows: Record<string, OnFakturProductRow>; updateOnRow: (plu: string, field: keyof OnFakturProductRow, val: string | number | boolean) => void; onError?: string;
-  offProducts: Product[]; offRows: Record<string, OffFakturProductRow>; updateOffRow: (plu: string, field: keyof OffFakturProductRow, val: string | number | boolean) => void; offError?: string;
-  budgetLink: BudgetLinkState; setBudgetLink: <K extends keyof BudgetLinkState>(f: K, v: BudgetLinkState[K]) => void;
+  onGroups: OnFakturGroup[];
+  updateOnGroup: <K extends keyof OnFakturGroup>(index: number, field: K, val: OnFakturGroup[K]) => void;
+  updateOnGroupProducts: (index: number, products: Product[]) => void;
+  updateOnGroupRow: (index: number, plu: string, field: keyof OnFakturProductRow, val: string | number | boolean) => void;
+  addOnGroup: () => void;
+  removeOnGroup: (index: number) => void;
+  onError?: string;
+  offGroups: OffFakturGroup[];
+  updateOffGroup: <K extends keyof OffFakturGroup>(index: number, field: K, val: OffFakturGroup[K]) => void;
+  updateOffGroupProducts: (index: number, products: Product[]) => void;
+  updateOffGroupRow: (index: number, plu: string, field: keyof OffFakturProductRow, val: string | number | boolean) => void;
+  addOffGroup: () => void;
+  removeOffGroup: (index: number) => void;
+  offError?: string;
 }) {
   const hasOn = tipe.includes('on-faktur');
   const hasOff = tipe.includes('off-faktur');
+  const renderDiscountFields = (
+    mode: DiskonMode,
+    basis: string,
+    value: number,
+    onMode: (v: DiskonMode) => void,
+    onBasis: (v: string) => void,
+    onValue: (v: number) => void,
+    showBasis: boolean,
+  ) => (
+    <div>
+      <Label req>Nilai Potongan Kelompok</Label>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <DiskonModeToggle value={mode} onChange={(v) => { onMode(v); if (v !== 'persen') onBasis(''); }} />
+        <input
+          type="number"
+          min={0}
+          value={value || ''}
+          onChange={(e) => onValue(parseFloat(e.target.value) || 0)}
+          placeholder={mode === 'persen' ? 'Persentase potongan...' : 'Nominal potongan per satuan...'}
+          className={inp}
+        />
+      </div>
+      {showBasis && mode === 'persen' && (
+        <div className="mt-3">
+          <Label req>Basis Persentase</Label>
+          <SingleChoiceChips options={DISKON_BASIS_OPTIONS} value={basis} onChange={onBasis} />
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <Card title="Detail Program" icon={Receipt} subtitle="Ketentuan diisi terpisah per skema penagihan, karena produk On Faktur dan Off Faktur bisa berbeda">
+    <Card title="Kelompok Potongan & Produk" icon={Receipt} subtitle="Kelompokkan PLU yang memiliki nilai potongan sama">
       {hasOn && (
-        <div className="space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Detail On Faktur</p>
+        <div className="space-y-4">
+          <InfoNote tone="amber">Buat satu kelompok untuk PLU dengan nilai potongan yang sama. Banded, syarat strata, alokasi, budget, dan keterangan tetap diisi per PLU.</InfoNote>
           <FieldError message={onError} />
-          {onProducts.length === 0 ? (
-            <p className="text-[12px] text-slate-400 italic">Belum ada produk pada cakupan On Faktur.</p>
-          ) : (
-            <div className="space-y-4">
-              {onProducts.map((p) => (
-                <OnFakturProductCard key={p.plu} product={p} row={onRows[p.plu] || emptyOnFakturProductRow()} setField={(f, v) => updateOnRow(p.plu, f, v)} />
-              ))}
+          {onGroups.map((group, index) => (
+            <div key={group.id} className="rounded-xl border border-amber-200 bg-white">
+              <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center text-[12px] font-bold">{index + 1}</div>
+                  <div><p className="text-[13px] font-bold text-amber-900">Kelompok Potongan On Faktur #{index + 1}</p><p className="text-[11px] text-amber-700">{group.products.length} produk</p></div>
+                </div>
+                <button type="button" onClick={() => removeOnGroup(index)} disabled={onGroups.length === 1} className="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30"><Trash2 className="w-4 h-4" /></button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div><Label>Keterangan Kelompok</Label><input type="text" value={group.keterangan} onChange={(e) => updateOnGroup(index, 'keterangan', e.target.value)} className={inp} placeholder="Keterangan tambahan untuk kelompok ini..." /></div>
+                {renderDiscountFields(
+                  group.diskonMode,
+                  group.diskonBasis,
+                  group.diskonValue,
+                  (v) => updateOnGroup(index, 'diskonMode', v),
+                  (v) => updateOnGroup(index, 'diskonBasis', v),
+                  (v) => updateOnGroup(index, 'diskonValue', v),
+                  false,
+                )}
+                <div><Label req>Tambah Produk ke Kelompok Ini</Label><PluMultiSelect selected={group.products} onChange={(products) => updateOnGroupProducts(index, products)} /></div>
+                {group.products.length > 0 && (
+                  <div className="space-y-3">
+                    {group.products.map((product) => (
+                      <OnFakturProductDetailCard key={product.plu} product={product} row={group.rows[product.plu] || emptyOnFakturProductRow()} setField={(field, val) => updateOnGroupRow(index, product.plu, field, val)} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          ))}
+          <button type="button" onClick={addOnGroup} className="w-full rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/40 py-3 text-[13px] font-bold text-amber-700 transition-all hover:bg-amber-50 inline-flex items-center justify-center gap-2"><Plus className="w-4 h-4" />Tambah Kelompok Potongan On Faktur</button>
         </div>
       )}
       {hasOff && (
-        <div className="space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Detail Off Faktur</p>
+        <div className="space-y-4">
+          <InfoNote tone="indigo">Buat satu kelompok untuk PLU dengan nilai potongan yang sama. Kupon/voucher, free produk, alokasi, budget, dan keterangan tetap diisi per PLU.</InfoNote>
           <FieldError message={offError} />
-          {offProducts.length === 0 ? (
-            <p className="text-[12px] text-slate-400 italic">Belum ada produk pada cakupan Off Faktur.</p>
-          ) : (
-            <div className="space-y-4">
-              {offProducts.map((p) => (
-                <OffFakturProductCard key={p.plu} product={p} row={offRows[p.plu] || emptyOffFakturProductRow()} setField={(f, v) => updateOffRow(p.plu, f, v)} />
-              ))}
+          {offGroups.map((group, index) => (
+            <div key={group.id} className="rounded-xl border border-indigo-200 bg-white">
+              <div className="flex items-center justify-between gap-3 border-b border-indigo-200 bg-indigo-50 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[12px] font-bold">{index + 1}</div>
+                  <div><p className="text-[13px] font-bold text-indigo-900">Kelompok Potongan Off Faktur #{index + 1}</p><p className="text-[11px] text-indigo-700">{group.products.length} produk</p></div>
+                </div>
+                <button type="button" onClick={() => removeOffGroup(index)} disabled={offGroups.length === 1} className="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30"><Trash2 className="w-4 h-4" /></button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div><Label>Keterangan Kelompok</Label><input type="text" value={group.keterangan} onChange={(e) => updateOffGroup(index, 'keterangan', e.target.value)} className={inp} placeholder="Keterangan tambahan untuk kelompok ini..." /></div>
+                {renderDiscountFields(
+                  group.diskonMode,
+                  group.diskonBasis,
+                  group.diskonValue,
+                  (v) => updateOffGroup(index, 'diskonMode', v),
+                  (v) => updateOffGroup(index, 'diskonBasis', v),
+                  (v) => updateOffGroup(index, 'diskonValue', v),
+                  true,
+                )}
+                <div><Label req>Tambah Produk ke Kelompok Ini</Label><PluMultiSelect selected={group.products} onChange={(products) => updateOffGroupProducts(index, products)} /></div>
+                {group.products.length > 0 && (
+                  <div className="space-y-3">
+                    {group.products.map((product) => (
+                      <OffFakturProductDetailCard key={product.plu} product={product} row={group.rows[product.plu] || emptyOffFakturProductRow()} setField={(field, val) => updateOffGroupRow(index, product.plu, field, val)} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          ))}
+          <button type="button" onClick={addOffGroup} className="w-full rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/40 py-3 text-[13px] font-bold text-indigo-700 transition-all hover:bg-indigo-50 inline-flex items-center justify-center gap-2"><Plus className="w-4 h-4" />Tambah Kelompok Potongan Off Faktur</button>
         </div>
       )}
-      {tipe.includes('budget') && <BudgetLinkSection state={budgetLink} setField={setBudgetLink} />}
     </Card>
   );
 }
@@ -1456,7 +1744,6 @@ interface ListingProductRow {
   konversiQty3: number;
   konversiSatuan3: string;
   hargaPerPcs: number;
-  hargaPpn: 'include' | 'exclude' | '';
   diskonReguler: number;
 }
 const emptyListingProductRow = (): ListingProductRow => ({
@@ -1470,7 +1757,6 @@ const emptyListingProductRow = (): ListingProductRow => ({
   konversiQty3: 0,
   konversiSatuan3: '',
   hargaPerPcs: 0,
-  hargaPpn: '',
   diskonReguler: 0,
 });
 
@@ -1546,6 +1832,70 @@ function ProductQtyTable({ products, rows, onChange, onRemove, error }: {
   );
 }
 
+function ListingConversionEditor({ row, onChange }: { row: ListingProductRow; onChange: (field: keyof ListingProductRow, value: string | number) => void }) {
+  const conversion = {
+    qty1: row.konversiQty1,
+    satuan1: row.konversiSatuan1,
+    qty2: row.konversiQty2,
+    satuan2: row.konversiSatuan2,
+    qty3: row.konversiQty3,
+    satuan3: row.konversiSatuan3,
+  };
+  const satuanBesar = row.konversiSatuan1 || 'kemasan besar';
+  const satuanAntara = row.konversiSatuan2 || 'kemasan antara';
+  const satuanKecil = row.konversiSatuan3 || 'satuan kecil';
+  const hasMiddle = Boolean(row.konversiQty2 && row.konversiSatuan2);
+  const totalKecil = hasMiddle ? (row.konversiQty2 || 0) * (row.konversiQty3 || 0) : row.konversiQty3 || 0;
+  const preview = formatListingConversion(conversion) || 'Lengkapi konversi dari kemasan terbesar sampai satuan terkecil';
+
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-4">
+      <div className="rounded-lg border border-amber-300 bg-white px-3 py-2">
+        <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Preview Konversi</p>
+        <p className="mt-1 text-[14px] font-black text-slate-800">{preview}</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <p className="mb-1.5 text-[11px] font-bold text-slate-600">1. Satuan terbesar</p>
+          <select value={row.konversiSatuan1 || ''} onChange={(e) => { onChange('konversiQty1', 1); onChange('konversiSatuan1', e.target.value); }} className={`${inp} cursor-pointer`}>
+            <option value="">Pilih, misal KARTON</option>
+            {KONVERSI_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <p className="mb-1.5 text-[11px] font-bold text-slate-600">2. Isi antara (opsional)</p>
+          <div className="grid grid-cols-[72px_1fr] gap-2">
+            <input type="number" min={0} value={row.konversiQty2 || ''} onChange={(e) => onChange('konversiQty2', parseInt(e.target.value) || 0)} className={inp} placeholder="12" />
+            <select value={row.konversiSatuan2 || ''} onChange={(e) => onChange('konversiSatuan2', e.target.value)} className={`${inp} cursor-pointer`}>
+              <option value="">Misal POUCH</option>
+              {KONVERSI_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <p className="mt-1 text-[10px] text-slate-400">Kosongkan kalau langsung ke satuan terkecil.</p>
+        </div>
+        <div>
+          <p className="mb-1.5 text-[11px] font-bold text-slate-600">3. Isi satuan terkecil</p>
+          <div className="grid grid-cols-[72px_1fr] gap-2">
+            <input type="number" min={1} value={row.konversiQty3 || ''} onChange={(e) => onChange('konversiQty3', parseInt(e.target.value) || 0)} className={inp} placeholder={hasMiddle ? '10' : '48'} />
+            <select value={row.konversiSatuan3 || ''} onChange={(e) => onChange('konversiSatuan3', e.target.value)} className={`${inp} cursor-pointer`}>
+              <option value="">Misal PCS</option>
+              {KONVERSI_UNIT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <p className="mt-1 text-[10px] text-slate-400">{hasMiddle ? `Isi 1 ${satuanAntara} berapa ${satuanKecil}.` : `Isi 1 ${satuanBesar} berapa ${satuanKecil}.`}</p>
+        </div>
+      </div>
+      <div className="rounded-lg bg-slate-900 px-3 py-2 text-[12px] text-white">
+        {hasMiddle ? (
+          <>Artinya: <span className="font-bold">1 {satuanBesar}</span> berisi <span className="font-bold">{row.konversiQty2 || '...'} {satuanAntara}</span>, dan <span className="font-bold">1 {satuanAntara}</span> berisi <span className="font-bold">{row.konversiQty3 || '...'} {satuanKecil}</span>. Total <span className="font-bold">1 {satuanBesar}</span> = <span className="font-bold">{totalKecil || '...'} {satuanKecil}</span>.</>
+        ) : (
+          <>Artinya: <span className="font-bold">1 {satuanBesar}</span> langsung berisi <span className="font-bold">{row.konversiQty3 || '...'} {satuanKecil}</span>.</>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface PendapatanState {
   jenis: string; namaProgram: string;
   // Sewa / Visibility
@@ -1553,6 +1903,9 @@ interface PendapatanState {
   sewaProducts: Product[];
   sewaProductRows: Record<string, ProductQtyRow>;
   sewaNominal: number;
+  sewaHargaPajak: string;
+  sewaCaraPembayaran: string;
+  sewaDurasiBulan: number;
   sewaPeriodeAwal: string; sewaPeriodeAkhir: string;
   sewaKeterangan: string;
   sewaPpnAktif: boolean; sewaPpnRate: string;
@@ -1566,25 +1919,39 @@ interface PendapatanState {
   rewardBank: string;
   rewardNoRekening: string;
   rewardNominal: number;
+  rewardHargaPajak: string;
   target: string;
   rewardMode: DiskonMode;
   rewardValue: number;
+  rewardDurasiBulan: number;
   rewardPeriodeAwal: string; rewardPeriodeAkhir: string;
   rewardKeterangan: string;
   rewardPpnAktif: boolean; rewardPpnRate: string;
   rewardPphAktif: boolean; rewardPphRate: string;
   // Promosi
   mediaTipe: string; mediaKeterangan: string;
+  promosiNominal: number;
+  promosiHargaPajak: string;
+  promosiCaraPembayaran: string;
+  promosiPeriodeAwal: string;
+  promosiDurasiBulan: number;
+  promosiPpnAktif: boolean; promosiPpnRate: string;
+  promosiPphAktif: boolean; promosiPphRate: string;
   // Listing (satu memo bisa mendaftarkan lebih dari satu produk)
   listingProducts: ListingProductRow[];
   listingPkp: boolean | null; listingReturn: boolean | null; listingBiayaLabel: boolean | null;
+  listingNominal: number; listingHargaPajak: string;
   listingTempoPembayaran: string; listingCaraPembayaran: string;
   listingPpnAktif: boolean; listingPpnRate: string;
   listingPphAktif: boolean; listingPphRate: string;
   // Event dan BLBMS
   eventJenis: string; eventJenisLainnya: string;
   eventBentuk: string;
+  eventMediaJenis: string;
   eventNominal: number;
+  eventHargaPajak: string;
+  eventCaraPembayaran: string;
+  eventDurasiBulan: number;
   eventPeriodeAwal: string; eventPeriodeAkhir: string;
   eventKeterangan: string;
   eventPpnAktif: boolean; eventPpnRate: string;
@@ -1649,17 +2016,32 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             <SingleChoiceChips options={SEWA_VISIBILITY_JENIS.map((s) => ({ key: s, label: s }))} value={state.sewaJenis} onChange={(v) => setField('sewaJenis', v)} />
             <FieldError message={errors.sewaJenis} />
           </div>
-          <div>
-            <Label req>Produk yang Dipajang / Didisplay (bisa lebih dari satu)</Label>
-            <PluMultiSelect selected={state.sewaProducts} onChange={setSewaProducts} showSelectedList={false} />
-            <FieldError message={errors.sewaProducts} />
-          </div>
-          <ProductQtyTable products={state.sewaProducts} rows={state.sewaProductRows} onChange={updateSewaProductRow} onRemove={removeSewaProduct} error={errors.sewaProductRows} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label req>Nilai Sewa (Rp)</Label><input type="number" min={0} value={state.sewaNominal || ''} onChange={(e) => setField('sewaNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" /></div>
+            <div>
+              <Label req>Nilai Sewa per Bulan (Rp)</Label>
+              <input type="number" min={0} value={state.sewaNominal || ''} onChange={(e) => setField('sewaNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+              <p className="mt-1 text-[11px] text-slate-400">Nominal diisi per bulan.</p>
+            </div>
+            <div>
+              <Label req>Harga Tersebut</Label>
+              <SingleChoiceChips options={[{ key: 'exclude', label: 'Exclude Pajak', tone: 'rose' }, { key: 'include', label: 'Include Pajak', tone: 'emerald' }]} value={state.sewaHargaPajak} onChange={(v) => setField('sewaHargaPajak', v)} />
+            </div>
           </div>
-          <div><Label req>Periode Sewa</Label><PeriodeRange awal={state.sewaPeriodeAwal} akhir={state.sewaPeriodeAkhir} onAwal={(v) => setField('sewaPeriodeAwal', v)} onAkhir={(v) => setField('sewaPeriodeAkhir', v)} /></div>
-          <div><Label req>Keterangan</Label><textarea rows={3} value={state.sewaKeterangan} onChange={(e) => setField('sewaKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait sewa/visibility..." /></div>
+          <div>
+            <Label req>Cara Pembayaran</Label>
+            <SingleChoiceChips options={SEWA_CARA_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.sewaCaraPembayaran} onChange={(v) => setField('sewaCaraPembayaran', v)} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><Label req>Mulai Sewa</Label><input type="date" value={state.sewaPeriodeAwal} onChange={(e) => setField('sewaPeriodeAwal', e.target.value)} className={inp} /></div>
+            <div>
+              <Label req>Durasi Sewa</Label>
+              <div className="relative">
+                <input type="number" min={1} value={state.sewaDurasiBulan || ''} onChange={(e) => setField('sewaDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
+              </div>
+            </div>
+          </div>
+          <div><Label>Keterangan</Label><textarea rows={3} value={state.sewaKeterangan} onChange={(e) => setField('sewaKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait sewa/visibility..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
               <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
@@ -1667,9 +2049,11 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             </p>
             <p className="text-[11px] text-slate-400 mb-3">Sewa/visibility adalah objek jasa/sewa — tentukan pajak yang berlaku</p>
             <KetentuanPajakSection
-              ppnAktif={state.sewaPpnAktif} ppnRate={state.sewaPpnRate} onPpnAktif={(v) => setField('sewaPpnAktif', v)} onPpnRate={(v) => setField('sewaPpnRate', v)}
+              ppnAktif={state.sewaPpnAktif} ppnRate={state.sewaPpnRate} onPpnAktif={(v) => { setField('sewaPpnAktif', v); setField('sewaPpnRate', v ? 'PPN 11%' : ''); }} onPpnRate={(v) => setField('sewaPpnRate', v)}
               pphAktif={state.sewaPphAktif} pphRate={state.sewaPphRate} onPphAktif={(v) => setField('sewaPphAktif', v)} onPphRate={(v) => setField('sewaPphRate', v)}
               errors={{ ppnRate: errors.sewaPpnRate, pphRate: errors.sewaPphRate }}
+              ppnOptions={['PPN 11%']}
+              pphOptions={SEWA_PPH_RATE_OPTIONS}
             />
           </div>
         </div>
@@ -1680,6 +2064,8 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
           <div>
             <Label req>Jenis Reward / Rabat / Insentif</Label>
             <SingleChoiceChips options={REWARD_JENIS_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.rewardJenis} onChange={(v) => setField('rewardJenis', v)} />
+            {state.rewardJenis === 'Reward' && <InfoNote tone="amber">Reward adalah pemberian cuma-cuma.</InfoNote>}
+            {state.rewardJenis === 'Insentif' && <InfoNote tone="indigo">Insentif adalah pemberian dengan pencapaian target tertentu.</InfoNote>}
             <FieldError message={errors.rewardJenis} />
           </div>
           <div>
@@ -1701,7 +2087,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
           </div>
           {state.rewardBentuk === 'Uang' && (
             <div>
-              <Label req>Metode Uang</Label>
+              <Label req>Metode Pembayaran</Label>
               <SingleChoiceChips
                 options={REWARD_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))}
                 value={state.rewardPembayaran}
@@ -1737,14 +2123,29 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             </div>
           )}
           {state.rewardBentuk === 'Uang' && (
-            <div className="max-w-xs">
-              <Label req>Nominal (Rp)</Label>
-              <input type="number" min={0} value={state.rewardNominal || ''} onChange={(e) => setField('rewardNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
-              <FieldError message={errors.rewardNominal} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label req>Nominal (Rp)</Label>
+                <input type="number" min={0} value={state.rewardNominal || ''} onChange={(e) => setField('rewardNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+                <FieldError message={errors.rewardNominal} />
+              </div>
+              <div>
+                <Label req>Harga Tersebut</Label>
+                <SingleChoiceChips options={[{ key: 'exclude', label: 'Exclude Pajak', tone: 'rose' }, { key: 'include', label: 'Include Pajak', tone: 'emerald' }]} value={state.rewardHargaPajak} onChange={(v) => setField('rewardHargaPajak', v)} />
+              </div>
             </div>
           )}
-          <div><Label req>Periode</Label><PeriodeRange awal={state.rewardPeriodeAwal} akhir={state.rewardPeriodeAkhir} onAwal={(v) => setField('rewardPeriodeAwal', v)} onAkhir={(v) => setField('rewardPeriodeAkhir', v)} /></div>
-          <div><Label req>Keterangan</Label><textarea rows={3} value={state.rewardKeterangan} onChange={(e) => setField('rewardKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait reward/insentif..." /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><Label req>Tanggal Mulai Periode</Label><input type="date" value={state.rewardPeriodeAwal} onChange={(e) => setField('rewardPeriodeAwal', e.target.value)} className={inp} /></div>
+            <div>
+              <Label req>Durasi Periode</Label>
+              <div className="relative">
+                <input type="number" min={1} value={state.rewardDurasiBulan || ''} onChange={(e) => setField('rewardDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
+              </div>
+            </div>
+          </div>
+          <div><Label>Keterangan</Label><textarea rows={3} value={state.rewardKeterangan} onChange={(e) => setField('rewardKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait reward/insentif..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
               <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
@@ -1752,9 +2153,11 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             </p>
             <p className="text-[11px] text-slate-400 mb-3">Reward/rabat/insentif tergolong hadiah — tentukan pajak yang berlaku</p>
             <KetentuanPajakSection
-              ppnAktif={state.rewardPpnAktif} ppnRate={state.rewardPpnRate} onPpnAktif={(v) => setField('rewardPpnAktif', v)} onPpnRate={(v) => setField('rewardPpnRate', v)}
-              pphAktif={state.rewardPphAktif} pphRate={state.rewardPphRate} onPphAktif={(v) => setField('rewardPphAktif', v)} onPphRate={(v) => setField('rewardPphRate', v)}
+              ppnAktif={state.rewardPpnAktif} ppnRate={state.rewardPpnRate} onPpnAktif={(v) => { setField('rewardPpnAktif', v); setField('rewardPpnRate', v ? 'PPN 11%' : ''); }} onPpnRate={(v) => setField('rewardPpnRate', v)}
+              pphAktif={state.rewardPphAktif} pphRate={state.rewardPphRate} onPphAktif={(v) => { setField('rewardPphAktif', v); setField('rewardPphRate', v ? 'PPh Pasal 23 - 15%' : ''); }} onPphRate={(v) => setField('rewardPphRate', v)}
               errors={{ ppnRate: errors.rewardPpnRate, pphRate: errors.rewardPphRate }}
+              ppnOptions={['PPN 11%']}
+              pphOptions={['PPh Pasal 23 - 15%', 'PPh Pasal 23 - 2%']}
             />
           </div>
         </div>
@@ -1766,7 +2169,46 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             <Label req>Media Cetak / Digital</Label>
             <SingleChoiceChips options={PROMOSI_MEDIA_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.mediaTipe} onChange={(v) => setField('mediaTipe', v)} />
           </div>
-          <div><Label req>Keterangan Media</Label><textarea rows={3} value={state.mediaKeterangan} onChange={(e) => setField('mediaKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="cth: Brosur mingguan / Instagram Ads" /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label req>Nilai Sewa per Bulan (Rp)</Label>
+              <input type="number" min={0} value={state.promosiNominal || ''} onChange={(e) => setField('promosiNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+              <p className="mt-1 text-[11px] text-slate-400">Nominal promosi diisi per bulan.</p>
+            </div>
+            <div>
+              <Label req>Harga Tersebut</Label>
+              <SingleChoiceChips options={[{ key: 'exclude', label: 'Exclude Pajak', tone: 'rose' }, { key: 'include', label: 'Include Pajak', tone: 'emerald' }]} value={state.promosiHargaPajak} onChange={(v) => setField('promosiHargaPajak', v)} />
+            </div>
+          </div>
+          <div>
+            <Label req>Cara Pembayaran</Label>
+            <SingleChoiceChips options={SEWA_CARA_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.promosiCaraPembayaran} onChange={(v) => setField('promosiCaraPembayaran', v)} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><Label req>Tanggal Mulai Sewa</Label><input type="date" value={state.promosiPeriodeAwal} onChange={(e) => setField('promosiPeriodeAwal', e.target.value)} className={inp} /></div>
+            <div>
+              <Label req>Durasi Sewa</Label>
+              <div className="relative">
+                <input type="number" min={1} value={state.promosiDurasiBulan || ''} onChange={(e) => setField('promosiDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
+              </div>
+            </div>
+          </div>
+          <div><Label>Keterangan Media</Label><textarea rows={3} value={state.mediaKeterangan} onChange={(e) => setField('mediaKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="cth: Brosur mingguan / Instagram Ads" /></div>
+          <div className="border-t border-slate-100 pt-5">
+            <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
+              <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
+              Ketentuan Pajak Promosi
+            </p>
+            <p className="text-[11px] text-slate-400 mb-3">Khusus promosi, PPN hanya 11% dan PPh hanya Pasal 23 2%.</p>
+            <KetentuanPajakSection
+              ppnAktif={state.promosiPpnAktif} ppnRate={state.promosiPpnRate} onPpnAktif={(v) => { setField('promosiPpnAktif', v); setField('promosiPpnRate', v ? 'PPN 11%' : ''); }} onPpnRate={(v) => setField('promosiPpnRate', v)}
+              pphAktif={state.promosiPphAktif} pphRate={state.promosiPphRate} onPphAktif={(v) => { setField('promosiPphAktif', v); setField('promosiPphRate', v ? 'PPh Pasal 23 - 2%' : ''); }} onPphRate={(v) => setField('promosiPphRate', v)}
+              errors={{ ppnRate: errors.promosiPpnRate, pphRate: errors.promosiPphRate }}
+              ppnOptions={['PPN 11%']}
+              pphOptions={['PPh Pasal 23 - 2%']}
+            />
+          </div>
         </div>
       )}
 
@@ -1790,45 +2232,17 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
                 </div>
                 <div>
                   <Label req>Konversi Bertingkat</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {[
-                      { qty: 'konversiQty1', satuan: 'konversiSatuan1', label: 'Level 1', placeholder: 'cth: 1' },
-                      { qty: 'konversiQty2', satuan: 'konversiSatuan2', label: 'Level 2', placeholder: 'cth: 12' },
-                      { qty: 'konversiQty3', satuan: 'konversiSatuan3', label: 'UOM Terkecil', placeholder: 'cth: 24' },
-                    ].map((item) => (
-                      <div key={item.qty} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">{item.label}</p>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            min={0}
-                            value={(row[item.qty as keyof ListingProductRow] as number) || ''}
-                            onChange={(e) => updateListingRow(i, item.qty as keyof ListingProductRow, parseInt(e.target.value) || 0)}
-                            className={inp}
-                            placeholder={item.placeholder}
-                          />
-                          <div className="relative shrink-0 w-32">
-                            <select
-                              value={(row[item.satuan as keyof ListingProductRow] as string) || ''}
-                              onChange={(e) => updateListingRow(i, item.satuan as keyof ListingProductRow, e.target.value)}
-                              className={`${inp} appearance-none pr-8 cursor-pointer`}
-                            >
-                              <option value="">Satuan...</option>
-                              {SATUAN_OPTIONS.map((s) => <option key={s}>{s}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ListingConversionEditor row={row} onChange={(field, value) => updateListingRow(i, field, value)} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div><Label req>Diskon Reguler (%)</Label><input type="number" min={0} value={row.diskonReguler || ''} onChange={(e) => updateListingRow(i, 'diskonReguler', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" /></div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div><Label req>Harga per Pcs</Label><input type="number" min={0} value={row.hargaPerPcs || ''} onChange={(e) => updateListingRow(i, 'hargaPerPcs', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" /></div>
-                  <div><Label req>Harga Tersebut</Label><SingleChoiceChips options={[{ key: 'include', label: 'Include PPN' }, { key: 'exclude', label: 'Exclude PPN' }]} value={row.hargaPpn} onChange={(v) => updateListingRow(i, 'hargaPpn', v)} /></div>
+                  <div>
+                    <Label req>Harga per Pcs</Label>
+                    <input type="number" min={0} value={row.hargaPerPcs || ''} onChange={(e) => updateListingRow(i, 'hargaPerPcs', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+                    <p className="mt-1 text-[11px] text-slate-400">Harga per produk sudah include PPN.</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1841,21 +2255,42 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
 
           <div className="border-t border-slate-100 pt-5 space-y-4">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Syarat & Ketentuan Listing (berlaku untuk seluruh produk di atas)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label req>Nominal Listing (Rp)</Label>
+                <input type="number" min={0} value={state.listingNominal || ''} onChange={(e) => setField('listingNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+              </div>
+              <div>
+                <Label req>Nominal Tersebut</Label>
+                <SingleChoiceChips options={[{ key: 'exclude', label: 'Exclude Pajak', tone: 'rose' }, { key: 'include', label: 'Include Pajak', tone: 'emerald' }]} value={state.listingHargaPajak} onChange={(v) => setField('listingHargaPajak', v)} />
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div><Label req>PKP (Bisa Faktur Pajak)?</Label><YesNoToggle value={state.listingPkp} onChange={(v) => setField('listingPkp', v)} /></div>
               <div><Label req>Bisa Return?</Label><YesNoToggle value={state.listingReturn} onChange={(v) => setField('listingReturn', v)} /></div>
               <div><Label req>Biaya Label Rp 15,-?</Label><YesNoToggle value={state.listingBiayaLabel} onChange={(v) => setField('listingBiayaLabel', v)} /></div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><Label req>Tempo Pembayaran</Label><input type="text" value={state.listingTempoPembayaran} onChange={(e) => setField('listingTempoPembayaran', e.target.value)} className={inp} placeholder="cth: 30 hari setelah faktur" /></div>
-              <div><Label req>Cara Pembayaran Listing</Label><input type="text" value={state.listingCaraPembayaran} onChange={(e) => setField('listingCaraPembayaran', e.target.value)} className={inp} placeholder="cth: Transfer / potong faktur" /></div>
+              <div>
+                <Label req>Tempo Pembayaran</Label>
+                <div className="relative">
+                  <input type="number" min={0} value={state.listingTempoPembayaran} onChange={(e) => setField('listingTempoPembayaran', e.target.value)} className={`${inp} pr-14`} placeholder="cth: 30" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">hari</span>
+                </div>
+              </div>
+              <div>
+                <Label req>Cara Pembayaran Listing</Label>
+                <SingleChoiceChips options={SEWA_CARA_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.listingCaraPembayaran} onChange={(v) => setField('listingCaraPembayaran', v)} />
+              </div>
             </div>
             <div><Label req>Dikenakan PPN / PPh?</Label>
               <p className="text-[11px] text-slate-400 mb-3">Berlaku untuk seluruh produk pada listing ini — pilih tarif jika PPN dan/atau PPh dikenakan</p>
               <KetentuanPajakSection
-                ppnAktif={state.listingPpnAktif} ppnRate={state.listingPpnRate} onPpnAktif={(v) => setField('listingPpnAktif', v)} onPpnRate={(v) => setField('listingPpnRate', v)}
-                pphAktif={state.listingPphAktif} pphRate={state.listingPphRate} onPphAktif={(v) => setField('listingPphAktif', v)} onPphRate={(v) => setField('listingPphRate', v)}
+                ppnAktif={state.listingPpnAktif} ppnRate={state.listingPpnRate} onPpnAktif={(v) => { setField('listingPpnAktif', v); setField('listingPpnRate', v ? 'PPN 11%' : ''); }} onPpnRate={(v) => setField('listingPpnRate', v)}
+                pphAktif={state.listingPphAktif} pphRate={state.listingPphRate} onPphAktif={(v) => { setField('listingPphAktif', v); setField('listingPphRate', v ? 'PPh Pasal 23 - 2%' : ''); }} onPphRate={(v) => setField('listingPphRate', v)}
                 errors={{ ppnRate: errors.listingPpnRate, pphRate: errors.listingPphRate }}
+                ppnOptions={['PPN 11%']}
+                pphOptions={['PPh Pasal 23 - 2%']}
               />
             </div>
           </div>
@@ -1865,34 +2300,59 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
       {state.jenis === 'event-blbms' && (
         <div className="border-t border-slate-100 pt-5 space-y-4">
           <div>
-            <Label req>Jenis Event</Label>
+            <Label req>Nama Event</Label>
             <SingleChoiceChips
               options={EVENT_JENIS_OPTIONS.map((s) => ({ key: s, label: s }))}
               value={state.eventJenis}
-              onChange={(v) => {
-                setField('eventJenis', v);
-                if (v !== EVENT_JENIS_LAINNYA) setField('eventJenisLainnya', '');
-              }}
+              onChange={(v) => setField('eventJenis', v)}
             />
             <FieldError message={errors.eventJenis} />
           </div>
-          {state.eventJenis === EVENT_JENIS_LAINNYA && (
-            <div>
-              <Label req>Nama Event Lainnya</Label>
-              <input type="text" value={state.eventJenisLainnya} onChange={(e) => setField('eventJenisLainnya', e.target.value)} className={inp} placeholder="Tuliskan nama event..." />
-              <FieldError message={errors.eventJenisLainnya} />
-            </div>
-          )}
           <div>
-            <Label req>Bentuk / Fasilitas Event</Label>
-            <SingleChoiceChips options={EVENT_BENTUK_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.eventBentuk} onChange={(v) => setField('eventBentuk', v)} />
+            <Label req>Kategori Media</Label>
+            <SingleChoiceChips
+              options={EVENT_MEDIA_CATEGORIES.map((s) => ({ key: s, label: s }))}
+              value={state.eventBentuk}
+              onChange={(v) => {
+                setField('eventBentuk', v);
+                setField('eventMediaJenis', '');
+              }}
+            />
             <FieldError message={errors.eventBentuk} />
           </div>
+          {state.eventBentuk && (
+            <div>
+              <Label req>Jenis Media</Label>
+              <SingleChoiceChips options={(EVENT_MEDIA_BY_CATEGORY[state.eventBentuk] || []).map((s) => ({ key: s, label: s }))} value={state.eventMediaJenis} onChange={(v) => setField('eventMediaJenis', v)} />
+              <FieldError message={errors.eventMediaJenis} />
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label req>Nilai Sewa (Rp)</Label><input type="number" min={0} value={state.eventNominal || ''} onChange={(e) => setField('eventNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" /></div>
+            <div>
+              <Label req>Nilai Sewa per Bulan (Rp)</Label>
+              <input type="number" min={0} value={state.eventNominal || ''} onChange={(e) => setField('eventNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
+              <p className="mt-1 text-[11px] text-slate-400">Nominal event diisi per bulan.</p>
+            </div>
+            <div>
+              <Label req>Harga Tersebut</Label>
+              <SingleChoiceChips options={[{ key: 'exclude', label: 'Exclude Pajak', tone: 'rose' }, { key: 'include', label: 'Include Pajak', tone: 'emerald' }]} value={state.eventHargaPajak} onChange={(v) => setField('eventHargaPajak', v)} />
+            </div>
           </div>
-          <div><Label req>Periode Sewa</Label><PeriodeRange awal={state.eventPeriodeAwal} akhir={state.eventPeriodeAkhir} onAwal={(v) => setField('eventPeriodeAwal', v)} onAkhir={(v) => setField('eventPeriodeAkhir', v)} /></div>
-          <div><Label req>Keterangan</Label><textarea rows={3} value={state.eventKeterangan} onChange={(e) => setField('eventKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait event/BLBMS..." /></div>
+          <div>
+            <Label req>Cara Pembayaran</Label>
+            <SingleChoiceChips options={SEWA_CARA_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.eventCaraPembayaran} onChange={(v) => setField('eventCaraPembayaran', v)} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><Label req>Tanggal Mulai Sewa</Label><input type="date" value={state.eventPeriodeAwal} onChange={(e) => setField('eventPeriodeAwal', e.target.value)} className={inp} /></div>
+            <div>
+              <Label req>Durasi Sewa</Label>
+              <div className="relative">
+                <input type="number" min={1} value={state.eventDurasiBulan || ''} onChange={(e) => setField('eventDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
+              </div>
+            </div>
+          </div>
+          <div><Label>Keterangan</Label><textarea rows={3} value={state.eventKeterangan} onChange={(e) => setField('eventKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait event/BLBMS..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
               <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
@@ -1996,7 +2456,7 @@ function SewaProductList({ products, rows, print = false }: { products: Product[
 
 function ReviewStep({
   identity, outlets, jenisMemo, updateInfo, programInfo, onProducts, onRows, offProducts, offRows, budgetLink, pendapatan, catatan,
-  signature, setSignature, agreed, setAgreed, errors,
+  signature, setSignature, agreed, setAgreed, paymentAgreed, setPaymentAgreed, errors,
 }: {
   identity: IdCardData | null; outlets: string[]; jenisMemo: JenisMemo;
   updateInfo: UpdateInfoState; programInfo: ProgramInfoState;
@@ -2004,7 +2464,7 @@ function ReviewStep({
   offProducts: Product[]; offRows: Record<string, OffFakturProductRow>;
   budgetLink: BudgetLinkState;
   pendapatan: PendapatanState;
-  catatan: string; signature: string; setSignature: (v: string) => void; agreed: boolean; setAgreed: (v: boolean) => void; errors: FormErrors;
+  catatan: string; signature: string; setSignature: (v: string) => void; agreed: boolean; setAgreed: (v: boolean) => void; paymentAgreed: boolean; setPaymentAgreed: (v: boolean) => void; errors: FormErrors;
 }) {
   const yn = (v: boolean | null) => v === null ? '—' : v ? 'Ya' : 'Tidak';
   const hasOn = programInfo.tipe.includes('on-faktur');
@@ -2018,9 +2478,10 @@ function ReviewStep({
     if (f === 'konversi') return formatListingConversion(updateInfo.produkKonversi[key]);
     if (f === 'hargaBeli' && value) return `Rp ${Number(value).toLocaleString('id-ID')} / PCS, include PPN, sebelum diskon/reguler`;
     if (f === 'diskonReguler' && value) return `${value}%`;
+    if (f === 'jatuhTempo' && value) return `${value} hari`;
     return value;
   };
-  const vendorFieldDisplay = (field: string) => field === 'picList' ? formatVendorPicRows(updateInfo.vendorValues[field]) : updateInfo.vendorValues[field];
+  const vendorFieldDisplay = (field: string) => field === 'picList' ? formatVendorPicRows(updateInfo.vendorValues[field] || getVendorOldValue(identity, field)) : updateInfo.vendorValues[field];
 
   return (
     <div className="space-y-6">
@@ -2046,7 +2507,7 @@ function ReviewStep({
             <p className="text-[12.5px] font-semibold text-slate-800">
               {jenisMemo === 'update-informasi' && 'Update Informasi'}
               {jenisMemo === 'memo-program' && 'Memo Program'}
-              {jenisMemo === 'pendapatan-lain' && 'Memo Pendapatan Lain-lain'}
+              {jenisMemo === 'pendapatan-lain' && 'Memo Lain-lain'}
             </p>
           </div>
         </div>
@@ -2083,6 +2544,7 @@ function ReviewStep({
               <Row label="Tipe Program" value={programInfo.tipe.map((t) => PROGRAM_TIPE_OPTIONS.find((o) => o.key === t)?.label).join(', ')} />
               {hasOff && <Row label="PPN" value={programInfo.ppnAktif ? programInfo.ppnRate || 'Aktif' : 'Tidak dikenakan'} />}
               {hasOff && <Row label="PPh" value={programInfo.pphAktif ? programInfo.pphRate || 'Aktif' : 'Tidak dikenakan'} />}
+              <Row label="Cara Pembayaran" value={programInfo.caraPembayaran} />
               <Row label="Redaksi" value={programInfo.redaksi} />
               <Row label="Periode" value={programInfo.periodeAwal && programInfo.periodeAkhir ? `${programInfo.periodeAwal} s/d ${programInfo.periodeAkhir}` : ''} />
             </div>
@@ -2098,8 +2560,9 @@ function ReviewStep({
                         <p className="text-[12px] font-bold text-slate-800">{p.nama} <span className="font-mono text-slate-400 font-normal">({p.plu})</span></p>
                         <Row label="Potongan" value={r.diskonMode === 'persen' ? `${r.diskonValue}%` : `Rp ${r.diskonValue.toLocaleString('id-ID')}`} />
                         <Row label="Banded" value={r.bandedAktif ? `Ya - ${r.banded}` : 'Tidak'} />
-                        <Row label="Syarat Strata" value={r.strataMinQty ? `Min. ${r.strataMinQty} qty` : ''} />
-                        <Row label="Alokasi Qty" value={r.alokasiQty ? String(r.alokasiQty) : ''} />
+                        <Row label="Syarat Strata" value={r.strataMinQty ? `Min. ${r.strataMinQty} ${r.strataSatuan}` : ''} />
+                        <Row label="Alokasi PCS" value={r.alokasiQty ? `${r.alokasiQty} PCS` : ''} />
+                        <Row label="Budget" value={r.budgetAktif ? `Rp ${r.budgetNominal.toLocaleString('id-ID')}` : 'Tidak'} />
                         <Row label="Keterangan" value={r.keterangan} />
                       </div>
                     );
@@ -2118,9 +2581,11 @@ function ReviewStep({
                       <div key={p.plu} className="p-4 space-y-1">
                         <p className="text-[12px] font-bold text-slate-800">{p.nama} <span className="font-mono text-slate-400 font-normal">({p.plu})</span></p>
                         <Row label="Potongan" value={r.diskonMode === 'persen' ? `${r.diskonValue}%` : `Rp ${r.diskonValue.toLocaleString('id-ID')}`} />
+                        {r.diskonMode === 'persen' && <Row label="Basis Diskon" value={DISKON_BASIS_OPTIONS.find((o) => o.key === r.diskonBasis)?.label} />}
                         <Row label="Kupon/Voucher" value={r.kuponVoucherAktif ? `Ya - ${r.kuponVoucher}` : 'Tidak'} />
                         <Row label="Free Produk" value={r.freeProdukAktif ? `Ya — ${r.freeProdukKeterangan}` : 'Tidak'} />
-                        <Row label="Alokasi" value={r.offAlokasiTipe === 'qty' ? `${r.offAlokasiQty} qty` : `Rp ${r.offAlokasiRp.toLocaleString('id-ID')}`} />
+                        <Row label="Alokasi PCS" value={r.offAlokasiQty ? `${r.offAlokasiQty} PCS` : ''} />
+                        <Row label="Budget" value={r.budgetAktif ? `Rp ${r.budgetNominal.toLocaleString('id-ID')}` : 'Tidak'} />
                         <Row label="Keterangan" value={r.keterangan} />
                       </div>
                     );
@@ -2151,9 +2616,9 @@ function ReviewStep({
               {pendapatan.jenis === 'sewa-visibility' && (
                 <>
                   <Row label="Jenis Sewa/Visibility" value={pendapatan.sewaJenis} />
-                  <Row label="Produk" value={<SewaProductList products={pendapatan.sewaProducts} rows={pendapatan.sewaProductRows} />} />
-                  <Row label="Nilai Sewa" value={pendapatan.sewaNominal ? `Rp ${pendapatan.sewaNominal.toLocaleString('id-ID')}` : ''} />
-                  <Row label="Periode" value={pendapatan.sewaPeriodeAwal && pendapatan.sewaPeriodeAkhir ? `${pendapatan.sewaPeriodeAwal} s/d ${pendapatan.sewaPeriodeAkhir}` : ''} />
+                  <Row label="Nilai Sewa" value={pendapatan.sewaNominal ? `Rp ${pendapatan.sewaNominal.toLocaleString('id-ID')} / bulan (${pendapatan.sewaHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />
+                  <Row label="Cara Pembayaran" value={pendapatan.sewaCaraPembayaran} />
+                  <Row label="Periode" value={sewaPeriodLabel(pendapatan.sewaPeriodeAwal, pendapatan.sewaDurasiBulan)} />
                   <Row label="Keterangan" value={pendapatan.sewaKeterangan} />
                   <Row label="PPN" value={pendapatan.sewaPpnAktif ? pendapatan.sewaPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.sewaPphAktif ? pendapatan.sewaPphRate || 'Aktif' : 'Tidak dikenakan'} />
@@ -2163,22 +2628,33 @@ function ReviewStep({
                 <>
                   <Row label="Jenis" value={pendapatan.rewardJenis} />
                   <Row label="Bentuk" value={pendapatan.rewardBentuk} />
-                  {pendapatan.rewardBentuk === 'Uang' && <Row label="Metode Uang" value={pendapatan.rewardPembayaran} />}
+                  {pendapatan.rewardBentuk === 'Uang' && <Row label="Metode Pembayaran" value={pendapatan.rewardPembayaran} />}
                   {pendapatan.rewardBentuk === 'Uang' && pendapatan.rewardPembayaran === 'Non Tunai' && <Row label="Rekening Bank" value={pendapatan.rewardBank && pendapatan.rewardNoRekening ? `${pendapatan.rewardBank} - ${pendapatan.rewardNoRekening}` : ''} />}
-                  {pendapatan.rewardBentuk === 'Uang' && <Row label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')}` : ''} />}
-                  <Row label="Periode" value={pendapatan.rewardPeriodeAwal && pendapatan.rewardPeriodeAkhir ? `${pendapatan.rewardPeriodeAwal} s/d ${pendapatan.rewardPeriodeAkhir}` : ''} />
+                  {pendapatan.rewardBentuk === 'Uang' && <Row label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')} (${pendapatan.rewardHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />}
+                  <Row label="Periode" value={sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan)} />
                   <Row label="Keterangan" value={pendapatan.rewardKeterangan} />
                   <Row label="PPN" value={pendapatan.rewardPpnAktif ? pendapatan.rewardPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.rewardPphAktif ? pendapatan.rewardPphRate || 'Aktif' : 'Tidak dikenakan'} />
                 </>
               )}
-              {pendapatan.jenis === 'promosi' && (<><Row label="Jenis Media" value={pendapatan.mediaTipe} /><Row label="Keterangan Media" value={pendapatan.mediaKeterangan} /></>)}
+              {pendapatan.jenis === 'promosi' && (
+                <>
+                  <Row label="Jenis Media" value={pendapatan.mediaTipe} />
+                  <Row label="Nilai Sewa" value={pendapatan.promosiNominal ? `Rp ${pendapatan.promosiNominal.toLocaleString('id-ID')} / bulan (${pendapatan.promosiHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />
+                  <Row label="Cara Pembayaran" value={pendapatan.promosiCaraPembayaran} />
+                  <Row label="Periode" value={sewaPeriodLabel(pendapatan.promosiPeriodeAwal, pendapatan.promosiDurasiBulan)} />
+                  <Row label="Keterangan Media" value={pendapatan.mediaKeterangan} />
+                  <Row label="PPN" value={pendapatan.promosiPpnAktif ? pendapatan.promosiPpnRate || 'Aktif' : 'Tidak dikenakan'} />
+                  <Row label="PPh" value={pendapatan.promosiPphAktif ? pendapatan.promosiPphRate || 'Aktif' : 'Tidak dikenakan'} />
+                </>
+              )}
               {pendapatan.jenis === 'listing' && (
                 <>
                   <Row label="PKP" value={yn(pendapatan.listingPkp)} />
                   <Row label="Bisa Return" value={yn(pendapatan.listingReturn)} />
                   <Row label="Biaya Label Rp 15,-" value={yn(pendapatan.listingBiayaLabel)} />
-                  <Row label="Tempo Pembayaran" value={pendapatan.listingTempoPembayaran} />
+                  <Row label="Nominal Listing" value={pendapatan.listingNominal ? `Rp ${pendapatan.listingNominal.toLocaleString('id-ID')} (${pendapatan.listingHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />
+                  <Row label="Tempo Pembayaran" value={pendapatan.listingTempoPembayaran ? `${pendapatan.listingTempoPembayaran} hari` : ''} />
                   <Row label="Cara Pembayaran" value={pendapatan.listingCaraPembayaran} />
                   <Row label="PPN" value={pendapatan.listingPpnAktif ? pendapatan.listingPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.listingPphAktif ? pendapatan.listingPphRate || 'Aktif' : 'Tidak dikenakan'} />
@@ -2186,10 +2662,12 @@ function ReviewStep({
               )}
               {pendapatan.jenis === 'event-blbms' && (
                 <>
-                  <Row label="Jenis Event" value={pendapatan.eventJenis === EVENT_JENIS_LAINNYA ? pendapatan.eventJenisLainnya : pendapatan.eventJenis} />
-                  <Row label="Bentuk / Fasilitas" value={pendapatan.eventBentuk} />
-                  <Row label="Nilai Sewa" value={pendapatan.eventNominal ? `Rp ${pendapatan.eventNominal.toLocaleString('id-ID')}` : ''} />
-                  <Row label="Periode" value={pendapatan.eventPeriodeAwal && pendapatan.eventPeriodeAkhir ? `${pendapatan.eventPeriodeAwal} s/d ${pendapatan.eventPeriodeAkhir}` : ''} />
+                  <Row label="Nama Event" value={pendapatan.eventJenis} />
+                  <Row label="Kategori Media" value={pendapatan.eventBentuk} />
+                  <Row label="Jenis Media" value={pendapatan.eventMediaJenis} />
+                  <Row label="Nilai Sewa" value={pendapatan.eventNominal ? `Rp ${pendapatan.eventNominal.toLocaleString('id-ID')} / bulan (${pendapatan.eventHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />
+                  <Row label="Cara Pembayaran" value={pendapatan.eventCaraPembayaran} />
+                  <Row label="Periode" value={sewaPeriodLabel(pendapatan.eventPeriodeAwal, pendapatan.eventDurasiBulan)} />
                   <Row label="Keterangan" value={pendapatan.eventKeterangan} />
                   <Row label="PPN" value={pendapatan.eventPpnAktif ? pendapatan.eventPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.eventPphAktif ? pendapatan.eventPphRate || 'Aktif' : 'Tidak dikenakan'} />
@@ -2208,7 +2686,7 @@ function ReviewStep({
                       r.konversiQty2 && r.konversiSatuan2 ? `${r.konversiQty2} ${r.konversiSatuan2}` : '',
                       r.konversiQty3 && r.konversiSatuan3 ? `${r.konversiQty3} ${r.konversiSatuan3}` : '',
                     ].filter(Boolean).join(' -> ')} />
-                    <Row label="Harga per Pcs" value={r.hargaPerPcs ? `Rp ${r.hargaPerPcs.toLocaleString('id-ID')} (${r.hargaPpn === 'include' ? 'Include PPN' : r.hargaPpn === 'exclude' ? 'Exclude PPN' : '—'})` : ''} />
+                    <Row label="Harga per Pcs" value={r.hargaPerPcs ? `Rp ${r.hargaPerPcs.toLocaleString('id-ID')} (Include PPN)` : ''} />
                     <Row label="Diskon Reguler" value={r.diskonReguler ? `${r.diskonReguler}%` : ''} />
                   </div>
                 ))}
@@ -2232,6 +2710,15 @@ function ReviewStep({
           <span className="text-[12px] text-slate-600 leading-relaxed">Saya menyatakan bahwa seluruh data yang saya isi pada formulir ini sudah benar dan sesuai kesepakatan, dan siap ditindaklanjuti oleh tim Buyer.</span>
         </label>
         <FieldError message={errors.agreed} />
+        {jenisMemo !== 'update-informasi' && (
+          <>
+            <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-xl border border-red-200 bg-red-50 px-3 py-2.5">
+              <input type="checkbox" checked={paymentAgreed} onChange={(e) => setPaymentAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-red-300 text-red-600 focus:ring-red-500" />
+              <span className="text-[12px] font-semibold text-red-700 leading-relaxed">Saya bersedia melakukan pembayaran sebelum 2 bulan setelah program berakhir.</span>
+            </label>
+            <FieldError message={errors.paymentAgreed} />
+          </>
+        )}
       </Card>
     </div>
   );
@@ -2269,7 +2756,7 @@ function printRows(jenisMemo: JenisMemo, updateInfo: UpdateInfoState, onProducts
       }),
       ...offProducts.map((p) => {
         const r = offRows[p.plu] || emptyOffFakturProductRow();
-        return { plu: p.plu, nama: p.nama, qty: r.offAlokasiTipe === 'qty' ? r.offAlokasiQty || '-' : '-', potongan: r.diskonValue ? (r.diskonMode === 'persen' ? `${r.diskonValue}%` : `Rp ${r.diskonValue.toLocaleString('id-ID')}`) : '-', total: r.offAlokasiTipe === 'rp' && r.offAlokasiRp ? `Rp ${r.offAlokasiRp.toLocaleString('id-ID')}` : '-' };
+        return { plu: p.plu, nama: p.nama, qty: r.offAlokasiQty || '-', potongan: r.diskonValue ? (r.diskonMode === 'persen' ? `${r.diskonValue}%` : `Rp ${r.diskonValue.toLocaleString('id-ID')}`) : '-', total: r.budgetAktif && r.budgetNominal ? `Rp ${r.budgetNominal.toLocaleString('id-ID')}` : '-' };
       }),
     ];
     if (budgetLink.nominal) rows.push({ plu: '-', nama: budgetLink.keterangan || 'Budget', qty: '-', potongan: '-', total: `Rp ${budgetLink.nominal.toLocaleString('id-ID')}` });
@@ -2279,7 +2766,7 @@ function printRows(jenisMemo: JenisMemo, updateInfo: UpdateInfoState, onProducts
     return pendapatan.listingProducts.map((r, i) => ({ plu: r.barcodePcs || '-', nama: r.namaProduk || `Produk #${i + 1}`, qty: formatListingConversion({ qty1: r.konversiQty1, satuan1: r.konversiSatuan1, qty2: r.konversiQty2, satuan2: r.konversiSatuan2, qty3: r.konversiQty3, satuan3: r.konversiSatuan3 }) || '-', potongan: r.diskonReguler ? `${r.diskonReguler}%` : '-', total: r.hargaPerPcs ? `Rp ${r.hargaPerPcs.toLocaleString('id-ID')}` : '-' }));
   }
   if (jenisMemo === 'pendapatan-lain') {
-    const total = pendapatan.sewaNominal || pendapatan.rewardNominal || pendapatan.eventNominal || 0;
+    const total = pendapatan.sewaNominal || pendapatan.promosiNominal || pendapatan.rewardNominal || pendapatan.listingNominal || pendapatan.eventNominal || 0;
     return [{ plu: '-', nama: pendapatan.namaProgram || programMethodLabel(jenisMemo, INITIAL_PROGRAM_INFO, pendapatan), qty: '-', potongan: '-', total: total ? `Rp ${total.toLocaleString('id-ID')}` : '-' }];
   }
   return updateInfo.selectedProducts.map((p) => ({ plu: p.plu, nama: p.nama, qty: '-', potongan: updateInfo.produkFields.join(', '), total: '-' }));
@@ -2317,7 +2804,13 @@ function SuccessScreen({
   const rows = printRows(jenisMemo, updateInfo, onProducts, onRows, offProducts, offRows, budgetLink, pendapatan);
   const periode = jenisMemo === 'memo-program'
     ? [programInfo.periodeAwal, programInfo.periodeAkhir].filter(Boolean).join(' s/d ')
-    : [pendapatan.sewaPeriodeAwal || pendapatan.rewardPeriodeAwal || pendapatan.eventPeriodeAwal, pendapatan.sewaPeriodeAkhir || pendapatan.rewardPeriodeAkhir || pendapatan.eventPeriodeAkhir].filter(Boolean).join(' s/d ') || '-';
+    : pendapatan.jenis === 'sewa-visibility'
+      ? sewaPeriodLabel(pendapatan.sewaPeriodeAwal, pendapatan.sewaDurasiBulan) || '-'
+      : pendapatan.jenis === 'promosi'
+        ? sewaPeriodLabel(pendapatan.promosiPeriodeAwal, pendapatan.promosiDurasiBulan) || '-'
+        : pendapatan.jenis === 'reward-insentif'
+          ? sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan) || '-'
+          : sewaPeriodLabel(pendapatan.eventPeriodeAwal, pendapatan.eventDurasiBulan) || '-';
   const programName = programInfo.namaProgram || pendapatan.namaProgram || memoTypeLabel(jenisMemo);
   const credential = `KREDENSIAL KEASLIAN DOKUMEN | ${memoNo} | Supplier: ${identity?.supplier?.name || '-'} | Program: ${programName} | Periode: ${periode} | Outlet: ${outlets.join(', ') || '-'}`;
   const qrCells = makeQrCells(credential);
@@ -2328,9 +2821,10 @@ function SuccessScreen({
     if (field === 'konversi') return formatListingConversion(updateInfo.produkKonversi[key]);
     if (field === 'hargaBeli' && updateInfo.produkValues[key]) return `Rp ${Number(updateInfo.produkValues[key]).toLocaleString('id-ID')} / PCS, include PPN, sebelum diskon/reguler`;
     if (field === 'diskonReguler' && updateInfo.produkValues[key]) return `${updateInfo.produkValues[key]}%`;
+    if (field === 'jatuhTempo' && updateInfo.produkValues[key]) return `${updateInfo.produkValues[key]} hari`;
     return updateInfo.produkValues[key] || '-';
   };
-  const vendorFieldValue = (field: string) => field === 'picList' ? formatVendorPicRows(updateInfo.vendorValues[field]) : updateInfo.vendorValues[field];
+  const vendorFieldValue = (field: string) => field === 'picList' ? formatVendorPicRows(updateInfo.vendorValues[field] || getVendorOldValue(identity, field)) : updateInfo.vendorValues[field];
   const detailTitle = jenisMemo === 'update-informasi' ? 'Detail Update Informasi'
     : jenisMemo === 'memo-program' ? 'Detail Program'
       : pendapatan.jenis === 'sewa-visibility' ? 'Detail Sewa / Visibility'
@@ -2369,7 +2863,10 @@ function SuccessScreen({
         <div className="memo-preview-scroll flex-1 overflow-auto py-6">
       <div className="sellout-print-page memo-print-page mx-auto bg-white text-slate-950 shadow-xl w-[210mm] min-h-[297mm] p-[14mm]">
         <div className="flex justify-between items-start border-b-2 border-slate-950 pb-6">
-          <div><h1 className="text-[18px] font-black tracking-tight">BUYER MEMO SYSTEM</h1><p className="text-[11px] font-bold text-slate-400 uppercase">{memoTypeLabel(jenisMemo)}</p></div>
+          <div className="flex items-start gap-3">
+            <img src={mannaKampusLogo} alt="Logo" className="memo-print-logo h-16 w-16 object-contain shrink-0" />
+            <div><h1 className="text-[18px] font-black tracking-tight">BUYER MEMO SYSTEM</h1><p className="text-[11px] font-bold text-slate-400 uppercase">{memoTypeLabel(jenisMemo)}</p></div>
+          </div>
           <div className="text-right"><p className="text-[10px] font-bold text-slate-400 uppercase">No Memo</p><p className="text-[18px] font-black">{memoNo}</p><p className="text-[10px] text-slate-400">Tgl: {submittedAt.toLocaleDateString('id-ID')}</p></div>
         </div>
 
@@ -2379,9 +2876,12 @@ function SuccessScreen({
             ['Program', programName],
             ['Periode', periode],
             ['PIC Supplier', identity?.picName || '-'],
-            ['Metode', programMethodLabel(jenisMemo, programInfo, pendapatan)],
+            ['', programMethodLabel(jenisMemo, programInfo, pendapatan)],
           ].map(([label, value]) => (
-            <div key={label} className="border border-slate-200 rounded px-3 py-2"><p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 font-bold">{value}</p></div>
+            <div key={label} className="memo-print-info-card min-w-0 border border-slate-200 rounded px-3 py-2">
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+              <p className="memo-print-info-value mt-1 font-bold">{value}</p>
+            </div>
           ))}
           <div className="col-span-2 border border-slate-200 rounded px-3 py-2">
             <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Outlet Berlaku</p>
@@ -2414,33 +2914,86 @@ function SuccessScreen({
 
             {jenisMemo === 'memo-program' && (
               <div className="space-y-3">
+                <PrintInfoRow label="Cara Pembayaran" value={programInfo.caraPembayaran || '-'} />
                 <PrintInfoRow label="Redaksi" value={programInfo.redaksi} />
-                {onProducts.map((product) => {
-                  const row = onRows[product.plu] || emptyOnFakturProductRow();
-                  return (
-                    <div key={product.plu} className="memo-detail-card rounded border border-amber-200 p-3">
-                      <p className="mb-2 text-[12px] font-black">On Faktur - {product.nama} <span className="font-mono text-slate-400">({product.plu})</span></p>
-                      <PrintInfoRow label="Potongan" value={row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}%` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-'} />
-                      <PrintInfoRow label="Banded" value={row.bandedAktif ? `Ya - ${row.banded}` : 'Tidak'} />
-                      <PrintInfoRow label="Syarat Strata" value={row.strataMinQty ? `${row.strataMinQty} qty` : '-'} />
-                      <PrintInfoRow label="Alokasi Qty" value={row.alokasiQty || '-'} />
-                      <PrintInfoRow label="Keterangan" value={row.keterangan || '-'} />
-                    </div>
-                  );
-                })}
-                {offProducts.map((product) => {
-                  const row = offRows[product.plu] || emptyOffFakturProductRow();
-                  return (
-                    <div key={product.plu} className="memo-detail-card rounded border border-indigo-200 p-3">
-                      <p className="mb-2 text-[12px] font-black">Off Faktur - {product.nama} <span className="font-mono text-slate-400">({product.plu})</span></p>
-                      <PrintInfoRow label="Potongan" value={row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}%` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-'} />
-                      <PrintInfoRow label="Kupon/Voucher" value={row.kuponVoucherAktif ? `Ya - ${row.kuponVoucher}` : 'Tidak'} />
-                      <PrintInfoRow label="Free Produk" value={row.freeProdukAktif ? `Ya - ${row.freeProdukKeterangan}` : 'Tidak'} />
-                      <PrintInfoRow label="Alokasi" value={row.offAlokasiTipe === 'qty' ? `${row.offAlokasiQty || 0} qty` : `Rp ${(row.offAlokasiRp || 0).toLocaleString('id-ID')}`} />
-                      <PrintInfoRow label="Keterangan" value={row.keterangan || '-'} />
-                    </div>
-                  );
-                })}
+                {onProducts.length > 0 && (
+                  <div className="overflow-visible">
+                    <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-amber-700">On Faktur</p>
+                    <table className="w-full border-collapse text-[9.5px]">
+                      <thead>
+                        <tr className="bg-amber-50">
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">PLU</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Produk</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Potongan</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Syarat</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Alokasi</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Budget</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Keterangan</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {onProducts.map((product) => {
+                          const row = onRows[product.plu] || emptyOnFakturProductRow();
+                          const potongan = row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}%` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-';
+                          const syarat = [
+                            row.bandedAktif ? `Banded: ${row.banded || '-'}` : '',
+                            row.strataMinQty ? `Strata: ${row.strataMinQty} ${row.strataSatuan}` : '',
+                          ].filter(Boolean).join(' | ') || '-';
+                          return (
+                            <tr key={`on-${product.plu}`}>
+                              <td className="border border-slate-200 px-1.5 py-1 font-mono">{product.plu}</td>
+                              <td className="border border-slate-200 px-1.5 py-1 font-semibold">{product.nama}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{potongan}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{syarat}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{row.alokasiQty ? `${row.alokasiQty} PCS` : '-'}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{row.budgetAktif ? `Rp ${row.budgetNominal.toLocaleString('id-ID')}` : '-'}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{row.keterangan || '-'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {offProducts.length > 0 && (
+                  <div className="overflow-visible">
+                    <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-indigo-700">Off Faktur</p>
+                    <table className="w-full border-collapse text-[9.5px]">
+                      <thead>
+                        <tr className="bg-indigo-50">
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">PLU</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Produk</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Potongan</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Benefit</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Alokasi</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Budget</th>
+                          <th className="border border-slate-300 px-1.5 py-1 text-left">Keterangan</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {offProducts.map((product) => {
+                          const row = offRows[product.plu] || emptyOffFakturProductRow();
+                          const potongan = row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}% ${DISKON_BASIS_OPTIONS.find((o) => o.key === row.diskonBasis)?.label || ''}` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-';
+                          const benefit = [
+                            row.kuponVoucherAktif ? `Kupon: ${row.kuponVoucher || '-'}` : '',
+                            row.freeProdukAktif ? `Free: ${row.freeProdukKeterangan || '-'}` : '',
+                          ].filter(Boolean).join(' | ') || '-';
+                          return (
+                            <tr key={`off-${product.plu}`}>
+                              <td className="border border-slate-200 px-1.5 py-1 font-mono">{product.plu}</td>
+                              <td className="border border-slate-200 px-1.5 py-1 font-semibold">{product.nama}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{potongan}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{benefit}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{row.offAlokasiQty ? `${row.offAlokasiQty} PCS` : '-'}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{row.budgetAktif ? `Rp ${row.budgetNominal.toLocaleString('id-ID')}` : '-'}</td>
+                              <td className="border border-slate-200 px-1.5 py-1">{row.keterangan || '-'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
                 {budgetLink.nominal > 0 && <PrintInfoRow label="Budget" value={`${budgetLink.keterangan} - Rp ${budgetLink.nominal.toLocaleString('id-ID')}`} />}
               </div>
             )}
@@ -2452,10 +3005,12 @@ function SuccessScreen({
                 {pendapatan.jenis === 'sewa-visibility' && (
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
                     <PrintInfoRow label="Jenis Sewa" value={pendapatan.sewaJenis} />
-                    <PrintInfoRow label="Produk" value={<SewaProductList products={pendapatan.sewaProducts} rows={pendapatan.sewaProductRows} print />} />
-                    <PrintInfoRow label="Nominal" value={`Rp ${pendapatan.sewaNominal.toLocaleString('id-ID')}`} />
-                    <PrintInfoRow label="Periode" value={`${pendapatan.sewaPeriodeAwal} s/d ${pendapatan.sewaPeriodeAkhir}`} />
+                    <PrintInfoRow label="Nilai Sewa" value={`Rp ${pendapatan.sewaNominal.toLocaleString('id-ID')} / bulan (${pendapatan.sewaHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
+                    <PrintInfoRow label="Cara Pembayaran" value={pendapatan.sewaCaraPembayaran || '-'} />
+                    <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.sewaPeriodeAwal, pendapatan.sewaDurasiBulan)} />
                     <PrintInfoRow label="Keterangan" value={pendapatan.sewaKeterangan || '-'} />
+                    <PrintInfoRow label="PPN" value={pendapatan.sewaPpnAktif ? pendapatan.sewaPpnRate || 'Aktif' : 'Tidak dikenakan'} />
+                    <PrintInfoRow label="PPh" value={pendapatan.sewaPphAktif ? pendapatan.sewaPphRate || 'Aktif' : 'Tidak dikenakan'} />
                   </div>
                 )}
                 {pendapatan.jenis === 'reward-insentif' && (
@@ -2464,18 +3019,30 @@ function SuccessScreen({
                     <PrintInfoRow label="Bentuk" value={pendapatan.rewardBentuk} />
                     <PrintInfoRow label="Metode" value={pendapatan.rewardPembayaran || '-'} />
                     <PrintInfoRow label="Rekening" value={pendapatan.rewardBank ? `${pendapatan.rewardBank} - ${pendapatan.rewardNoRekening}` : '-'} />
-                    <PrintInfoRow label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')}` : '-'} />
-                    <PrintInfoRow label="Periode" value={`${pendapatan.rewardPeriodeAwal} s/d ${pendapatan.rewardPeriodeAkhir}`} />
+                    <PrintInfoRow label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')} (${pendapatan.rewardHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : '-'} />
+                    <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan)} />
                     <PrintInfoRow label="Keterangan" value={pendapatan.rewardKeterangan || '-'} />
                   </div>
                 )}
-                {pendapatan.jenis === 'promosi' && <div className="memo-detail-card rounded border border-slate-200 p-3"><PrintInfoRow label="Media" value={pendapatan.mediaTipe} /><PrintInfoRow label="Keterangan" value={pendapatan.mediaKeterangan} /></div>}
+                {pendapatan.jenis === 'promosi' && (
+                  <div className="memo-detail-card rounded border border-slate-200 p-3">
+                    <PrintInfoRow label="Media" value={pendapatan.mediaTipe} />
+                    <PrintInfoRow label="Nilai Sewa" value={`Rp ${pendapatan.promosiNominal.toLocaleString('id-ID')} / bulan (${pendapatan.promosiHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
+                    <PrintInfoRow label="Cara Pembayaran" value={pendapatan.promosiCaraPembayaran || '-'} />
+                    <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.promosiPeriodeAwal, pendapatan.promosiDurasiBulan)} />
+                    <PrintInfoRow label="Keterangan" value={pendapatan.mediaKeterangan} />
+                    <PrintInfoRow label="PPN" value={pendapatan.promosiPpnAktif ? pendapatan.promosiPpnRate || 'Aktif' : 'Tidak dikenakan'} />
+                    <PrintInfoRow label="PPh" value={pendapatan.promosiPphAktif ? pendapatan.promosiPphRate || 'Aktif' : 'Tidak dikenakan'} />
+                  </div>
+                )}
                 {pendapatan.jenis === 'event-blbms' && (
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
-                    <PrintInfoRow label="Jenis Event" value={pendapatan.eventJenis === EVENT_JENIS_LAINNYA ? pendapatan.eventJenisLainnya : pendapatan.eventJenis} />
-                    <PrintInfoRow label="Bentuk / Fasilitas" value={pendapatan.eventBentuk} />
-                    <PrintInfoRow label="Nominal" value={`Rp ${pendapatan.eventNominal.toLocaleString('id-ID')}`} />
-                    <PrintInfoRow label="Periode" value={`${pendapatan.eventPeriodeAwal} s/d ${pendapatan.eventPeriodeAkhir}`} />
+                    <PrintInfoRow label="Nama Event" value={pendapatan.eventJenis} />
+                    <PrintInfoRow label="Kategori Media" value={pendapatan.eventBentuk} />
+                    <PrintInfoRow label="Jenis Media" value={pendapatan.eventMediaJenis} />
+                    <PrintInfoRow label="Nominal" value={`Rp ${pendapatan.eventNominal.toLocaleString('id-ID')} / bulan (${pendapatan.eventHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
+                    <PrintInfoRow label="Cara Pembayaran" value={pendapatan.eventCaraPembayaran || '-'} />
+                    <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.eventPeriodeAwal, pendapatan.eventDurasiBulan)} />
                     <PrintInfoRow label="Keterangan" value={pendapatan.eventKeterangan || '-'} />
                   </div>
                 )}
@@ -2486,7 +3053,7 @@ function SuccessScreen({
                     <PrintInfoRow label="Barcode Karton" value={row.barcodeKarton} />
                     <PrintInfoRow label="Konversi" value={formatListingConversion({ qty1: row.konversiQty1, satuan1: row.konversiSatuan1, qty2: row.konversiQty2, satuan2: row.konversiSatuan2, qty3: row.konversiQty3, satuan3: row.konversiSatuan3 })} />
                     <PrintInfoRow label="Diskon Reguler" value={`${row.diskonReguler}%`} />
-                    <PrintInfoRow label="Harga PCS" value={`Rp ${row.hargaPerPcs.toLocaleString('id-ID')} (${row.hargaPpn === 'include' ? 'Include PPN' : 'Exclude PPN'})`} />
+                    <PrintInfoRow label="Harga PCS" value={`Rp ${row.hargaPerPcs.toLocaleString('id-ID')} (Include PPN)`} />
                   </div>
                 ))}
                 {pendapatan.jenis === 'listing' && (
@@ -2494,7 +3061,10 @@ function SuccessScreen({
                     <PrintInfoRow label="PKP" value={pendapatan.listingPkp === null ? '-' : pendapatan.listingPkp ? 'Ya' : 'Tidak'} />
                     <PrintInfoRow label="Return" value={pendapatan.listingReturn === null ? '-' : pendapatan.listingReturn ? 'Ya' : 'Tidak'} />
                     <PrintInfoRow label="Biaya Label" value={pendapatan.listingBiayaLabel === null ? '-' : pendapatan.listingBiayaLabel ? 'Ya' : 'Tidak'} />
-                    <PrintInfoRow label="Pembayaran" value={`${pendapatan.listingTempoPembayaran} - ${pendapatan.listingCaraPembayaran}`} />
+                    <PrintInfoRow label="Nominal Listing" value={pendapatan.listingNominal ? `Rp ${pendapatan.listingNominal.toLocaleString('id-ID')} (${pendapatan.listingHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : '-'} />
+                    <PrintInfoRow label="Pembayaran" value={`${pendapatan.listingTempoPembayaran || '-'} hari - ${pendapatan.listingCaraPembayaran || '-'}`} />
+                    <PrintInfoRow label="PPN" value={pendapatan.listingPpnAktif ? pendapatan.listingPpnRate || 'Aktif' : 'Tidak dikenakan'} />
+                    <PrintInfoRow label="PPh" value={pendapatan.listingPphAktif ? pendapatan.listingPphRate || 'Aktif' : 'Tidak dikenakan'} />
                   </>
                 )}
               </div>
@@ -2505,6 +3075,9 @@ function SuccessScreen({
         <div className="grid grid-cols-2 gap-12 mt-10 text-center text-[12px]">
           <div><p className="font-bold">Buyer</p><div className="h-20 border-b border-slate-400" /><p className="mt-2 text-slate-500"></p></div>
           <div><p className="font-bold">Supplier</p><div className="h-20 border-b border-slate-400 flex items-end justify-center">{signature && <img src={signature} alt="Tanda tangan supplier" className="max-h-16 max-w-48 object-contain" />}</div><p className="mt-2 text-slate-500">{identity?.picName || 'Nama & Tanda Tangan'}</p></div>
+        </div>
+        <div className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-[10.5px] font-bold text-red-800">
+          Supplier menyatakan bersedia melakukan pembayaran sebelum 2 bulan setelah program berakhir.
         </div>
 
         <div className="mt-8 pt-4 border-t border-slate-200 flex items-end justify-between gap-6">
@@ -2520,19 +3093,20 @@ function SuccessScreen({
 
 /* ───────────────────────── Main wizard ───────────────────────── */
 const INITIAL_UPDATE_INFO: UpdateInfoState = { jenisUpdate: '', selectedProducts: [], produkFields: [], produkValues: {}, produkUnits: {}, produkKonversi: {}, vendorFields: [], vendorValues: {}, vendorBank: '', vendorRekening: '' };
-const INITIAL_PROGRAM_INFO: ProgramInfoState = { namaProgram: '', tipe: [], ppnAktif: false, ppnRate: '', pphAktif: false, pphRate: '', redaksi: '', periodeAwal: '', periodeAkhir: '' };
+const INITIAL_PROGRAM_INFO: ProgramInfoState = { namaProgram: '', tipe: [], ppnAktif: false, ppnRate: '', pphAktif: false, pphRate: '', redaksi: '', caraPembayaran: '', periodeAwal: '', periodeAkhir: '' };
 const INITIAL_BUDGET_LINK: BudgetLinkState = { keterangan: '', nominal: 0 };
 const INITIAL_PENDAPATAN: PendapatanState = {
   jenis: '', namaProgram: '',
-  sewaJenis: '', sewaProducts: [], sewaProductRows: {}, sewaNominal: 0, sewaPeriodeAwal: '', sewaPeriodeAkhir: '', sewaKeterangan: '',
+  sewaJenis: '', sewaProducts: [], sewaProductRows: {}, sewaNominal: 0, sewaHargaPajak: 'exclude', sewaCaraPembayaran: '', sewaDurasiBulan: 0, sewaPeriodeAwal: '', sewaPeriodeAkhir: '', sewaKeterangan: '',
   sewaPpnAktif: false, sewaPpnRate: '', sewaPphAktif: false, sewaPphRate: '',
-  rewardJenis: '', rewardBentuk: '', rewardPembayaran: '', rewardBank: '', rewardNoRekening: '', rewardNominal: 0, rewardProducts: [], rewardProductRows: {}, target: '', rewardMode: 'persen', rewardValue: 0, rewardPeriodeAwal: '', rewardPeriodeAkhir: '', rewardKeterangan: '',
+  rewardJenis: '', rewardBentuk: '', rewardPembayaran: '', rewardBank: '', rewardNoRekening: '', rewardNominal: 0, rewardHargaPajak: 'exclude', rewardProducts: [], rewardProductRows: {}, target: '', rewardMode: 'persen', rewardValue: 0, rewardDurasiBulan: 0, rewardPeriodeAwal: '', rewardPeriodeAkhir: '', rewardKeterangan: '',
   rewardPpnAktif: false, rewardPpnRate: '', rewardPphAktif: false, rewardPphRate: '',
-  mediaTipe: '', mediaKeterangan: '',
+  mediaTipe: '', mediaKeterangan: '', promosiNominal: 0, promosiHargaPajak: 'exclude', promosiCaraPembayaran: '', promosiPeriodeAwal: '', promosiDurasiBulan: 0,
+  promosiPpnAktif: false, promosiPpnRate: '', promosiPphAktif: false, promosiPphRate: '',
   listingProducts: [emptyListingProductRow()],
-  listingPkp: null, listingReturn: null, listingBiayaLabel: null, listingTempoPembayaran: '', listingCaraPembayaran: '',
+  listingPkp: true, listingReturn: true, listingBiayaLabel: false, listingNominal: 0, listingHargaPajak: 'exclude', listingTempoPembayaran: '', listingCaraPembayaran: '',
   listingPpnAktif: false, listingPpnRate: '', listingPphAktif: false, listingPphRate: '',
-  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventNominal: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
+  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventMediaJenis: '', eventNominal: 0, eventHargaPajak: 'exclude', eventCaraPembayaran: '', eventDurasiBulan: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
   eventPpnAktif: false, eventPpnRate: '', eventPphAktif: false, eventPphRate: '',
 };
 
@@ -2550,13 +3124,11 @@ export default function SupplierMemoWizard() {
 
   const [onProductScope, setOnProductScope] = useState<ProductScope>('per-plu');
   const [onSelectedSubCategory, setOnSelectedSubCategory] = useState('');
-  const [onProducts, setOnProducts] = useState<Product[]>([]);
-  const [onRows, setOnRows] = useState<Record<string, OnFakturProductRow>>({});
+  const [onGroups, setOnGroups] = useState<OnFakturGroup[]>([emptyOnFakturGroup()]);
 
   const [offProductScope, setOffProductScope] = useState<ProductScope>('per-plu');
   const [offSelectedSubCategory, setOffSelectedSubCategory] = useState('');
-  const [offProducts, setOffProducts] = useState<Product[]>([]);
-  const [offRows, setOffRows] = useState<Record<string, OffFakturProductRow>>({});
+  const [offGroups, setOffGroups] = useState<OffFakturGroup[]>([emptyOffFakturGroup()]);
 
   const [budgetLink, setBudgetLink] = useState<BudgetLinkState>(INITIAL_BUDGET_LINK);
 
@@ -2565,6 +3137,7 @@ export default function SupplierMemoWizard() {
   const [catatan, setCatatan] = useState('');
   const [signature, setSignature] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const [paymentAgreed, setPaymentAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const subCategories = Array.from(new Set(PRODUCT_CATALOG.map((p) => p.subKategori)));
@@ -2577,23 +3150,32 @@ export default function SupplierMemoWizard() {
   const steps = getSteps(jenisMemo, programInfo.tipe);
   const currentKey = steps[Math.min(step, steps.length - 1)].key;
 
+  const onProducts = onGroups.flatMap((group) => group.products);
+  const onRows = onGroups.reduce<Record<string, OnFakturProductRow>>((acc, group) => {
+    group.products.forEach((product) => {
+      acc[product.plu] = {
+        ...(group.rows[product.plu] || emptyOnFakturProductRow()),
+        diskonMode: group.diskonMode,
+        diskonBasis: group.diskonBasis,
+        diskonValue: group.diskonValue,
+      };
+    });
+    return acc;
+  }, {});
+  const offProducts = offGroups.flatMap((group) => group.products);
+  const offRows = offGroups.reduce<Record<string, OffFakturProductRow>>((acc, group) => {
+    group.products.forEach((product) => {
+      acc[product.plu] = {
+        ...(group.rows[product.plu] || emptyOffFakturProductRow()),
+        diskonMode: group.diskonMode,
+        diskonBasis: group.diskonBasis,
+        diskonValue: group.diskonValue,
+      };
+    });
+    return acc;
+  }, {});
+
   /* Keep per-product rows in sync with the selected product scope — On Faktur and Off Faktur tracked independently */
-  useEffect(() => {
-    setOnRows((prev) => {
-      const next: Record<string, OnFakturProductRow> = {};
-      onProducts.forEach((p) => { next[p.plu] = prev[p.plu] || emptyOnFakturProductRow(); });
-      return next;
-    });
-  }, [onProducts]);
-
-  useEffect(() => {
-    setOffRows((prev) => {
-      const next: Record<string, OffFakturProductRow> = {};
-      offProducts.forEach((p) => { next[p.plu] = prev[p.plu] || emptyOffFakturProductRow(); });
-      return next;
-    });
-  }, [offProducts]);
-
   const applyOutletScope = (scope: OutletScope) => {
     setOutletScope(scope);
     if (scope === 'pt-nayan') setOutlets([...NAYAN_OUTLETS]);
@@ -2610,15 +3192,37 @@ export default function SupplierMemoWizard() {
   const onJenisMemoChange = (v: JenisMemo) => {
     setJenisMemo(v);
     setUpdateInfo(INITIAL_UPDATE_INFO); setProgramInfo(INITIAL_PROGRAM_INFO);
-    setOnProductScope('per-plu'); setOnSelectedSubCategory(''); setOnProducts([]); setOnRows({});
-    setOffProductScope('per-plu'); setOffSelectedSubCategory(''); setOffProducts([]); setOffRows({});
+    setOnProductScope('per-plu'); setOnSelectedSubCategory(''); setOnGroups([emptyOnFakturGroup()]);
+    setOffProductScope('per-plu'); setOffSelectedSubCategory(''); setOffGroups([emptyOffFakturGroup()]);
     setBudgetLink(INITIAL_BUDGET_LINK); setPendapatan(INITIAL_PENDAPATAN);
   };
 
-  const updateOnRow = (plu: string, field: keyof OnFakturProductRow, val: string | number | boolean) =>
-    setOnRows((prev) => ({ ...prev, [plu]: { ...(prev[plu] || emptyOnFakturProductRow()), [field]: val } }));
-  const updateOffRow = (plu: string, field: keyof OffFakturProductRow, val: string | number | boolean) =>
-    setOffRows((prev) => ({ ...prev, [plu]: { ...(prev[plu] || emptyOffFakturProductRow()), [field]: val } }));
+  const syncOnGroupRows = (products: Product[], rows: Record<string, OnFakturProductRow>) => {
+    const next: Record<string, OnFakturProductRow> = {};
+    products.forEach((product) => { next[product.plu] = rows[product.plu] || emptyOnFakturProductRow(); });
+    return next;
+  };
+  const syncOffGroupRows = (products: Product[], rows: Record<string, OffFakturProductRow>) => {
+    const next: Record<string, OffFakturProductRow> = {};
+    products.forEach((product) => { next[product.plu] = rows[product.plu] || emptyOffFakturProductRow(); });
+    return next;
+  };
+  const updateOnGroup = <K extends keyof OnFakturGroup>(index: number, field: K, val: OnFakturGroup[K]) =>
+    setOnGroups((prev) => prev.map((group, i) => i === index ? { ...group, [field]: val } : group));
+  const updateOffGroup = <K extends keyof OffFakturGroup>(index: number, field: K, val: OffFakturGroup[K]) =>
+    setOffGroups((prev) => prev.map((group, i) => i === index ? { ...group, [field]: val } : group));
+  const updateOnGroupProducts = (index: number, products: Product[]) =>
+    setOnGroups((prev) => prev.map((group, i) => i === index ? { ...group, products, rows: syncOnGroupRows(products, group.rows) } : group));
+  const updateOffGroupProducts = (index: number, products: Product[]) =>
+    setOffGroups((prev) => prev.map((group, i) => i === index ? { ...group, products, rows: syncOffGroupRows(products, group.rows) } : group));
+  const updateOnGroupRow = (index: number, plu: string, field: keyof OnFakturProductRow, val: string | number | boolean) =>
+    setOnGroups((prev) => prev.map((group, i) => i === index ? { ...group, rows: { ...group.rows, [plu]: { ...(group.rows[plu] || emptyOnFakturProductRow()), [field]: val } } } : group));
+  const updateOffGroupRow = (index: number, plu: string, field: keyof OffFakturProductRow, val: string | number | boolean) =>
+    setOffGroups((prev) => prev.map((group, i) => i === index ? { ...group, rows: { ...group.rows, [plu]: { ...(group.rows[plu] || emptyOffFakturProductRow()), [field]: val } } } : group));
+  const addOnGroup = () => setOnGroups((prev) => [...prev, emptyOnFakturGroup()]);
+  const addOffGroup = () => setOffGroups((prev) => [...prev, emptyOffFakturGroup()]);
+  const removeOnGroup = (index: number) => setOnGroups((prev) => prev.length === 1 ? prev : prev.filter((_, i) => i !== index));
+  const removeOffGroup = (index: number) => setOffGroups((prev) => prev.length === 1 ? prev : prev.filter((_, i) => i !== index));
 
   const validateStep = (key: string): FormErrors => {
     const e: FormErrors = {};
@@ -2649,7 +3253,7 @@ export default function SupplierMemoWizard() {
         if (updateInfo.vendorFields.length === 0) e.vendorFields = 'Pilih minimal satu data yang akan diupdate.';
         const vendorFilled = updateInfo.vendorFields.every((f) => {
           if (f === 'picList') {
-            const picRows = parseVendorPicRows(updateInfo.vendorValues[f]);
+            const picRows = parseVendorPicRows(updateInfo.vendorValues[f] || getVendorOldValue(identity, f));
             return picRows.length > 0 && picRows.every((row) => row.nama.trim() && row.kontak.trim());
           }
           return (updateInfo.vendorValues[f] || '').trim();
@@ -2660,69 +3264,77 @@ export default function SupplierMemoWizard() {
     if (key === 'program-info') {
       if (!programInfo.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
       if (programInfo.tipe.length === 0) e.tipe = 'Pilih minimal satu tipe program.';
-      if (programInfo.tipe.includes('off-faktur')) {
-        if (!programInfo.ppnAktif && !programInfo.pphAktif) { e.ppnRate = 'Aktifkan PPN dan/atau PPh untuk program Off Faktur.'; }
-        if (programInfo.ppnAktif && !programInfo.ppnRate) e.ppnRate = 'Pilih tarif PPN.';
-        if (programInfo.pphAktif && !programInfo.pphRate) e.pphRate = 'Pilih tarif PPh.';
-      }
+      if (programInfo.ppnAktif && !programInfo.ppnRate) e.ppnRate = 'Pilih tarif PPN.';
+      if (programInfo.pphAktif && !programInfo.pphRate) e.pphRate = 'Pilih tarif PPh.';
+      if (!programInfo.caraPembayaran) e.caraPembayaran = 'Pilih cara pembayaran.';
       if (!programInfo.redaksi.trim()) e.redaksi = 'Redaksi wajib diisi.';
       if (!programInfo.periodeAwal) e.periodeAwal = 'Periode dari wajib diisi.';
       if (!programInfo.periodeAkhir) e.periodeAkhir = 'Periode sampai wajib diisi.';
       if (programInfo.periodeAwal && programInfo.periodeAkhir && programInfo.periodeAkhir < programInfo.periodeAwal) e.periodeAkhir = 'Periode sampai tidak boleh sebelum periode dari.';
     }
-    if (key === 'cakupan-produk') {
-      const hasOn = programInfo.tipe.includes('on-faktur');
-      const hasOff = programInfo.tipe.includes('off-faktur');
-      if (hasOn && onProducts.length === 0) e.onProduk = 'Pilih minimal satu produk untuk cakupan On Faktur.';
-      if (hasOff && offProducts.length === 0) e.offProduk = 'Pilih minimal satu produk untuk cakupan Off Faktur.';
-    }
     if (key === 'program-detail') {
       const hasOn = programInfo.tipe.includes('on-faktur');
       const hasOff = programInfo.tipe.includes('off-faktur');
       if (hasOn) {
-        const invalid = onProducts.some((p) => !(onRows[p.plu]?.diskonValue > 0));
-        const bandedInvalid = onProducts.some((p) => onRows[p.plu]?.bandedAktif && !onRows[p.plu]?.banded.trim());
-        if (invalid) e.onProduk = 'Isi potongan untuk setiap produk On Faktur yang dipilih.';
+        const emptyGroup = onGroups.some((group) => group.products.length === 0);
+        const invalid = onGroups.some((group) => !(group.diskonValue > 0));
+        const bandedInvalid = onGroups.some((group) => group.products.some((p) => group.rows[p.plu]?.bandedAktif && !group.rows[p.plu]?.banded.trim()));
+        const budgetInvalid = onGroups.some((group) => group.products.some((p) => group.rows[p.plu]?.budgetAktif && !(group.rows[p.plu]?.budgetNominal > 0)));
+        if (emptyGroup) e.onProduk = 'Pilih minimal satu produk untuk setiap kelompok potongan On Faktur.';
+        if (invalid) e.onProduk = e.onProduk || 'Isi nilai potongan untuk setiap kelompok On Faktur.';
         if (bandedInvalid) e.onProduk = e.onProduk || 'Isi keterangan banded untuk produk On Faktur yang memilih Ya.';
+        if (budgetInvalid) e.onProduk = e.onProduk || 'Isi nominal budget untuk produk On Faktur yang memakai budget.';
       }
       if (hasOff) {
-        const invalid = offProducts.some((p) => !(offRows[p.plu]?.diskonValue > 0));
-        const kuponInvalid = offProducts.some((p) => offRows[p.plu]?.kuponVoucherAktif && !offRows[p.plu]?.kuponVoucher.trim());
-        const freeProdukInvalid = offProducts.some((p) => offRows[p.plu]?.freeProdukAktif && !offRows[p.plu]?.freeProdukKeterangan.trim());
-        if (invalid) e.offProduk = 'Isi potongan untuk setiap produk Off Faktur yang dipilih.';
+        const emptyGroup = offGroups.some((group) => group.products.length === 0);
+        const invalid = offGroups.some((group) => !(group.diskonValue > 0));
+        const basisInvalid = offGroups.some((group) => group.diskonMode === 'persen' && !group.diskonBasis);
+        const kuponInvalid = offGroups.some((group) => group.products.some((p) => group.rows[p.plu]?.kuponVoucherAktif && !group.rows[p.plu]?.kuponVoucher.trim()));
+        const freeProdukInvalid = offGroups.some((group) => group.products.some((p) => group.rows[p.plu]?.freeProdukAktif && !group.rows[p.plu]?.freeProdukKeterangan.trim()));
+        const budgetInvalid = offGroups.some((group) => group.products.some((p) => group.rows[p.plu]?.budgetAktif && !(group.rows[p.plu]?.budgetNominal > 0)));
+        if (emptyGroup) e.offProduk = 'Pilih minimal satu produk untuk setiap kelompok potongan Off Faktur.';
+        if (invalid) e.offProduk = e.offProduk || 'Isi nilai potongan untuk setiap kelompok Off Faktur.';
         if (kuponInvalid) e.offProduk = e.offProduk || 'Isi keterangan kupon/voucher untuk produk Off Faktur yang memilih Ya.';
         if (freeProdukInvalid) e.offProduk = e.offProduk || 'Isi keterangan free produk untuk produk Off Faktur yang memilih Ya.';
+        if (basisInvalid) e.offProduk = e.offProduk || 'Pilih basis persentase CBP/RBP untuk produk Off Faktur.';
+        if (budgetInvalid) e.offProduk = e.offProduk || 'Isi nominal budget untuk produk Off Faktur yang memakai budget.';
       }
-      if (programInfo.tipe.includes('budget') && (!budgetLink.keterangan.trim() || !budgetLink.nominal)) e.onProduk = e.onProduk || 'Lengkapi keterangan dan nominal budget.';
     }
     if (key === 'pendapatan') {
       if (!pendapatan.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
       if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
       if (pendapatan.jenis === 'sewa-visibility') {
         if (!pendapatan.sewaJenis) e.sewaJenis = 'Pilih jenis sewa/visibility.';
-        if (pendapatan.sewaProducts.length === 0) e.sewaProducts = 'Pilih minimal satu produk.';
-        if (pendapatan.sewaProducts.some((p) => !pendapatan.sewaProductRows[p.plu]?.qty || !pendapatan.sewaProductRows[p.plu]?.satuan)) e.sewaProductRows = 'Lengkapi qty dan satuan untuk setiap produk.';
         if (!pendapatan.sewaNominal) e.sewaJenis = e.sewaJenis || 'Lengkapi nilai sewa.';
-        if (!pendapatan.sewaPeriodeAwal || !pendapatan.sewaPeriodeAkhir) e.sewaJenis = e.sewaJenis || 'Lengkapi periode sewa.';
+        if (!pendapatan.sewaHargaPajak) e.sewaJenis = e.sewaJenis || 'Pilih include atau exclude pajak.';
+        if (!pendapatan.sewaCaraPembayaran) e.sewaJenis = e.sewaJenis || 'Pilih cara pembayaran.';
+        if (!pendapatan.sewaPeriodeAwal || !pendapatan.sewaDurasiBulan) e.sewaJenis = e.sewaJenis || 'Lengkapi tanggal mulai dan durasi sewa.';
         if (!pendapatan.sewaPpnAktif && !pendapatan.sewaPphAktif) e.sewaPpnRate = 'Aktifkan PPN dan/atau PPh untuk sewa/visibility ini.';
         if (pendapatan.sewaPpnAktif && !pendapatan.sewaPpnRate) e.sewaPpnRate = 'Pilih tarif PPN.';
         if (pendapatan.sewaPphAktif && !pendapatan.sewaPphRate) e.sewaPphRate = 'Pilih tarif PPh.';
       }
       if (pendapatan.jenis === 'reward-insentif') {
         if (!pendapatan.rewardJenis) e.rewardJenis = 'Pilih reward, rabate, atau insentif.';
-        if (!pendapatan.rewardBentuk) e.rewardBentuk = 'Pilih uang atau hadiah.';
+        if (!pendapatan.rewardBentuk) e.rewardBentuk = 'Pilih uang, barang, hadiah, atau trip.';
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardPembayaran) e.rewardPembayaran = 'Pilih tunai atau non tunai.';
         if (pendapatan.rewardBentuk === 'Uang' && pendapatan.rewardPembayaran === 'Non Tunai' && !pendapatan.rewardBank) e.rewardBank = 'Pilih bank.';
         if (pendapatan.rewardBentuk === 'Uang' && pendapatan.rewardPembayaran === 'Non Tunai' && !pendapatan.rewardNoRekening.trim()) e.rewardNoRekening = 'Isi nomor rekening.';
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardNominal) e.rewardNominal = 'Isi nominal.';
-        if (!pendapatan.rewardPeriodeAwal || !pendapatan.rewardPeriodeAkhir) e.target = e.target || 'Lengkapi periode.';
+        if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardHargaPajak) e.rewardNominal = e.rewardNominal || 'Pilih include atau exclude pajak.';
+        if (!pendapatan.rewardPeriodeAwal || !pendapatan.rewardDurasiBulan) e.target = e.target || 'Lengkapi tanggal mulai dan durasi periode.';
         if (!pendapatan.rewardPpnAktif && !pendapatan.rewardPphAktif) e.rewardPpnRate = 'Aktifkan PPN dan/atau PPh untuk reward/insentif ini.';
         if (pendapatan.rewardPpnAktif && !pendapatan.rewardPpnRate) e.rewardPpnRate = 'Pilih tarif PPN.';
         if (pendapatan.rewardPphAktif && !pendapatan.rewardPphRate) e.rewardPphRate = 'Pilih tarif PPh.';
       }
       if (pendapatan.jenis === 'promosi') {
         if (!pendapatan.mediaTipe) e.jenis = 'Pilih jenis media.';
-        if (!pendapatan.mediaKeterangan.trim()) e.jenis = e.jenis || 'Keterangan media wajib diisi.';
+        if (!pendapatan.promosiNominal) e.jenis = e.jenis || 'Lengkapi nilai sewa promosi.';
+        if (!pendapatan.promosiHargaPajak) e.jenis = e.jenis || 'Pilih include atau exclude pajak.';
+        if (!pendapatan.promosiCaraPembayaran) e.jenis = e.jenis || 'Pilih cara pembayaran.';
+        if (!pendapatan.promosiPeriodeAwal || !pendapatan.promosiDurasiBulan) e.jenis = e.jenis || 'Lengkapi tanggal mulai dan durasi sewa.';
+        if (!pendapatan.promosiPpnAktif && !pendapatan.promosiPphAktif) e.promosiPpnRate = 'Aktifkan PPN dan/atau PPh untuk promosi ini.';
+        if (pendapatan.promosiPpnAktif && !pendapatan.promosiPpnRate) e.promosiPpnRate = 'Pilih tarif PPN.';
+        if (pendapatan.promosiPphAktif && !pendapatan.promosiPphRate) e.promosiPphRate = 'Pilih tarif PPh.';
       }
       if (pendapatan.jenis === 'listing') {
         const rowsValid = pendapatan.listingProducts.length > 0 && pendapatan.listingProducts.every((r) =>
@@ -2730,13 +3342,12 @@ export default function SupplierMemoWizard() {
           r.barcodePcs.trim() &&
           r.barcodeKarton.trim() &&
           r.konversiQty1 > 0 && r.konversiSatuan1 &&
-          r.konversiQty2 > 0 && r.konversiSatuan2 &&
           r.konversiQty3 > 0 && r.konversiSatuan3 &&
-          r.hargaPerPcs > 0 &&
-          r.hargaPpn
+          ((!r.konversiQty2 && !r.konversiSatuan2) || Boolean(r.konversiQty2 && r.konversiSatuan2)) &&
+          r.hargaPerPcs > 0
         );
         if (!rowsValid) e.listingProducts = 'Lengkapi data setiap produk yang di-listing.';
-        if (pendapatan.listingPkp === null || pendapatan.listingReturn === null || pendapatan.listingBiayaLabel === null || !pendapatan.listingTempoPembayaran.trim() || !pendapatan.listingCaraPembayaran.trim()) {
+        if (pendapatan.listingPkp === null || pendapatan.listingReturn === null || pendapatan.listingBiayaLabel === null || !pendapatan.listingNominal || !pendapatan.listingHargaPajak || !pendapatan.listingTempoPembayaran.trim() || !pendapatan.listingCaraPembayaran.trim()) {
           e.listingProducts = e.listingProducts || 'Lengkapi syarat & ketentuan listing.';
         }
         if (!pendapatan.listingPpnAktif && !pendapatan.listingPphAktif) e.listingPpnRate = 'Aktifkan PPN dan/atau PPh untuk listing ini.';
@@ -2744,11 +3355,13 @@ export default function SupplierMemoWizard() {
         if (pendapatan.listingPphAktif && !pendapatan.listingPphRate) e.listingPphRate = 'Pilih tarif PPh.';
       }
       if (pendapatan.jenis === 'event-blbms') {
-        if (!pendapatan.eventJenis) e.eventJenis = 'Pilih jenis event.';
-        if (pendapatan.eventJenis === EVENT_JENIS_LAINNYA && !pendapatan.eventJenisLainnya.trim()) e.eventJenisLainnya = 'Tuliskan nama event.';
-        if (!pendapatan.eventBentuk) e.eventBentuk = 'Pilih bentuk/fasilitas event.';
+        if (!pendapatan.eventJenis) e.eventJenis = 'Pilih nama event.';
+        if (!pendapatan.eventBentuk) e.eventBentuk = 'Pilih kategori media.';
+        if (!pendapatan.eventMediaJenis) e.eventMediaJenis = 'Pilih jenis media.';
         if (!pendapatan.eventNominal) e.eventJenis = e.eventJenis || 'Lengkapi nilai sewa.';
-        if (!pendapatan.eventPeriodeAwal || !pendapatan.eventPeriodeAkhir) e.eventJenis = e.eventJenis || 'Lengkapi periode sewa.';
+        if (!pendapatan.eventHargaPajak) e.eventJenis = e.eventJenis || 'Pilih include atau exclude pajak.';
+        if (!pendapatan.eventCaraPembayaran) e.eventJenis = e.eventJenis || 'Pilih cara pembayaran.';
+        if (!pendapatan.eventPeriodeAwal || !pendapatan.eventDurasiBulan) e.eventJenis = e.eventJenis || 'Lengkapi tanggal mulai dan durasi sewa.';
         if (!pendapatan.eventPpnAktif && !pendapatan.eventPphAktif) e.eventPpnRate = 'Aktifkan PPN dan/atau PPh untuk event/BLBMS ini.';
         if (pendapatan.eventPpnAktif && !pendapatan.eventPpnRate) e.eventPpnRate = 'Pilih tarif PPN.';
         if (pendapatan.eventPphAktif && !pendapatan.eventPphRate) e.eventPphRate = 'Pilih tarif PPh.';
@@ -2757,6 +3370,7 @@ export default function SupplierMemoWizard() {
     if (key === 'tinjau') {
       if (!signature) e.signature = 'Tanda tangan wajib diisi.';
       if (!agreed) e.agreed = 'Centang persetujuan sebelum submit.';
+      if (jenisMemo !== 'update-informasi' && !paymentAgreed) e.paymentAgreed = 'Centang pernyataan kesediaan pembayaran sebelum 2 bulan.';
     }
     return e;
   };
@@ -2779,10 +3393,10 @@ export default function SupplierMemoWizard() {
   const resetAll = () => {
     setSubmitted(false); setStep(0); setIdentity(null); setOutlets([]); setOutletScope('custom'); setJenisMemo('');
     setUpdateInfo(INITIAL_UPDATE_INFO); setProgramInfo(INITIAL_PROGRAM_INFO);
-    setOnProductScope('per-plu'); setOnSelectedSubCategory(''); setOnProducts([]); setOnRows({});
-    setOffProductScope('per-plu'); setOffSelectedSubCategory(''); setOffProducts([]); setOffRows({});
+    setOnProductScope('per-plu'); setOnSelectedSubCategory(''); setOnGroups([emptyOnFakturGroup()]);
+    setOffProductScope('per-plu'); setOffSelectedSubCategory(''); setOffGroups([emptyOffFakturGroup()]);
     setBudgetLink(INITIAL_BUDGET_LINK); setPendapatan(INITIAL_PENDAPATAN);
-    setCatatan(''); setSignature(''); setAgreed(false);
+    setCatatan(''); setSignature(''); setAgreed(false); setPaymentAgreed(false);
   };
 
   if (submitted) return (
@@ -2826,7 +3440,7 @@ export default function SupplierMemoWizard() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6 pb-28">
         <div className="text-center space-y-1.5">
-          <h1 className="text-[20px] font-extrabold text-slate-900">Formulir Memo Buyer</h1>
+          <h1 className="text-[20px] font-extrabold text-slate-900">Memo Buyer</h1>
           <p className="text-[13px] text-slate-500">Langkah {step + 1} dari {steps.length} — {steps[step].label}</p>
         </div>
 
@@ -2835,22 +3449,23 @@ export default function SupplierMemoWizard() {
         {currentKey === 'jenis-memo' && <JenisMemoStep value={jenisMemo} onChange={onJenisMemoChange} error={errors.jenisMemo} />}
         {currentKey === 'update-informasi' && <UpdateInformasiStep state={updateInfo} setField={setUF} onJenisUpdateChange={onJenisUpdateChange} identity={identity} errors={errors} />}
         {currentKey === 'program-info' && <ProgramInfoStep state={programInfo} setField={setPF} errors={errors} />}
-        {currentKey === 'cakupan-produk' && (
-          <CakupanProdukStep
-            tipe={programInfo.tipe}
-            onScope={onProductScope} setOnScope={setOnProductScope} onSubCategory={onSelectedSubCategory} setOnSubCategory={setOnSelectedSubCategory}
-            onProducts={onProducts} setOnProducts={setOnProducts} onError={errors.onProduk}
-            offScope={offProductScope} setOffScope={setOffProductScope} offSubCategory={offSelectedSubCategory} setOffSubCategory={setOffSelectedSubCategory}
-            offProducts={offProducts} setOffProducts={setOffProducts} offError={errors.offProduk}
-            subCategories={subCategories} supplierId={identity?.supplier?.id}
-          />
-        )}
         {currentKey === 'program-detail' && (
           <ProgramDetailStep
             tipe={programInfo.tipe}
-            onProducts={onProducts} onRows={onRows} updateOnRow={updateOnRow} onError={errors.onProduk}
-            offProducts={offProducts} offRows={offRows} updateOffRow={updateOffRow} offError={errors.offProduk}
-            budgetLink={budgetLink} setBudgetLink={setBL}
+            onGroups={onGroups}
+            updateOnGroup={updateOnGroup}
+            updateOnGroupProducts={updateOnGroupProducts}
+            updateOnGroupRow={updateOnGroupRow}
+            addOnGroup={addOnGroup}
+            removeOnGroup={removeOnGroup}
+            onError={errors.onProduk}
+            offGroups={offGroups}
+            updateOffGroup={updateOffGroup}
+            updateOffGroupProducts={updateOffGroupProducts}
+            updateOffGroupRow={updateOffGroupRow}
+            addOffGroup={addOffGroup}
+            removeOffGroup={removeOffGroup}
+            offError={errors.offProduk}
           />
         )}
         {currentKey === 'pendapatan' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} />}
@@ -2860,7 +3475,7 @@ export default function SupplierMemoWizard() {
             identity={identity} outlets={outlets} jenisMemo={jenisMemo}
             updateInfo={updateInfo} programInfo={programInfo} onProducts={onProducts} onRows={onRows} offProducts={offProducts} offRows={offRows} budgetLink={budgetLink}
             pendapatan={pendapatan} catatan={catatan}
-            signature={signature} setSignature={setSignature} agreed={agreed} setAgreed={setAgreed} errors={errors}
+            signature={signature} setSignature={setSignature} agreed={agreed} setAgreed={setAgreed} paymentAgreed={paymentAgreed} setPaymentAgreed={setPaymentAgreed} errors={errors}
           />
         )}
       </main>
@@ -2887,3 +3502,6 @@ export default function SupplierMemoWizard() {
     </div>
   );
 }
+
+
+
