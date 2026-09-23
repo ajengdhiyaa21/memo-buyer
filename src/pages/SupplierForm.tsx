@@ -144,7 +144,7 @@ const EVENT_JENIS_OPTIONS = ['Belanja Luar Biasa Murah Spektakuler (BLBMS)', 'Pr
 /** Bentuk/fasilitas yang dipilih setelah Jenis Event — gabungan Reward/Insentif, Promosi, dan Sewa/Visibility. */
 const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publish'];
 const EVENT_MEDIA_BY_CATEGORY: Record<string, string[]> = {
-  'Media Display Produk': ['N Gondola', 'Wing Gondola', 'Klip Strip', 'Dumbin', 'COC', 'Floor Display', 'Open Booth'],
+  'Media Display Produk': ['N Gondola', 'Wing Gondola', 'Klip Strip', 'Dumbin', 'COC', 'Floor Display'],
   'Media Branding & Publish': ['Media Cetak', 'Media Elektronik dan Digital', 'Media Indoor', 'Media Outdoor'],
 };
 
@@ -484,6 +484,9 @@ function StepIndicator({ steps, current }: { steps: StepDef[]; current: number }
 /* ───────────────────────── Step: Scan ID ───────────────────────── */
 function ScanIdStep({ identity, onScanned, error }: { identity: IdCardData | null; onScanned: (card: IdCardData) => void; error?: string }) {
   const [scanning, setScanning] = useState(false);
+  const [mode, setMode] = useState<'scan' | 'manual'>('scan');
+  const [manualId, setManualId] = useState('');
+  const [manualError, setManualError] = useState('');
   const doScan = () => {
     setScanning(true);
     window.setTimeout(() => {
@@ -492,10 +495,32 @@ function ScanIdStep({ identity, onScanned, error }: { identity: IdCardData | nul
       setScanning(false);
     }, 1400);
   };
+  const submitManualId = () => {
+    const value = manualId.trim().toUpperCase();
+    const card = MOCK_ID_CARDS.find((item) => item.cardId.toUpperCase() === value);
+    if (!card) {
+      setManualError('ID supplier tidak ditemukan. Gunakan salah satu contoh ID di bawah.');
+      return;
+    }
+    setManualError('');
+    onScanned(card);
+  };
+  const exampleIds = MOCK_ID_CARDS.map((card) => card.cardId);
 
   return (
-    <Card title="Scan Kartu ID Supplier" icon={IdCard} subtitle="Tempelkan / scan barcode kartu ID supplier Anda untuk mengisi identitas secara otomatis">
+    <Card title="Identitas Supplier" icon={IdCard} subtitle="Scan kartu ID supplier atau masukkan ID supplier secara manual">
       <div className="flex flex-col items-center gap-6 py-4">
+        <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-1 w-full max-w-md">
+          <button type="button" onClick={() => setMode('scan')} className={`rounded-xl px-4 py-2.5 text-[12px] font-bold transition-all ${mode === 'scan' ? 'bg-white text-amber-700 shadow-sm border border-amber-200' : 'text-slate-500 hover:text-slate-800'}`}>
+            Scan ID
+          </button>
+          <button type="button" onClick={() => setMode('manual')} className={`rounded-xl px-4 py-2.5 text-[12px] font-bold transition-all ${mode === 'manual' ? 'bg-white text-amber-700 shadow-sm border border-amber-200' : 'text-slate-500 hover:text-slate-800'}`}>
+            Input ID
+          </button>
+        </div>
+
+        {mode === 'scan' && (
+          <>
         <div className={`relative w-full max-w-sm rounded-2xl border-2 border-dashed p-8 flex flex-col items-center justify-center text-center transition-all ${
           scanning ? 'border-amber-400 bg-amber-50' : identity ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 bg-slate-50'
         }`}>
@@ -524,6 +549,51 @@ function ScanIdStep({ identity, onScanned, error }: { identity: IdCardData | nul
           className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-[13px] font-bold text-white transition-all active:scale-[0.98] bg-gradient-to-r from-amber-700 to-amber-600 shadow-lg shadow-amber-700/30 disabled:opacity-60 disabled:cursor-not-allowed">
           <ScanLine className="w-4 h-4" />{identity ? 'Scan Ulang Kartu' : 'Scan Kartu ID'}
         </button>
+          </>
+        )}
+
+        {mode === 'manual' && (
+        <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4">
+          <Label>Input ID Supplier Manual</Label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={manualId}
+              onChange={(e) => {
+                setManualId(e.target.value);
+                setManualError('');
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitManualId();
+              }}
+              className={`${manualError ? inpErr : inp} font-mono uppercase`}
+              placeholder="cth: MK-SPV-00123"
+            />
+            <button type="button" onClick={submitManualId} className="px-4 py-2.5 rounded-xl text-[12px] font-bold text-white bg-slate-950 hover:bg-slate-800 transition-colors">
+              Gunakan ID
+            </button>
+          </div>
+          <FieldError message={manualError} />
+          <div className="mt-3">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Contoh ID demo</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {exampleIds.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setManualId(id);
+                    setManualError('');
+                  }}
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-mono font-bold text-amber-700 hover:bg-amber-100"
+                >
+                  {id}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        )}
         <FieldError message={error} />
 
         {identity && (
