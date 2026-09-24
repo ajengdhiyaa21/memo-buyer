@@ -127,16 +127,15 @@ const SEWA_CARA_PEMBAYARAN_OPTIONS = ['Transfer', 'Tunai', 'Potong Tagihan'];
 const PENDAPATAN_OPTIONS = [
   { key: 'event-blbms', label: 'Event dan BLBMS', desc: 'Sewa area/kegiatan untuk event outlet atau BLBMS', icon: Calendar },
   { key: 'sewa-visibility', label: 'Sewa / Visibility', desc: 'Sewa ruang, gondola, atau media visibility', icon: Store },
-  { key: 'reward-insentif', label: 'Reward / Rabat / Insentif', desc: 'Insentif yang melekat pada pencapaian target', icon: Gift },
+  { key: 'reward-insentif', label: 'Reward / Insentif', desc: 'Reward atau insentif yang melekat pada pencapaian target', icon: Gift },
   { key: 'promosi', label: 'Promosi (Media Cetak/Digital)', desc: 'Kerja sama promosi melalui media cetak atau digital', icon: Megaphone },
   { key: 'listing', label: 'Listing', desc: 'Pendaftaran produk baru beserta syarat & ketentuan', icon: Receipt },
 ] as const;
 
-const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Open Booth', 'Clip Strip', 'Fasilitas (Air dan Listrik)', 'Dumbin/Mini Wings', 'Showroom & Tenant', 'Building'];
-const PROMOSI_MEDIA_OPTIONS = ['Neonbox Instore', 'Spanduk/Banner In Store', 'Spanduk/Banner Out Store', 'Banner Mobil', 'TVC/Digital Signage', 'Sosial Media', 'Audio Promo', 'Audio Instore', 'Rollup Banner', 'Brosur'];
-const REWARD_JENIS_OPTIONS = ['Reward', 'Rabate', 'Insentif'];
+const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Open Booth', 'Clip Strip', 'Fasilitas (Air/Listrik)', 'Dumbin/Mini Wings', 'Showroom/Tenant', 'Building'];
+const PROMOSI_MEDIA_OPTIONS = ['Neonbox Instore', 'Spanduk/Banner In Store', 'Spanduk/Banner Out Store', 'Banner Mobil', 'TVC/Digital Signage', 'Brosur', 'Sosial Media', 'Audio Instore Promo', 'Rollup Banner'];
+const REWARD_JENIS_OPTIONS = ['Reward', 'Insentif'];
 const REWARD_BENTUK_OPTIONS = ['Uang', 'Barang', 'Hadiah', 'Trip'];
-const REWARD_PEMBAYARAN_OPTIONS = ['Tunai', 'Non Tunai'];
 
 /** Sentinel value for "pilihan lainnya" on Jenis Event — selecting it reveals a free-text input. */
 const EVENT_JENIS_OPTIONS = ['Belanja Luar Biasa Murah Spektakuler (BLBMS)', 'Pra Ramadhan & Lebaran', 'Anniversary', 'Tahun Ajaran Baru', 'Natal dan Tahun Baru', 'Grand Opening (New Store)', 'Additional Event', 'Regular Event'];
@@ -144,8 +143,8 @@ const EVENT_JENIS_OPTIONS = ['Belanja Luar Biasa Murah Spektakuler (BLBMS)', 'Pr
 /** Bentuk/fasilitas yang dipilih setelah Jenis Event — gabungan Reward/Insentif, Promosi, dan Sewa/Visibility. */
 const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publish'];
 const EVENT_MEDIA_BY_CATEGORY: Record<string, string[]> = {
-  'Media Display Produk': ['N Gondola', 'Wing Gondola', 'Klip Strip', 'Dumbin', 'COC', 'Floor Display'],
-  'Media Branding & Publish': ['Media Cetak', 'Media Elektronik dan Digital', 'Media Indoor', 'Media Outdoor'],
+  'Media Display Produk': SEWA_VISIBILITY_JENIS,
+  'Media Branding & Publish': PROMOSI_MEDIA_OPTIONS,
 };
 
 const SATUAN_OPTIONS = ['PCS', 'BANDED', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK'];
@@ -237,6 +236,21 @@ function InfoNote({ tone = 'indigo', children }: { tone?: 'indigo' | 'amber' | '
   return (
     <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl text-[12px] leading-relaxed border ${tones[tone]}`}>
       <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>{children}</span>
+    </div>
+  );
+}
+
+function RewardTypeNote({ type }: { type: string }) {
+  if (!['Reward', 'Insentif'].includes(type)) return null;
+  const isReward = type === 'Reward';
+  return (
+    <div className={`mt-2.5 flex items-start gap-2 rounded-xl border px-3.5 py-2.5 text-[12px] font-medium leading-relaxed ${
+      isReward
+        ? 'border-amber-200 bg-amber-50 text-amber-800'
+        : 'border-indigo-200 bg-indigo-50 text-indigo-800'
+    }`}>
+      <Info className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${isReward ? 'text-amber-600' : 'text-indigo-600'}`} />
+      <span>{isReward ? 'Reward adalah pemberian cuma-cuma.' : 'Insentif adalah pemberian dengan pencapaian target tertentu.'}</span>
     </div>
   );
 }
@@ -736,6 +750,39 @@ function sewaPeriodLabel(start: string, months: number) {
   endDate.setDate(endDate.getDate() - 1);
   const end = endDate.toISOString().slice(0, 10);
   return `${start} s/d ${end} (${months} bulan)`;
+}
+
+function addMonthsDateLabel(dateValue: string, months: number) {
+  if (!dateValue) return '';
+  const date = new Date(`${dateValue}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '';
+  date.setMonth(date.getMonth() + months);
+  return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+function periodEndDateValue(start: string, months: number) {
+  if (!start || !months) return '';
+  const startDate = new Date(`${start}T00:00:00`);
+  if (Number.isNaN(startDate.getTime())) return '';
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + months);
+  endDate.setDate(endDate.getDate() - 1);
+  return endDate.toISOString().slice(0, 10);
+}
+
+function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
+  return (
+    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+      <div className="flex items-start gap-2">
+        <Info className="warning-info-animate mt-0.5 h-4 w-4 shrink-0" />
+        <p className="text-[12px] font-semibold leading-relaxed">
+          {dueDate
+            ? `Batas pembayar maksimal sampai tanggal ${dueDate}.`
+            : 'Batas pembayar maksimal akan tampil setelah Periode Sampai diisi.'}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function parseVendorPicRows(value?: string): VendorPicRow[] {
@@ -1315,6 +1362,7 @@ function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAk
 }
 
 function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState; setField: <K extends keyof ProgramInfoState>(f: K, v: ProgramInfoState[K]) => void; errors: FormErrors }) {
+  const paymentDueDate = addMonthsDateLabel(state.periodeAkhir, 2);
   return (
     <Card title="Informasi Program" icon={Tag} subtitle="Program dapat mencakup lebih dari satu tipe sekaligus">
       <div><Label req>Nama Program</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={errors.namaProgram ? inpErr : inp} placeholder="cth: Program Akhir Tahun 2026" /><FieldError message={errors.namaProgram} /></div>
@@ -1340,12 +1388,6 @@ function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState;
       </div>
 
       <div>
-        <Label req>Cara Pembayaran</Label>
-        <SingleChoiceChips options={CARA_PEMBAYARAN_OPTIONS.map((o) => ({ key: o, label: o }))} value={state.caraPembayaran} onChange={(v) => setField('caraPembayaran', v)} />
-        <FieldError message={errors.caraPembayaran} />
-      </div>
-
-      <div>
         <Label req>Redaksi</Label>
         <textarea
           rows={4}
@@ -1358,17 +1400,11 @@ function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState;
         <FieldError message={errors.redaksi} />
       </div>
 
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-        <div className="flex items-start gap-2">
-          <Info className="warning-info-animate mt-0.5 h-4 w-4 shrink-0" />
-          <p className="text-[12px] font-semibold leading-relaxed">Batas pembayar maksimal 2 bulan setelah program berakhir.</p>
-        </div>
-      </div>
-
       <div>
         <Label req>Periode Program</Label>
         <PeriodeRange awal={state.periodeAwal} akhir={state.periodeAkhir} onAwal={(v) => setField('periodeAwal', v)} onAkhir={(v) => setField('periodeAkhir', v)} />
         <FieldError message={errors.periodeAwal || errors.periodeAkhir} />
+        <PaymentDueWarning dueDate={paymentDueDate} />
       </div>
     </Card>
   );
@@ -2111,6 +2147,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
               </div>
             </div>
           </div>
+          <PaymentDueWarning dueDate={addMonthsDateLabel(periodEndDateValue(state.sewaPeriodeAwal, state.sewaDurasiBulan), 2)} />
           <div><Label>Keterangan</Label><textarea rows={3} value={state.sewaKeterangan} onChange={(e) => setField('sewaKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait sewa/visibility..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -2132,14 +2169,13 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
       {state.jenis === 'reward-insentif' && (
         <div className="border-t border-slate-100 pt-5 space-y-4">
           <div>
-            <Label req>Jenis Reward / Rabat / Insentif</Label>
+            <Label req>Jenis Reward / Insentif</Label>
             <SingleChoiceChips options={REWARD_JENIS_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.rewardJenis} onChange={(v) => setField('rewardJenis', v)} />
-            {state.rewardJenis === 'Reward' && <InfoNote tone="amber">Reward adalah pemberian cuma-cuma.</InfoNote>}
-            {state.rewardJenis === 'Insentif' && <InfoNote tone="indigo">Insentif adalah pemberian dengan pencapaian target tertentu.</InfoNote>}
+            <RewardTypeNote type={state.rewardJenis} />
             <FieldError message={errors.rewardJenis} />
           </div>
           <div>
-            <Label req>Bentuk Reward / Rabat / Insentif</Label>
+            <Label req>Bentuk Reward / Insentif</Label>
             <SingleChoiceChips
               options={REWARD_BENTUK_OPTIONS.map((s) => ({ key: s, label: s }))}
               value={state.rewardBentuk}
@@ -2157,39 +2193,13 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
           </div>
           {state.rewardBentuk === 'Uang' && (
             <div>
-              <Label req>Metode Pembayaran</Label>
+              <Label req>Cara Pembayaran</Label>
               <SingleChoiceChips
-                options={REWARD_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))}
+                options={SEWA_CARA_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))}
                 value={state.rewardPembayaran}
-                onChange={(v) => {
-                  setField('rewardPembayaran', v);
-                  if (v !== 'Non Tunai') {
-                    setField('rewardBank', '');
-                    setField('rewardNoRekening', '');
-                  }
-                }}
+                onChange={(v) => setField('rewardPembayaran', v)}
               />
               <FieldError message={errors.rewardPembayaran} />
-            </div>
-          )}
-          {state.rewardBentuk === 'Uang' && state.rewardPembayaran === 'Non Tunai' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label req>Bank</Label>
-                <div className="relative">
-                  <select value={state.rewardBank} onChange={(e) => setField('rewardBank', e.target.value)} className={`${inp} appearance-none pr-9 cursor-pointer`}>
-                    <option value="">Pilih bank...</option>
-                    {BANK_OPTIONS.map((b) => <option key={b}>{b}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-                <FieldError message={errors.rewardBank} />
-              </div>
-              <div>
-                <Label req>No Rekening</Label>
-                <input type="text" value={state.rewardNoRekening} onChange={(e) => setField('rewardNoRekening', e.target.value)} className={inp} placeholder="Masukkan nomor rekening..." />
-                <FieldError message={errors.rewardNoRekening} />
-              </div>
             </div>
           )}
           {state.rewardBentuk === 'Uang' && (
@@ -2215,6 +2225,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
               </div>
             </div>
           </div>
+          <PaymentDueWarning dueDate={addMonthsDateLabel(periodEndDateValue(state.rewardPeriodeAwal, state.rewardDurasiBulan), 2)} />
           <div><Label>Keterangan</Label><textarea rows={3} value={state.rewardKeterangan} onChange={(e) => setField('rewardKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait reward/insentif..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -2264,6 +2275,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
               </div>
             </div>
           </div>
+          <PaymentDueWarning dueDate={addMonthsDateLabel(periodEndDateValue(state.promosiPeriodeAwal, state.promosiDurasiBulan), 2)} />
           <div><Label>Keterangan Media</Label><textarea rows={3} value={state.mediaKeterangan} onChange={(e) => setField('mediaKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="cth: Brosur mingguan / Instagram Ads" /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -2327,7 +2339,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Syarat & Ketentuan Listing (berlaku untuk seluruh produk di atas)</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label req>Nominal Listing (Rp)</Label>
+                <Label req>Biaya Listing (Rp)</Label>
                 <input type="number" min={0} value={state.listingNominal || ''} onChange={(e) => setField('listingNominal', parseFloat(e.target.value) || 0)} className={inp} placeholder="0" />
               </div>
               <div>
@@ -2422,6 +2434,7 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
               </div>
             </div>
           </div>
+          <PaymentDueWarning dueDate={addMonthsDateLabel(periodEndDateValue(state.eventPeriodeAwal, state.eventDurasiBulan), 2)} />
           <div><Label>Keterangan</Label><textarea rows={3} value={state.eventKeterangan} onChange={(e) => setField('eventKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait event/BLBMS..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -2442,11 +2455,37 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
 }
 
 /* ───────────────────────── Step: Catatan ───────────────────────── */
-function NotesStep({ catatan, setCatatan }: { catatan: string; setCatatan: (v: string) => void }) {
+function NotesStep({
+  catatan, setCatatan, jenisMemo, programInfo, setProgramField, errors,
+}: {
+  catatan: string; setCatatan: (v: string) => void;
+  jenisMemo: JenisMemo;
+  programInfo: ProgramInfoState;
+  setProgramField: <K extends keyof ProgramInfoState>(f: K, v: ProgramInfoState[K]) => void;
+  errors: FormErrors;
+}) {
+  const paymentDueDate = addMonthsDateLabel(programInfo.periodeAkhir, 2);
   return (
-    <Card title="Catatan" icon={FileText} subtitle="Instruksi atau catatan tambahan untuk tim Buyer (opsional)">
+    <Card title="Pembayaran & Catatan" icon={FileText} subtitle="Lengkapi cara pembayaran dan tambahkan catatan memo bila diperlukan">
+      {jenisMemo === 'memo-program' && (
+        <div>
+          <Label req>Cara Pembayaran</Label>
+          <SingleChoiceChips options={CARA_PEMBAYARAN_OPTIONS.map((o) => ({ key: o, label: o }))} value={programInfo.caraPembayaran} onChange={(v) => setProgramField('caraPembayaran', v)} />
+          <FieldError message={errors.caraPembayaran} />
+          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+            <div className="flex items-start gap-2">
+              <Info className="warning-info-animate mt-0.5 h-4 w-4 shrink-0" />
+              <p className="text-[12px] font-semibold leading-relaxed">
+                {paymentDueDate
+                  ? `Batas pembayar maksimal sampai tanggal ${paymentDueDate}.`
+                  : 'Batas pembayar maksimal akan tampil setelah Periode Sampai diisi.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div>
-        <Label>Catatan (Memo Internal)</Label>
+        <Label>Catatan (Memo Internal) - Opsional</Label>
         <textarea rows={5} value={catatan} onChange={(e) => setCatatan(e.target.value)} className={`${inp} resize-none`} placeholder="Catatan atau instruksi khusus untuk tim Buyer..." />
       </div>
     </Card>
@@ -2698,8 +2737,7 @@ function ReviewStep({
                 <>
                   <Row label="Jenis" value={pendapatan.rewardJenis} />
                   <Row label="Bentuk" value={pendapatan.rewardBentuk} />
-                  {pendapatan.rewardBentuk === 'Uang' && <Row label="Metode Pembayaran" value={pendapatan.rewardPembayaran} />}
-                  {pendapatan.rewardBentuk === 'Uang' && pendapatan.rewardPembayaran === 'Non Tunai' && <Row label="Rekening Bank" value={pendapatan.rewardBank && pendapatan.rewardNoRekening ? `${pendapatan.rewardBank} - ${pendapatan.rewardNoRekening}` : ''} />}
+                  {pendapatan.rewardBentuk === 'Uang' && <Row label="Cara Pembayaran" value={pendapatan.rewardPembayaran} />}
                   {pendapatan.rewardBentuk === 'Uang' && <Row label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')} (${pendapatan.rewardHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />}
                   <Row label="Periode" value={sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan)} />
                   <Row label="Keterangan" value={pendapatan.rewardKeterangan} />
@@ -2723,7 +2761,7 @@ function ReviewStep({
                   <Row label="PKP" value={yn(pendapatan.listingPkp)} />
                   <Row label="Bisa Return" value={yn(pendapatan.listingReturn)} />
                   <Row label="Biaya Label Rp 15,-" value={yn(pendapatan.listingBiayaLabel)} />
-                  <Row label="Nominal Listing" value={pendapatan.listingNominal ? `Rp ${pendapatan.listingNominal.toLocaleString('id-ID')} (${pendapatan.listingHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />
+                  <Row label="Nominal Listing" value={`Rp ${pendapatan.listingNominal.toLocaleString('id-ID')} (${pendapatan.listingHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
                   <Row label="Tempo Pembayaran" value={pendapatan.listingTempoPembayaran ? `${pendapatan.listingTempoPembayaran} hari` : ''} />
                   <Row label="Cara Pembayaran" value={pendapatan.listingCaraPembayaran} />
                   <Row label="PPN" value={pendapatan.listingPpnAktif ? pendapatan.listingPpnRate || 'Aktif' : 'Tidak dikenakan'} />
@@ -2932,9 +2970,9 @@ function SuccessScreen({
         </div>
         <div className="memo-preview-scroll flex-1 overflow-auto py-6">
       <div className="sellout-print-page memo-print-page mx-auto bg-white text-slate-950 shadow-xl w-[210mm] min-h-[297mm] p-[14mm]">
-        <div className="flex justify-between items-start border-b-2 border-slate-950 pb-6">
-          <div className="flex items-start gap-3">
-            <img src={mannaKampusLogo} alt="Logo" className="memo-print-logo h-16 w-16 object-contain shrink-0" />
+        <div className="flex justify-between items-center border-b-2 border-slate-950 pb-6">
+          <div className="flex items-center gap-4">
+            <img src={mannaKampusLogo} alt="Logo" className="memo-print-logo h-24 w-24 object-contain shrink-0" />
             <div><h1 className="text-[18px] font-black tracking-tight">BUYER MEMO SYSTEM</h1><p className="text-[11px] font-bold text-slate-400 uppercase">{memoTypeLabel(jenisMemo)}</p></div>
           </div>
           <div className="text-right"><p className="text-[10px] font-bold text-slate-400 uppercase">No Memo</p><p className="text-[18px] font-black">{memoNo}</p><p className="text-[10px] text-slate-400">Tgl: {submittedAt.toLocaleDateString('id-ID')}</p></div>
@@ -3087,8 +3125,7 @@ function SuccessScreen({
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
                     <PrintInfoRow label="Jenis" value={pendapatan.rewardJenis} />
                     <PrintInfoRow label="Bentuk" value={pendapatan.rewardBentuk} />
-                    <PrintInfoRow label="Metode" value={pendapatan.rewardPembayaran || '-'} />
-                    <PrintInfoRow label="Rekening" value={pendapatan.rewardBank ? `${pendapatan.rewardBank} - ${pendapatan.rewardNoRekening}` : '-'} />
+                    <PrintInfoRow label="Cara Pembayaran" value={pendapatan.rewardPembayaran || '-'} />
                     <PrintInfoRow label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')} (${pendapatan.rewardHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : '-'} />
                     <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan)} />
                     <PrintInfoRow label="Keterangan" value={pendapatan.rewardKeterangan || '-'} />
@@ -3131,7 +3168,7 @@ function SuccessScreen({
                     <PrintInfoRow label="PKP" value={pendapatan.listingPkp === null ? '-' : pendapatan.listingPkp ? 'Ya' : 'Tidak'} />
                     <PrintInfoRow label="Return" value={pendapatan.listingReturn === null ? '-' : pendapatan.listingReturn ? 'Ya' : 'Tidak'} />
                     <PrintInfoRow label="Biaya Label" value={pendapatan.listingBiayaLabel === null ? '-' : pendapatan.listingBiayaLabel ? 'Ya' : 'Tidak'} />
-                    <PrintInfoRow label="Nominal Listing" value={pendapatan.listingNominal ? `Rp ${pendapatan.listingNominal.toLocaleString('id-ID')} (${pendapatan.listingHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : '-'} />
+                    <PrintInfoRow label="Nominal Listing" value={`Rp ${pendapatan.listingNominal.toLocaleString('id-ID')} (${pendapatan.listingHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
                     <PrintInfoRow label="Pembayaran" value={`${pendapatan.listingTempoPembayaran || '-'} hari - ${pendapatan.listingCaraPembayaran || '-'}`} />
                     <PrintInfoRow label="PPN" value={pendapatan.listingPpnAktif ? pendapatan.listingPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                     <PrintInfoRow label="PPh" value={pendapatan.listingPphAktif ? pendapatan.listingPphRate || 'Aktif' : 'Tidak dikenakan'} />
@@ -3336,7 +3373,6 @@ export default function SupplierMemoWizard() {
       if (programInfo.tipe.length === 0) e.tipe = 'Pilih minimal satu tipe program.';
       if (programInfo.ppnAktif && !programInfo.ppnRate) e.ppnRate = 'Pilih tarif PPN.';
       if (programInfo.pphAktif && !programInfo.pphRate) e.pphRate = 'Pilih tarif PPh.';
-      if (!programInfo.caraPembayaran) e.caraPembayaran = 'Pilih cara pembayaran.';
       if (!programInfo.redaksi.trim()) e.redaksi = 'Redaksi wajib diisi.';
       if (!programInfo.periodeAwal) e.periodeAwal = 'Periode dari wajib diisi.';
       if (!programInfo.periodeAkhir) e.periodeAkhir = 'Periode sampai wajib diisi.';
@@ -3370,6 +3406,9 @@ export default function SupplierMemoWizard() {
         if (budgetInvalid) e.offProduk = e.offProduk || 'Isi nominal budget untuk produk Off Faktur yang memakai budget.';
       }
     }
+    if (key === 'catatan') {
+      if (jenisMemo === 'memo-program' && !programInfo.caraPembayaran) e.caraPembayaran = 'Pilih cara pembayaran.';
+    }
     if (key === 'pendapatan') {
       if (!pendapatan.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
       if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
@@ -3384,11 +3423,9 @@ export default function SupplierMemoWizard() {
         if (pendapatan.sewaPphAktif && !pendapatan.sewaPphRate) e.sewaPphRate = 'Pilih tarif PPh.';
       }
       if (pendapatan.jenis === 'reward-insentif') {
-        if (!pendapatan.rewardJenis) e.rewardJenis = 'Pilih reward, rabate, atau insentif.';
+        if (!pendapatan.rewardJenis) e.rewardJenis = 'Pilih reward atau insentif.';
         if (!pendapatan.rewardBentuk) e.rewardBentuk = 'Pilih uang, barang, hadiah, atau trip.';
-        if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardPembayaran) e.rewardPembayaran = 'Pilih tunai atau non tunai.';
-        if (pendapatan.rewardBentuk === 'Uang' && pendapatan.rewardPembayaran === 'Non Tunai' && !pendapatan.rewardBank) e.rewardBank = 'Pilih bank.';
-        if (pendapatan.rewardBentuk === 'Uang' && pendapatan.rewardPembayaran === 'Non Tunai' && !pendapatan.rewardNoRekening.trim()) e.rewardNoRekening = 'Isi nomor rekening.';
+        if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardPembayaran) e.rewardPembayaran = 'Pilih cara pembayaran.';
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardNominal) e.rewardNominal = 'Isi nominal.';
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardHargaPajak) e.rewardNominal = e.rewardNominal || 'Pilih include atau exclude pajak.';
         if (!pendapatan.rewardPeriodeAwal || !pendapatan.rewardDurasiBulan) e.target = e.target || 'Lengkapi tanggal mulai dan durasi periode.';
@@ -3417,7 +3454,7 @@ export default function SupplierMemoWizard() {
           r.hargaPerPcs > 0
         );
         if (!rowsValid) e.listingProducts = 'Lengkapi data setiap produk yang di-listing.';
-        if (pendapatan.listingPkp === null || pendapatan.listingReturn === null || pendapatan.listingBiayaLabel === null || !pendapatan.listingNominal || !pendapatan.listingHargaPajak || !pendapatan.listingTempoPembayaran.trim() || !pendapatan.listingCaraPembayaran.trim()) {
+        if (pendapatan.listingPkp === null || pendapatan.listingReturn === null || pendapatan.listingBiayaLabel === null || !pendapatan.listingHargaPajak || !pendapatan.listingTempoPembayaran.trim() || !pendapatan.listingCaraPembayaran.trim()) {
           e.listingProducts = e.listingProducts || 'Lengkapi syarat & ketentuan listing.';
         }
         if (!pendapatan.listingPpnAktif && !pendapatan.listingPphAktif) e.listingPpnRate = 'Aktifkan PPN dan/atau PPh untuk listing ini.';
@@ -3539,7 +3576,7 @@ export default function SupplierMemoWizard() {
           />
         )}
         {currentKey === 'pendapatan' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} />}
-        {currentKey === 'catatan' && <NotesStep catatan={catatan} setCatatan={setCatatan} />}
+        {currentKey === 'catatan' && <NotesStep catatan={catatan} setCatatan={setCatatan} jenisMemo={jenisMemo} programInfo={programInfo} setProgramField={setPF} errors={errors} />}
         {currentKey === 'tinjau' && (
           <ReviewStep
             identity={identity} outlets={outlets} jenisMemo={jenisMemo}
