@@ -109,6 +109,10 @@ body {
   background: #ffffff;
 }
 
+.memo-print-page .memo-signature-block {
+  display: block;
+}
+
 .memo-print-page .memo-print-info-card {
   min-width: 0;
   overflow: hidden;
@@ -212,6 +216,12 @@ body {
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
     vertical-align: top !important;
+  }
+
+  .memo-signature-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    display: block !important;
   }
 
   thead {

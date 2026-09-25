@@ -2403,8 +2403,6 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
     <Card title={mode === 'jenis' ? 'Pilih Jenis Program' : 'Detail Program Lain-lain'} icon={Building2} subtitle={mode === 'jenis' ? 'Pilih jenis program yang ingin diajukan' : 'Lengkapi detail berdasarkan jenis program yang dipilih'}>
       {mode === 'jenis' && (
         <>
-      <div><Label req>Nama Program / Kegiatan</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={inp} placeholder="cth: Program Event Reguler" /></div>
-
       <div>
         <Label req>Jenis Program</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2429,6 +2427,18 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Jenis Program</p>
             <p className="mt-1 text-[13px] font-bold text-slate-800">{PENDAPATAN_OPTIONS.find((o) => o.key === state.jenis)?.label || '-'}</p>
+          </div>
+
+          <div>
+            <Label req>Nama Program / Kegiatan</Label>
+            <input
+              type="text"
+              value={state.namaProgram}
+              onChange={(e) => setField('namaProgram', e.target.value)}
+              className={errors.namaProgram ? inpErr : inp}
+              placeholder="cth: Program Event Reguler"
+            />
+            <FieldError message={errors.namaProgram} />
           </div>
 
       {state.jenis === 'sewa-visibility' && (
@@ -2698,9 +2708,20 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
       {state.jenis === 'event-blbms' && (
         <div className="border-t border-slate-100 pt-5 space-y-4">
           <div>
-            <Label req>Nama Event</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label req>Nama Event</Label>
+              {state.eventJenis && (
+                <button
+                  type="button"
+                  onClick={() => setField('eventJenis', '')}
+                  className="mb-1 text-[11px] font-bold text-amber-700 hover:text-amber-800"
+                >
+                  Ganti
+                </button>
+              )}
+            </div>
             <SingleChoiceChips
-              options={EVENT_JENIS_OPTIONS.map((s) => ({ key: s, label: s }))}
+              options={(state.eventJenis ? [state.eventJenis] : EVENT_JENIS_OPTIONS).map((s) => ({ key: s, label: s }))}
               value={state.eventJenis}
               onChange={(v) => setField('eventJenis', v)}
             />
@@ -2937,6 +2958,44 @@ function SewaProductList({ products, rows, print = false }: { products: Product[
   );
 }
 
+function UpdateProductDetailTable({
+  products, fields, display, print = false,
+}: {
+  products: Product[];
+  fields: string[];
+  display: (plu: string, field: string) => React.ReactNode;
+  print?: boolean;
+}) {
+  if (products.length === 0 || fields.length === 0) return null;
+
+  return (
+    <div className={print ? 'overflow-visible' : 'rounded-xl border border-slate-200 overflow-hidden'}>
+      <table className={`${print ? 'text-[9.5px]' : 'text-[11px]'} w-full border-collapse`}>
+        <thead>
+          <tr className="bg-slate-100">
+            <th className="border border-slate-300 px-2 py-1 text-left">PLU</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Produk</th>
+            {fields.map((field) => (
+              <th key={field} className="border border-slate-300 px-2 py-1 text-left">{PRODUK_UPDATE_FIELDS.find((item) => item.key === field)?.label || field}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product) => (
+            <tr key={product.plu}>
+              <td className="border border-slate-200 px-2 py-1 font-mono">{product.plu}</td>
+              <td className="border border-slate-200 px-2 py-1 font-semibold">{product.nama}</td>
+              {fields.map((field) => (
+                <td key={`${product.plu}-${field}`} className="border border-slate-200 px-2 py-1">{display(product.plu, field) || '-'}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function EventMediaDetailTables({ mediaTypes, details, print = false }: { mediaTypes: string[]; details: EventMediaDetailRow[]; print?: boolean }) {
   if (mediaTypes.length === 0) return null;
   return (
@@ -2973,6 +3032,96 @@ function EventMediaDetailTables({ mediaTypes, details, print = false }: { mediaT
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function OnFakturDetailTable({ products, rows, print = false }: { products: Product[]; rows: Record<string, OnFakturProductRow>; print?: boolean }) {
+  if (products.length === 0) return null;
+
+  return (
+    <div className={print ? 'overflow-visible' : 'rounded-xl border border-slate-200 overflow-hidden'}>
+      <p className={`${print ? 'mb-1 text-[10px]' : 'bg-amber-50 px-3 py-2 text-[11px]'} font-black uppercase tracking-wider text-amber-700`}>On Faktur</p>
+      <table className={`${print ? 'text-[9.5px]' : 'text-[11px]'} w-full border-collapse`}>
+        <thead>
+          <tr className="bg-amber-50">
+            <th className="border border-slate-300 px-2 py-1 text-left">PLU</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Produk</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Potongan</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Syarat</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Alokasi</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Budget</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product) => {
+            const row = rows[product.plu] || emptyOnFakturProductRow();
+            const potongan = row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}%` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-';
+            const syarat = [
+              row.bandedAktif ? `Banded: ${row.banded || '-'}` : '',
+              row.strataMinQty ? `Strata: ${row.strataMinQty} ${row.strataSatuan}` : '',
+            ].filter(Boolean).join(' | ') || '-';
+
+            return (
+              <tr key={`on-${product.plu}`}>
+                <td className="border border-slate-200 px-2 py-1 font-mono">{product.plu}</td>
+                <td className="border border-slate-200 px-2 py-1 font-semibold">{product.nama}</td>
+                <td className="border border-slate-200 px-2 py-1">{potongan}</td>
+                <td className="border border-slate-200 px-2 py-1">{syarat}</td>
+                <td className="border border-slate-200 px-2 py-1">{row.alokasiQty ? `${row.alokasiQty} PCS` : '-'}</td>
+                <td className="border border-slate-200 px-2 py-1">{row.budgetAktif ? `Rp ${row.budgetNominal.toLocaleString('id-ID')}` : '-'}</td>
+                <td className="border border-slate-200 px-2 py-1">{row.keterangan || '-'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OffFakturDetailTable({ products, rows, print = false }: { products: Product[]; rows: Record<string, OffFakturProductRow>; print?: boolean }) {
+  if (products.length === 0) return null;
+
+  return (
+    <div className={print ? 'overflow-visible' : 'rounded-xl border border-slate-200 overflow-hidden'}>
+      <p className={`${print ? 'mb-1 text-[10px]' : 'bg-indigo-50 px-3 py-2 text-[11px]'} font-black uppercase tracking-wider text-indigo-700`}>Off Faktur</p>
+      <table className={`${print ? 'text-[9.5px]' : 'text-[11px]'} w-full border-collapse`}>
+        <thead>
+          <tr className="bg-indigo-50">
+            <th className="border border-slate-300 px-2 py-1 text-left">PLU</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Produk</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Potongan</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Benefit</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Alokasi</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Budget</th>
+            <th className="border border-slate-300 px-2 py-1 text-left">Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product) => {
+            const row = rows[product.plu] || emptyOffFakturProductRow();
+            const potongan = row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}% ${DISKON_BASIS_OPTIONS.find((o) => o.key === row.diskonBasis)?.label || ''}` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-';
+            const benefit = [
+              row.kuponVoucherAktif ? `Kupon: ${row.kuponVoucher || '-'}` : '',
+              row.freeProdukAktif ? `Free: ${row.freeProdukKeterangan || '-'}` : '',
+            ].filter(Boolean).join(' | ') || '-';
+
+            return (
+              <tr key={`off-${product.plu}`}>
+                <td className="border border-slate-200 px-2 py-1 font-mono">{product.plu}</td>
+                <td className="border border-slate-200 px-2 py-1 font-semibold">{product.nama}</td>
+                <td className="border border-slate-200 px-2 py-1">{potongan}</td>
+                <td className="border border-slate-200 px-2 py-1">{benefit}</td>
+                <td className="border border-slate-200 px-2 py-1">{row.offAlokasiQty ? `${row.offAlokasiQty} PCS` : '-'}</td>
+                <td className="border border-slate-200 px-2 py-1">{row.budgetAktif ? `Rp ${row.budgetNominal.toLocaleString('id-ID')}` : '-'}</td>
+                <td className="border border-slate-200 px-2 py-1">{row.keterangan || '-'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -3039,16 +3188,7 @@ function ReviewStep({
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Detail Update</p>
             {updateInfo.jenisUpdate === 'produk' ? (
-              <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
-                {updateInfo.selectedProducts.map((p) => (
-                  <div key={p.plu} className="p-4">
-                    <p className="text-[12px] font-bold text-slate-800 mb-1">{p.nama} <span className="font-mono text-slate-400 font-normal">({p.plu})</span></p>
-                    {updateInfo.produkFields.map((f) => (
-                      <Row key={f} label={PRODUK_UPDATE_FIELDS.find((x) => x.key === f)?.label} value={produkFieldDisplay(p.plu, f)} />
-                    ))}
-                  </div>
-                ))}
-              </div>
+              <UpdateProductDetailTable products={updateInfo.selectedProducts} fields={updateInfo.produkFields} display={produkFieldDisplay} />
             ) : (
               <div className="rounded-xl border border-slate-200 p-4 divide-y divide-slate-100">
                 {updateInfo.vendorFields.map((f) => (
@@ -3073,47 +3213,14 @@ function ReviewStep({
             </div>
 
             {hasOn && onProducts.length > 0 && (
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700 mt-3 mb-1.5">Produk On Faktur</p>
-                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
-                  {onProducts.map((p) => {
-                    const r = onRows[p.plu] || emptyOnFakturProductRow();
-                    return (
-                      <div key={p.plu} className="p-4 space-y-1">
-                        <p className="text-[12px] font-bold text-slate-800">{p.nama} <span className="font-mono text-slate-400 font-normal">({p.plu})</span></p>
-                        <Row label="Potongan" value={r.diskonMode === 'persen' ? `${r.diskonValue}%` : `Rp ${r.diskonValue.toLocaleString('id-ID')}`} />
-                        <Row label="Banded" value={r.bandedAktif ? `Ya - ${r.banded}` : 'Tidak'} />
-                        <Row label="Syarat Strata" value={r.strataMinQty ? `Min. ${r.strataMinQty} ${r.strataSatuan}` : ''} />
-                        <Row label="Alokasi PCS" value={r.alokasiQty ? `${r.alokasiQty} PCS` : ''} />
-                        <Row label="Budget" value={r.budgetAktif ? `Rp ${r.budgetNominal.toLocaleString('id-ID')}` : 'Tidak'} />
-                        <Row label="Keterangan" value={r.keterangan} />
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="mt-3">
+                <OnFakturDetailTable products={onProducts} rows={onRows} />
               </div>
             )}
 
             {hasOff && offProducts.length > 0 && (
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 mt-3 mb-1.5">Produk Off Faktur</p>
-                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
-                  {offProducts.map((p) => {
-                    const r = offRows[p.plu] || emptyOffFakturProductRow();
-                    return (
-                      <div key={p.plu} className="p-4 space-y-1">
-                        <p className="text-[12px] font-bold text-slate-800">{p.nama} <span className="font-mono text-slate-400 font-normal">({p.plu})</span></p>
-                        <Row label="Potongan" value={r.diskonMode === 'persen' ? `${r.diskonValue}%` : `Rp ${r.diskonValue.toLocaleString('id-ID')}`} />
-                        {r.diskonMode === 'persen' && <Row label="Basis Diskon" value={DISKON_BASIS_OPTIONS.find((o) => o.key === r.diskonBasis)?.label} />}
-                        <Row label="Kupon/Voucher" value={r.kuponVoucherAktif ? `Ya - ${r.kuponVoucher}` : 'Tidak'} />
-                        <Row label="Free Produk" value={r.freeProdukAktif ? `Ya — ${r.freeProdukKeterangan}` : 'Tidak'} />
-                        <Row label="Alokasi PCS" value={r.offAlokasiQty ? `${r.offAlokasiQty} PCS` : ''} />
-                        <Row label="Budget" value={r.budgetAktif ? `Rp ${r.budgetNominal.toLocaleString('id-ID')}` : 'Tidak'} />
-                        <Row label="Keterangan" value={r.keterangan} />
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="mt-3">
+                <OffFakturDetailTable products={offProducts} rows={offRows} />
               </div>
             )}
 
@@ -3421,14 +3528,17 @@ function SuccessScreen({
           <div className="border border-t-0 border-slate-200 p-3">
             {jenisMemo === 'update-informasi' && (
               <div className="space-y-3">
-                {updateInfo.jenisUpdate === 'produk' && updateInfo.selectedProducts.map((product) => (
-                  <div key={product.plu} className="memo-detail-card rounded border border-slate-200 p-3">
-                    <p className="mb-2 text-[12px] font-black">{product.nama} <span className="font-mono text-slate-400">({product.plu})</span></p>
-                    {updateInfo.produkFields.map((field) => (
-                      <PrintInfoRow key={field} label={PRODUK_UPDATE_FIELDS.find((f) => f.key === field)?.label || field} value={updateFieldValue(product, field)} />
-                    ))}
-                  </div>
-                ))}
+                {updateInfo.jenisUpdate === 'produk' && (
+                  <UpdateProductDetailTable
+                    products={updateInfo.selectedProducts}
+                    fields={updateInfo.produkFields}
+                    display={(plu, field) => {
+                      const product = updateInfo.selectedProducts.find((item) => item.plu === plu);
+                      return product ? updateFieldValue(product, field) : '-';
+                    }}
+                    print
+                  />
+                )}
                 {updateInfo.jenisUpdate === 'vendor' && (
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
                     {updateInfo.vendorFields.map((field) => (
@@ -3443,84 +3553,8 @@ function SuccessScreen({
               <div className="space-y-3">
                 <PrintInfoRow label="Cara Pembayaran" value={programInfo.caraPembayaran || '-'} />
                 <PrintInfoRow label="Redaksi" value={programInfo.redaksi} />
-                {onProducts.length > 0 && (
-                  <div className="overflow-visible">
-                    <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-amber-700">On Faktur</p>
-                    <table className="w-full border-collapse text-[9.5px]">
-                      <thead>
-                        <tr className="bg-amber-50">
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">PLU</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Produk</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Potongan</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Syarat</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Alokasi</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Budget</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Keterangan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {onProducts.map((product) => {
-                          const row = onRows[product.plu] || emptyOnFakturProductRow();
-                          const potongan = row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}%` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-';
-                          const syarat = [
-                            row.bandedAktif ? `Banded: ${row.banded || '-'}` : '',
-                            row.strataMinQty ? `Strata: ${row.strataMinQty} ${row.strataSatuan}` : '',
-                          ].filter(Boolean).join(' | ') || '-';
-                          return (
-                            <tr key={`on-${product.plu}`}>
-                              <td className="border border-slate-200 px-1.5 py-1 font-mono">{product.plu}</td>
-                              <td className="border border-slate-200 px-1.5 py-1 font-semibold">{product.nama}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{potongan}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{syarat}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{row.alokasiQty ? `${row.alokasiQty} PCS` : '-'}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{row.budgetAktif ? `Rp ${row.budgetNominal.toLocaleString('id-ID')}` : '-'}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{row.keterangan || '-'}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                {offProducts.length > 0 && (
-                  <div className="overflow-visible">
-                    <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-indigo-700">Off Faktur</p>
-                    <table className="w-full border-collapse text-[9.5px]">
-                      <thead>
-                        <tr className="bg-indigo-50">
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">PLU</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Produk</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Potongan</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Benefit</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Alokasi</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Budget</th>
-                          <th className="border border-slate-300 px-1.5 py-1 text-left">Keterangan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {offProducts.map((product) => {
-                          const row = offRows[product.plu] || emptyOffFakturProductRow();
-                          const potongan = row.diskonValue ? (row.diskonMode === 'persen' ? `${row.diskonValue}% ${DISKON_BASIS_OPTIONS.find((o) => o.key === row.diskonBasis)?.label || ''}` : `Rp ${row.diskonValue.toLocaleString('id-ID')}`) : '-';
-                          const benefit = [
-                            row.kuponVoucherAktif ? `Kupon: ${row.kuponVoucher || '-'}` : '',
-                            row.freeProdukAktif ? `Free: ${row.freeProdukKeterangan || '-'}` : '',
-                          ].filter(Boolean).join(' | ') || '-';
-                          return (
-                            <tr key={`off-${product.plu}`}>
-                              <td className="border border-slate-200 px-1.5 py-1 font-mono">{product.plu}</td>
-                              <td className="border border-slate-200 px-1.5 py-1 font-semibold">{product.nama}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{potongan}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{benefit}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{row.offAlokasiQty ? `${row.offAlokasiQty} PCS` : '-'}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{row.budgetAktif ? `Rp ${row.budgetNominal.toLocaleString('id-ID')}` : '-'}</td>
-                              <td className="border border-slate-200 px-1.5 py-1">{row.keterangan || '-'}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                {onProducts.length > 0 && <OnFakturDetailTable products={onProducts} rows={onRows} print />}
+                {offProducts.length > 0 && <OffFakturDetailTable products={offProducts} rows={offRows} print />}
                 {budgetLink.nominal > 0 && <PrintInfoRow label="Budget" value={`${budgetLink.keterangan} - Rp ${budgetLink.nominal.toLocaleString('id-ID')}`} />}
               </div>
             )}
@@ -3603,17 +3637,21 @@ function SuccessScreen({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-12 mt-10 text-center text-[12px]">
-          <div><p className="font-bold">Buyer</p><div className="h-20 border-b border-slate-400" /><p className="mt-2 text-slate-500"></p></div>
-          <div><p className="font-bold">Supplier</p><div className="h-20 border-b border-slate-400 flex items-end justify-center">{signature && <img src={signature} alt="Tanda tangan supplier" className="max-h-16 max-w-48 object-contain" />}</div><p className="mt-2 text-slate-500">{identity?.picName || 'Nama & Tanda Tangan'}</p></div>
-        </div>
-        <div className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-[10.5px] font-bold text-red-800">
-          Supplier menyatakan bersedia melakukan pembayaran sebelum 2 bulan setelah program berakhir.
+        <div className="memo-signature-block">
+          <div className="grid grid-cols-2 gap-10 mt-5 text-center text-[11px]">
+            <div><p className="font-bold">Buyer</p><div className="h-14 border-b border-slate-400" /><p className="mt-1.5 text-slate-500"></p></div>
+            <div><p className="font-bold">Supplier</p><div className="h-14 border-b border-slate-400 flex items-end justify-center">{signature && <img src={signature} alt="Tanda tangan supplier" className="max-h-12 max-w-40 object-contain" />}</div><p className="mt-1.5 text-slate-500">{identity?.picName || 'Nama & Tanda Tangan'}</p></div>
+          </div>
+          {jenisMemo !== 'update-informasi' && (
+            <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-1.5 text-[10px] font-bold text-red-800">
+              Supplier menyatakan bersedia melakukan pembayaran sebelum 2 bulan setelah program berakhir.
+            </div>
+          )}
         </div>
 
-        <div className="mt-8 pt-4 border-t border-slate-200 flex items-end justify-between gap-6">
-          <div className="text-[9px] text-slate-500 leading-relaxed"><p className="font-black text-slate-600">Kredensial Keaslian Dokumen</p><p className="font-mono break-all">{credential}</p></div>
-          <div className="grid gap-0.5 border border-slate-300 p-1 bg-white w-[84px] h-[84px] shrink-0" style={{ gridTemplateColumns: 'repeat(21, 1fr)' }}>{qrCells.map((active, i) => <span key={i} className={active ? 'bg-slate-950' : 'bg-white'} />)}</div>
+        <div className="mt-5 pt-3 border-t border-slate-200 flex items-end justify-between gap-6">
+          <div className="text-[8.5px] text-slate-500 leading-relaxed"><p className="font-black text-slate-600">Kredensial Keaslian Dokumen</p><p className="font-mono break-all">{credential}</p></div>
+          <div className="grid gap-0.5 border border-slate-300 p-1 bg-white w-[70px] h-[70px] shrink-0" style={{ gridTemplateColumns: 'repeat(21, 1fr)' }}>{qrCells.map((active, i) => <span key={i} className={active ? 'bg-slate-950' : 'bg-white'} />)}</div>
         </div>
       </div>
         </div>
@@ -3834,7 +3872,6 @@ export default function SupplierMemoWizard() {
       if (jenisMemo === 'memo-program' && !programInfo.caraPembayaran) e.caraPembayaran = 'Pilih cara pembayaran.';
     }
     if (key === 'pendapatan-jenis') {
-      if (!pendapatan.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
       if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
     }
     if (key === 'pendapatan') {
