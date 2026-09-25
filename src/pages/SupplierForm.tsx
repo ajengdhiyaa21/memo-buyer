@@ -105,7 +105,7 @@ const VENDOR_UPDATE_FIELDS = [
 const JENIS_MEMO_OPTIONS = [
   { key: 'update-informasi', label: 'Update Informasi', desc: 'Perbarui data produk atau profil vendor', icon: FileText },
   { key: 'memo-program', label: 'Memo Program', desc: 'On Faktur dan Off Faktur', icon: Tag },
-  { key: 'pendapatan-lain', label: 'Memo Lain-lain', desc: 'Sewa/visibility, reward, promosi, listing, event & BLBMS', icon: Building2 },
+  { key: 'pendapatan-lain', label: 'Memo Lain-lain', desc: 'Sewa/visibility, reward, promosi, listing, event', icon: Building2 },
 ] as const;
 
 const PROGRAM_TIPE_OPTIONS = [
@@ -125,14 +125,15 @@ const SEWA_PPH_RATE_OPTIONS = ['PPh Pasal 23 - 2%', 'PPh Final 4 Ayat 2 - 10%'];
 const SEWA_CARA_PEMBAYARAN_OPTIONS = ['Transfer', 'Tunai', 'Potong Tagihan'];
 
 const PENDAPATAN_OPTIONS = [
-  { key: 'event-blbms', label: 'Event dan BLBMS', desc: 'Sewa area/kegiatan untuk event outlet atau BLBMS', icon: Calendar },
+  { key: 'event-blbms', label: 'Event', desc: 'Sewa area/kegiatan untuk event outlet', icon: Calendar },
   { key: 'sewa-visibility', label: 'Sewa / Visibility', desc: 'Sewa ruang, gondola, atau media visibility', icon: Store },
   { key: 'reward-insentif', label: 'Reward / Insentif', desc: 'Reward atau insentif yang melekat pada pencapaian target', icon: Gift },
   { key: 'promosi', label: 'Promosi (Media Cetak/Digital)', desc: 'Kerja sama promosi melalui media cetak atau digital', icon: Megaphone },
   { key: 'listing', label: 'Listing', desc: 'Pendaftaran produk baru beserta syarat & ketentuan', icon: Receipt },
 ] as const;
+const VISIBLE_PENDAPATAN_OPTIONS = PENDAPATAN_OPTIONS.filter((option) => !['sewa-visibility', 'promosi'].includes(option.key));
 
-const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Open Booth', 'Clip Strip', 'Fasilitas (Air/Listrik)', 'Dumbin/Mini Wings', 'Showroom/Tenant', 'Building'];
+const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Clip Strip', 'Dumbin/Mini Wings'];
 const PROMOSI_MEDIA_OPTIONS = ['Neonbox Instore', 'Spanduk/Banner In Store', 'Spanduk/Banner Out Store', 'Banner Mobil', 'TVC/Digital Signage', 'Brosur', 'Sosial Media', 'Audio Instore Promo', 'Rollup Banner'];
 const REWARD_JENIS_OPTIONS = ['Reward', 'Insentif'];
 const REWARD_BENTUK_OPTIONS = ['Uang', 'Barang', 'Hadiah', 'Trip'];
@@ -141,10 +142,11 @@ const REWARD_BENTUK_OPTIONS = ['Uang', 'Barang', 'Hadiah', 'Trip'];
 const EVENT_JENIS_OPTIONS = ['Belanja Luar Biasa Murah Spektakuler (BLBMS)', 'Pra Ramadhan & Lebaran', 'Anniversary', 'Tahun Ajaran Baru', 'Natal dan Tahun Baru', 'Grand Opening (New Store)', 'Additional Event', 'Regular Event'];
 
 /** Bentuk/fasilitas yang dipilih setelah Jenis Event — gabungan Reward/Insentif, Promosi, dan Sewa/Visibility. */
-const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publish'];
+const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publish', 'Area dan Fasilitas'];
 const EVENT_MEDIA_BY_CATEGORY: Record<string, string[]> = {
   'Media Display Produk': SEWA_VISIBILITY_JENIS,
   'Media Branding & Publish': PROMOSI_MEDIA_OPTIONS,
+  'Area dan Fasilitas': ['Openbooth/Tenant', 'Showroom', 'Buildings', 'Free Drink', 'Free Test','Open Table', 'Fasilitas Air', 'Fasilitas Listrik', 'Fasilitas Internet'],
 };
 
 const SATUAN_OPTIONS = ['PCS', 'BANDED', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK'];
@@ -193,7 +195,10 @@ function getSteps(jenisMemo: JenisMemo, tipeProgram: string[]): StepDef[] {
     steps.push({ key: 'program-info', label: 'Info Program' });
     steps.push({ key: 'program-detail', label: 'Detail Program' });
   }
-  if (jenisMemo === 'pendapatan-lain') steps.push({ key: 'pendapatan', label: 'Program Lain' });
+  if (jenisMemo === 'pendapatan-lain') {
+    steps.push({ key: 'pendapatan-jenis', label: 'Jenis Program' });
+    steps.push({ key: 'pendapatan', label: 'Detail Program' });
+  }
   steps.push({ key: 'catatan', label: 'Catatan' });
   steps.push({ key: 'tinjau', label: 'Tinjau & TTD' });
   return steps;
@@ -780,6 +785,267 @@ function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
             ? `Batas pembayar maksimal sampai tanggal ${dueDate}.`
             : 'Batas pembayar maksimal akan tampil setelah Periode Sampai diisi.'}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function DateRangeLikePicker({
+  start, end, onStart, onEnd,
+}: {
+  start: string; end: string; onStart: (v: string) => void; onEnd: (v: string) => void;
+}) {
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label req>Tanggal Pemakaian Jasa / Sewa</Label>
+          <div className="grid grid-cols-[38px_1fr] rounded-lg border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
+            <div className="flex items-center justify-center bg-slate-100 border-r border-slate-300 text-slate-500"><Calendar className="h-4 w-4" /></div>
+            <input type="date" value={start} onChange={(e) => onStart(e.target.value)} className="px-3 py-2.5 text-[13px] outline-none text-slate-700" />
+          </div>
+        </div>
+        <div>
+          <Label req>Tanggal Jatuh Tempo</Label>
+          <div className="grid grid-cols-[38px_1fr] rounded-lg border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
+            <div className="flex items-center justify-center bg-slate-100 border-r border-slate-300 text-slate-500"><Calendar className="h-4 w-4" /></div>
+            <input type="date" value={end} onChange={(e) => onEnd(e.target.value)} className="px-3 py-2.5 text-[13px] outline-none text-slate-700" />
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
+        {start && end ? `${start} sampai ${end}` : 'Pilih tanggal pemakaian dan tanggal jatuh tempo.'}
+      </div>
+    </div>
+  );
+}
+
+function formatDateShort(dateValue: string) {
+  if (!dateValue) return '';
+  const date = new Date(`${dateValue}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function dateRangeDurationLabel(startValue: string, endValue: string) {
+  if (!startValue || !endValue) return '';
+  const start = new Date(`${startValue}T00:00:00`);
+  const end = new Date(`${endValue}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return '';
+  let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  let anchor = new Date(start);
+  anchor.setMonth(anchor.getMonth() + months);
+  if (anchor > end) {
+    months -= 1;
+    anchor = new Date(start);
+    anchor.setMonth(anchor.getMonth() + months);
+  }
+  const days = Math.floor((end.getTime() - anchor.getTime()) / 86400000) + 1;
+  return `${formatDateShort(startValue)} sampai ${formatDateShort(endValue)} (${months ? `${months} bulan` : ''}${months && days ? ' ' : ''}${days ? `${days} hari` : ''})`;
+}
+
+function DualCalendarRangePicker({
+  start, end, onStart, onEnd, minDate,
+}: {
+  start: string; end: string; onStart: (v: string) => void; onEnd: (v: string) => void;
+  /** Opsional (format YYYY-MM-DD). Tanggal sebelum ini dicoret & tidak bisa dipilih. */
+  minDate?: string;
+}) {
+  const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  const toDate = (v: string) => {
+    if (!v) return null;
+    const d = new Date(`${v}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const toValue = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+  const fmt = (v: string) => {
+    const d = toDate(v);
+    if (!d) return '';
+    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+  };
+  const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+  const sameDay = (a: Date | null, b: Date) => Boolean(a && a.toDateString() === b.toDateString());
+  const minD = toDate(minDate || '');
+
+  const [open, setOpen] = useState(false);
+  const [draftStart, setDraftStart] = useState('');
+  const [draftEnd, setDraftEnd] = useState('');
+  const [hover, setHover] = useState<Date | null>(null);
+  const [visibleMonth, setVisibleMonth] = useState(() => monthStart(toDate(start) || new Date()));
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const closePicker = () => { setOpen(false); setHover(null); };
+  const openPicker = () => {
+    const today = new Date();
+    setDraftStart(start);
+    setDraftEnd(end);
+    setHover(null);
+    setVisibleMonth(monthStart(toDate(start) || (minD && minD > today ? minD : today)));
+    setOpen(true);
+  };
+  const applyPicker = () => {
+    if (!draftStart || !draftEnd) return;
+    onStart(draftStart);
+    onEnd(draftEnd);
+    closePicker();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) closePicker();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closePicker(); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const ds = toDate(draftStart);
+  const de = toDate(draftEnd);
+  const previewEnd = de ?? (ds && hover && hover > ds ? hover : null);
+  const isEdge = (d: Date) => sameDay(ds, d) || sameDay(de, d);
+  const inRange = (d: Date) => Boolean(ds && previewEnd && d > ds && (de ? d < de : d <= previewEnd));
+
+  const pickDate = (date: Date) => {
+    const value = toValue(date);
+    if (!draftStart || draftEnd || (ds && date < ds)) {
+      setDraftStart(value);
+      setDraftEnd('');
+      return;
+    }
+    setDraftEnd(value);
+    setHover(null);
+  };
+
+  const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+  const baseYear = new Date().getFullYear();
+  const yearFrom = Math.min(baseYear - 5, visibleMonth.getFullYear());
+  const yearTo = Math.max(baseYear + 10, nextMonth.getFullYear());
+  const years = Array.from({ length: yearTo - yearFrom + 1 }, (_, i) => yearFrom + i);
+  const canPrev = !minD || visibleMonth > monthStart(minD);
+  const selectCls = 'rounded border border-slate-300 bg-white px-1 py-0.5 text-[12px] text-slate-700 focus:outline-none focus:border-[#2b7bbf]';
+
+  const renderMonth = (month: Date, side: 'left' | 'right') => {
+    const leading = (new Date(month.getFullYear(), month.getMonth(), 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    const offset = side === 'right' ? -1 : 0; // bulan kanan = visibleMonth + 1
+    const setMonthYear = (y: number, m: number) => setVisibleMonth(new Date(y, m + offset, 1));
+
+    const cells = Array.from({ length: 42 }, (_, i) => {
+      const day = i - leading + 1;
+      const date = new Date(month.getFullYear(), month.getMonth(), day);
+      const inMonth = day >= 1 && day <= daysInMonth;
+      const disabled = Boolean(minD && date < minD);
+      if (!inMonth) {
+        return (
+          <div key={i} className={`flex h-9 items-center justify-center text-[13px] text-slate-300 ${disabled ? 'line-through' : ''}`}>
+            {date.getDate()}
+          </div>
+        );
+      }
+      const edge = isEdge(date);
+      const ranged = inRange(date);
+      return (
+        <button
+          key={i}
+          type="button"
+          disabled={disabled && !edge}
+          onClick={() => pickDate(date)}
+          onMouseEnter={() => setHover(date)}
+          className={`h-9 text-[13px] transition-colors ${
+            edge ? 'rounded-[3px] bg-[#2b7bbf] font-semibold text-white'
+              : disabled ? 'cursor-not-allowed text-slate-400 line-through'
+              : ranged ? 'bg-[#e6f0f8] font-medium text-slate-700'
+              : 'font-medium text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          {date.getDate()}
+        </button>
+      );
+    });
+
+    return (
+      <div>
+        <div className="relative mb-3 flex h-8 items-center justify-center gap-1.5">
+          {side === 'left' && canPrev && (
+            <button type="button" aria-label="Bulan sebelumnya" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))} className="absolute left-0 flex h-7 w-7 items-center justify-center rounded text-[16px] font-bold text-slate-700 hover:bg-slate-100">‹</button>
+          )}
+          <select value={month.getMonth()} onChange={(e) => setMonthYear(month.getFullYear(), Number(e.target.value))} className={selectCls} aria-label="Bulan">
+            {monthNames.map((name, idx) => <option key={name} value={idx}>{name}</option>)}
+          </select>
+          <select value={month.getFullYear()} onChange={(e) => setMonthYear(Number(e.target.value), month.getMonth())} className={selectCls} aria-label="Tahun">
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          {side === 'right' && (
+            <button type="button" aria-label="Bulan berikutnya" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))} className="absolute right-0 flex h-7 w-7 items-center justify-center rounded text-[16px] font-bold text-slate-700 hover:bg-slate-100">›</button>
+          )}
+        </div>
+        <div className="grid grid-cols-7 text-center">
+          {dayNames.map((d) => <div key={d} className="py-2 text-[12px] font-bold text-slate-800">{d}</div>)}
+          {cells}
+        </div>
+      </div>
+    );
+  };
+
+  const trigger = (label: string, value: string, placeholder: string) => (
+    <div>
+      <Label req>{label}</Label>
+      <button
+        type="button"
+        onClick={() => (open ? closePicker() : openPicker())}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className={`grid w-full grid-cols-[38px_1fr] overflow-hidden rounded-lg border bg-white text-left transition-all ${open ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-300 hover:border-slate-400'}`}
+      >
+        <span className="flex items-center justify-center border-r border-slate-300 bg-slate-100 text-slate-500"><Calendar className="h-4 w-4" /></span>
+        <span className={`px-3 py-2.5 text-[13px] ${value ? 'font-semibold text-slate-700' : 'text-slate-400'}`}>{value ? fmt(value) : placeholder}</span>
+      </button>
+    </div>
+  );
+
+  return (
+    <div>
+      <div ref={wrapRef} className="relative">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {trigger('Tanggal Mulai Sewa', start, 'Pilih tanggal mulai sewa')}
+          {trigger('Tanggal Selesai Sewa', end, 'Klik untuk pilih tanggal selesai')}
+        </div>
+        {open && (
+          <div role="dialog" aria-label="Pilih rentang tanggal sewa" className="absolute left-0 top-full z-50 mt-1 w-full max-w-full rounded-lg border border-slate-200 bg-white shadow-xl sm:w-[560px]" onMouseLeave={() => setHover(null)}>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-4 px-4 pb-3 pt-4 sm:grid-cols-2">
+              {renderMonth(visibleMonth, 'left')}
+              {renderMonth(nextMonth, 'right')}
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 border-t border-slate-200 px-4 py-3">
+              <span className="text-[12px] text-slate-600">
+                {draftStart ? `${fmt(draftStart)}${draftEnd ? ` to ${fmt(draftEnd)}` : ''}` : 'Pilih tanggal mulai lalu tanggal selesai'}
+              </span>
+              <button type="button" onClick={closePicker} className="text-[13px] font-semibold text-slate-600 hover:text-slate-800">Batal</button>
+              <button
+                type="button"
+                onClick={applyPicker}
+                disabled={!draftStart || !draftEnd}
+                className="rounded-md bg-[#d1b063] px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[#c29f4f] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#d1b063]"
+              >
+                Pilih
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
+        {dateRangeDurationLabel(start, end) || 'Pilih tanggal mulai dan tanggal selesai.'}
       </div>
     </div>
   );
@@ -1403,6 +1669,9 @@ function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState;
       <div>
         <Label req>Periode Program</Label>
         <PeriodeRange awal={state.periodeAwal} akhir={state.periodeAkhir} onAwal={(v) => setField('periodeAwal', v)} onAkhir={(v) => setField('periodeAkhir', v)} />
+        <div className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-semibold text-blue-700">
+          Durasi: {dateRangeDurationLabel(state.periodeAwal, state.periodeAkhir) || 'Pilih Periode Dari dan Periode Sampai.'}
+        </div>
         <FieldError message={errors.periodeAwal || errors.periodeAkhir} />
         <PaymentDueWarning dueDate={paymentDueDate} />
       </div>
@@ -2029,7 +2298,6 @@ interface PendapatanState {
   target: string;
   rewardMode: DiskonMode;
   rewardValue: number;
-  rewardDurasiBulan: number;
   rewardPeriodeAwal: string; rewardPeriodeAkhir: string;
   rewardKeterangan: string;
   rewardPpnAktif: boolean; rewardPpnRate: string;
@@ -2053,7 +2321,8 @@ interface PendapatanState {
   // Event dan BLBMS
   eventJenis: string; eventJenisLainnya: string;
   eventBentuk: string;
-  eventMediaJenis: string;
+  eventMediaJenis: string[];
+  eventMediaDetails: EventMediaDetailRow[];
   eventNominal: number;
   eventHargaPajak: string;
   eventCaraPembayaran: string;
@@ -2064,7 +2333,16 @@ interface PendapatanState {
   eventPphAktif: boolean; eventPphRate: string;
 }
 
-function PendapatanStep({ state, setField, errors }: { state: PendapatanState; setField: <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => void; errors: FormErrors }) {
+interface EventMediaDetailRow {
+  id: string;
+  mediaJenis: string;
+  nama: string;
+  nominal: number;
+  tanggalMulai: string;
+  tanggalSelesai: string;
+}
+
+function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: PendapatanState; setField: <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => void; errors: FormErrors; mode?: 'jenis' | 'detail' }) {
   const syncProductRows = (products: Product[], rows: Record<string, ProductQtyRow>) => {
     const next: Record<string, ProductQtyRow> = {};
     products.forEach((product) => {
@@ -2093,15 +2371,44 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
   };
   const addListingRow = () => setField('listingProducts', [...state.listingProducts, emptyListingProductRow()]);
   const removeListingRow = (index: number) => setField('listingProducts', state.listingProducts.filter((_, i) => i !== index));
+  const addEventMediaDetail = (mediaJenis: string) => {
+    setField('eventMediaDetails', [
+      ...state.eventMediaDetails,
+      { id: `${mediaJenis}-${Date.now()}`, mediaJenis, nama: '', nominal: 0, tanggalMulai: state.eventPeriodeAwal || '', tanggalSelesai: '' },
+    ]);
+  };
+  const updateEventMediaDetail = (id: string, patch: Partial<EventMediaDetailRow>) => {
+    setField('eventMediaDetails', state.eventMediaDetails.map((row) => row.id === id ? { ...row, ...patch } : row));
+  };
+  const removeEventMediaDetail = (id: string) => setField('eventMediaDetails', state.eventMediaDetails.filter((row) => row.id !== id));
+  const eventDetailDuration = (row: EventMediaDetailRow) => {
+    if (!row.tanggalMulai || !row.tanggalSelesai) return 'Pilih tanggal mulai dan selesai.';
+    const start = new Date(`${row.tanggalMulai}T00:00:00`);
+    const end = new Date(`${row.tanggalSelesai}T00:00:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return 'Tanggal selesai harus setelah tanggal mulai.';
+    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    let anchor = new Date(start);
+    anchor.setMonth(anchor.getMonth() + months);
+    if (anchor > end) {
+      months -= 1;
+      anchor = new Date(start);
+      anchor.setMonth(anchor.getMonth() + months);
+    }
+    const days = Math.floor((end.getTime() - anchor.getTime()) / 86400000) + 1;
+    return `${months > 0 ? `${months} bulan` : ''}${months > 0 && days > 0 ? ' ' : ''}${days > 0 ? `${days} hari` : ''}` || '0 hari';
+  };
+  const eventUsesMediaDetails = state.eventBentuk === 'Media Display Produk';
 
   return (
-    <Card title="Memo Lain-lain" icon={Building2} subtitle="Pilih satu jenis program lain-lain">
-      <div><Label req>Nama Program / Kegiatan</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={inp} placeholder="cth: Sewa Gondola Ujung MK3" /></div>
+    <Card title={mode === 'jenis' ? 'Pilih Jenis Program' : 'Detail Program Lain-lain'} icon={Building2} subtitle={mode === 'jenis' ? 'Pilih jenis program yang ingin diajukan' : 'Lengkapi detail berdasarkan jenis program yang dipilih'}>
+      {mode === 'jenis' && (
+        <>
+      <div><Label req>Nama Program / Kegiatan</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={inp} placeholder="cth: Program Event Reguler" /></div>
 
       <div>
         <Label req>Jenis Program</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {PENDAPATAN_OPTIONS.map((o) => {
+          {VISIBLE_PENDAPATAN_OPTIONS.map((o) => {
             const Icon = o.icon; const active = state.jenis === o.key;
             return (
               <button key={o.key} type="button" onClick={() => setField('jenis', o.key)}
@@ -2114,6 +2421,15 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
         </div>
         <FieldError message={errors.jenis} />
       </div>
+        </>
+      )}
+
+      {mode === 'detail' && (
+        <>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Jenis Program</p>
+            <p className="mt-1 text-[13px] font-bold text-slate-800">{PENDAPATAN_OPTIONS.find((o) => o.key === state.jenis)?.label || '-'}</p>
+          </div>
 
       {state.jenis === 'sewa-visibility' && (
         <div className="border-t border-slate-100 pt-5 space-y-4">
@@ -2218,14 +2534,14 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label req>Tanggal Mulai Periode</Label><input type="date" value={state.rewardPeriodeAwal} onChange={(e) => setField('rewardPeriodeAwal', e.target.value)} className={inp} /></div>
             <div>
-              <Label req>Durasi Periode</Label>
-              <div className="relative">
-                <input type="number" min={1} value={state.rewardDurasiBulan || ''} onChange={(e) => setField('rewardDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
-              </div>
+              <Label req>Tanggal Selesai Periode</Label>
+              <input type="date" value={state.rewardPeriodeAkhir} onChange={(e) => setField('rewardPeriodeAkhir', e.target.value)} className={inp} />
             </div>
           </div>
-          <PaymentDueWarning dueDate={addMonthsDateLabel(periodEndDateValue(state.rewardPeriodeAwal, state.rewardDurasiBulan), 2)} />
+          <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-semibold text-blue-700">
+            Durasi: {dateRangeDurationLabel(state.rewardPeriodeAwal, state.rewardPeriodeAkhir) || 'Pilih tanggal mulai dan tanggal selesai.'}
+          </div>
+          <PaymentDueWarning dueDate={addMonthsDateLabel(state.rewardPeriodeAkhir, 2)} />
           <div><Label>Keterangan</Label><textarea rows={3} value={state.rewardKeterangan} onChange={(e) => setField('rewardKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait reward/insentif..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -2397,16 +2713,73 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
               value={state.eventBentuk}
               onChange={(v) => {
                 setField('eventBentuk', v);
-                setField('eventMediaJenis', '');
+                setField('eventMediaJenis', []);
+                setField('eventMediaDetails', []);
               }}
             />
             <FieldError message={errors.eventBentuk} />
           </div>
           {state.eventBentuk && (
             <div>
-              <Label req>Jenis Media</Label>
-              <SingleChoiceChips options={(EVENT_MEDIA_BY_CATEGORY[state.eventBentuk] || []).map((s) => ({ key: s, label: s }))} value={state.eventMediaJenis} onChange={(v) => setField('eventMediaJenis', v)} />
+              <Label req>{eventUsesMediaDetails ? 'Jenis Media (bisa lebih dari satu)' : 'Jenis Media'}</Label>
+              {eventUsesMediaDetails ? (
+                <MultiChoiceChips
+                  options={(EVENT_MEDIA_BY_CATEGORY[state.eventBentuk] || []).map((s) => ({ key: s, label: s }))}
+                  value={state.eventMediaJenis}
+                  onChange={(values) => {
+                    setField('eventMediaJenis', values);
+                    setField('eventMediaDetails', state.eventMediaDetails.filter((row) => values.includes(row.mediaJenis)));
+                  }}
+                />
+              ) : (
+                <SingleChoiceChips
+                  options={(EVENT_MEDIA_BY_CATEGORY[state.eventBentuk] || []).map((s) => ({ key: s, label: s }))}
+                  value={state.eventMediaJenis[0] || ''}
+                  onChange={(value) => {
+                    setField('eventMediaJenis', value ? [value] : []);
+                    setField('eventMediaDetails', []);
+                  }}
+                />
+              )}
               <FieldError message={errors.eventMediaJenis} />
+            </div>
+          )}
+          {eventUsesMediaDetails && state.eventMediaJenis.length > 0 && (
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+              <div>
+                <p className="text-[12px] font-black uppercase tracking-wider text-slate-500">Detail Jenis Media</p>
+                <p className="mt-1 text-[11px] text-slate-400">Isi detail per media, masukkan nama Media untuk Produk dengan nominal dan periode masing-masing.</p>
+              </div>
+              {state.eventMediaJenis.map((media) => (
+                <div key={media} className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[13px] font-bold text-slate-800">{media}</p>
+                    <button type="button" onClick={() => addEventMediaDetail(media)} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white"><Plus className="h-3.5 w-3.5" />Tambah Detail</button>
+                  </div>
+                  {(state.eventMediaDetails.filter((row) => row.mediaJenis === media).length ? state.eventMediaDetails.filter((row) => row.mediaJenis === media) : []).map((row) => (
+                    <div key={row.id} className="rounded-xl border border-slate-200 p-3 space-y-3">
+                      <div className="flex justify-between gap-3">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">Detail {media}</p>
+                        <button type="button" onClick={() => removeEventMediaDetail(row.id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div><Label req>Nama {media}</Label><input type="text" value={row.nama} onChange={(e) => updateEventMediaDetail(row.id, { nama: e.target.value })} className={inp} placeholder={`cth: ${media} Nama Clip Strip`} /></div>
+                        <div><Label req>Nilai Sewa (Rp)</Label><input type="number" min={0} value={row.nominal || ''} onChange={(e) => updateEventMediaDetail(row.id, { nominal: parseFloat(e.target.value) || 0 })} className={inp} placeholder="0" /></div>
+                      </div>
+                      <DateRangeLikePicker
+                        start={row.tanggalMulai}
+                        end={row.tanggalSelesai}
+                        onStart={(value) => updateEventMediaDetail(row.id, { tanggalMulai: value })}
+                        onEnd={(value) => updateEventMediaDetail(row.id, { tanggalSelesai: value })}
+                      />
+                      <p className="rounded-lg bg-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-600">Durasi: {eventDetailDuration(row)}</p>
+                    </div>
+                  ))}
+                  {state.eventMediaDetails.filter((row) => row.mediaJenis === media).length === 0 && (
+                    <button type="button" onClick={() => addEventMediaDetail(media)} className="w-full rounded-xl border border-dashed border-amber-300 bg-amber-50 py-3 text-[12px] font-bold text-amber-700">Tambah detail {media}</button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2424,17 +2797,16 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             <Label req>Cara Pembayaran</Label>
             <SingleChoiceChips options={SEWA_CARA_PEMBAYARAN_OPTIONS.map((s) => ({ key: s, label: s }))} value={state.eventCaraPembayaran} onChange={(v) => setField('eventCaraPembayaran', v)} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label req>Tanggal Mulai Sewa</Label><input type="date" value={state.eventPeriodeAwal} onChange={(e) => setField('eventPeriodeAwal', e.target.value)} className={inp} /></div>
-            <div>
-              <Label req>Durasi Sewa</Label>
-              <div className="relative">
-                <input type="number" min={1} value={state.eventDurasiBulan || ''} onChange={(e) => setField('eventDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
-              </div>
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div><Label req>Tanggal Mulai Sewa</Label><input type="date" value={state.eventPeriodeAwal} onChange={(e) => setField('eventPeriodeAwal', e.target.value)} className={inp} /></div>
+              <div><Label req>Tanggal Selesai Sewa</Label><input type="date" value={state.eventPeriodeAkhir} onChange={(e) => setField('eventPeriodeAkhir', e.target.value)} className={inp} /></div>
             </div>
+            <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-semibold text-blue-700">
+              Durasi: {dateRangeDurationLabel(state.eventPeriodeAwal, state.eventPeriodeAkhir) || 'Pilih tanggal mulai dan tanggal selesai.'}
+            </p>
           </div>
-          <PaymentDueWarning dueDate={addMonthsDateLabel(periodEndDateValue(state.eventPeriodeAwal, state.eventDurasiBulan), 2)} />
+          <PaymentDueWarning dueDate={addMonthsDateLabel(state.eventPeriodeAkhir, 2)} />
           <div><Label>Keterangan</Label><textarea rows={3} value={state.eventKeterangan} onChange={(e) => setField('eventKeterangan', e.target.value)} className={`${inp} min-h-24 resize-y`} placeholder="Catatan tambahan terkait event/BLBMS..." /></div>
           <div className="border-t border-slate-100 pt-5">
             <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -2449,6 +2821,8 @@ function PendapatanStep({ state, setField, errors }: { state: PendapatanState; s
             />
           </div>
         </div>
+      )}
+        </>
       )}
     </Card>
   );
@@ -2560,6 +2934,46 @@ function SewaProductList({ products, rows, print = false }: { products: Product[
         );
       })}
     </ul>
+  );
+}
+
+function EventMediaDetailTables({ mediaTypes, details, print = false }: { mediaTypes: string[]; details: EventMediaDetailRow[]; print?: boolean }) {
+  if (mediaTypes.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      {mediaTypes.map((media) => {
+        const rows = details.filter((row) => row.mediaJenis === media);
+        return (
+          <div key={media} className={print ? '' : 'rounded-xl border border-slate-200 overflow-hidden'}>
+            <p className={`${print ? 'mb-1 text-[10px]' : 'bg-slate-50 px-3 py-2 text-[11px]'} font-black uppercase tracking-wider text-slate-600`}>{media}</p>
+            <table className={`${print ? 'text-[9.5px]' : 'text-[11px]'} w-full border-collapse`}>
+              <thead>
+                <tr className="bg-slate-100">
+                  <th className="border border-slate-300 px-2 py-1 text-left">Nama Detail</th>
+                  <th className="border border-slate-300 px-2 py-1 text-left">Nilai Sewa</th>
+                  <th className="border border-slate-300 px-2 py-1 text-left">Periode</th>
+                  <th className="border border-slate-300 px-2 py-1 text-left">Durasi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length > 0 ? rows.map((row) => (
+                  <tr key={row.id}>
+                    <td className="border border-slate-200 px-2 py-1 font-semibold">{row.nama || '-'}</td>
+                    <td className="border border-slate-200 px-2 py-1">Rp {row.nominal.toLocaleString('id-ID')}</td>
+                    <td className="border border-slate-200 px-2 py-1">{row.tanggalMulai || '-'} s/d {row.tanggalSelesai || '-'}</td>
+                    <td className="border border-slate-200 px-2 py-1">{dateRangeDurationLabel(row.tanggalMulai, row.tanggalSelesai) || '-'}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td className="border border-slate-200 px-2 py-1 text-slate-400" colSpan={4}>Belum ada detail media.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -2739,7 +3153,7 @@ function ReviewStep({
                   <Row label="Bentuk" value={pendapatan.rewardBentuk} />
                   {pendapatan.rewardBentuk === 'Uang' && <Row label="Cara Pembayaran" value={pendapatan.rewardPembayaran} />}
                   {pendapatan.rewardBentuk === 'Uang' && <Row label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')} (${pendapatan.rewardHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />}
-                  <Row label="Periode" value={sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan)} />
+                  <Row label="Periode" value={dateRangeDurationLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardPeriodeAkhir)} />
                   <Row label="Keterangan" value={pendapatan.rewardKeterangan} />
                   <Row label="PPN" value={pendapatan.rewardPpnAktif ? pendapatan.rewardPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.rewardPphAktif ? pendapatan.rewardPphRate || 'Aktif' : 'Tidak dikenakan'} />
@@ -2772,16 +3186,21 @@ function ReviewStep({
                 <>
                   <Row label="Nama Event" value={pendapatan.eventJenis} />
                   <Row label="Kategori Media" value={pendapatan.eventBentuk} />
-                  <Row label="Jenis Media" value={pendapatan.eventMediaJenis} />
+                  <Row label="Jenis Media" value={pendapatan.eventMediaJenis.join(', ')} />
                   <Row label="Nilai Sewa" value={pendapatan.eventNominal ? `Rp ${pendapatan.eventNominal.toLocaleString('id-ID')} / bulan (${pendapatan.eventHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : ''} />
                   <Row label="Cara Pembayaran" value={pendapatan.eventCaraPembayaran} />
-                  <Row label="Periode" value={sewaPeriodLabel(pendapatan.eventPeriodeAwal, pendapatan.eventDurasiBulan)} />
+                  <Row label="Periode" value={dateRangeDurationLabel(pendapatan.eventPeriodeAwal, pendapatan.eventPeriodeAkhir)} />
                   <Row label="Keterangan" value={pendapatan.eventKeterangan} />
                   <Row label="PPN" value={pendapatan.eventPpnAktif ? pendapatan.eventPpnRate || 'Aktif' : 'Tidak dikenakan'} />
                   <Row label="PPh" value={pendapatan.eventPphAktif ? pendapatan.eventPphRate || 'Aktif' : 'Tidak dikenakan'} />
                 </>
               )}
             </div>
+            {pendapatan.jenis === 'event-blbms' && pendapatan.eventBentuk === 'Media Display Produk' && pendapatan.eventMediaJenis.length > 0 && (
+              <div className="mt-3">
+                <EventMediaDetailTables mediaTypes={pendapatan.eventMediaJenis} details={pendapatan.eventMediaDetails} />
+              </div>
+            )}
             {pendapatan.jenis === 'listing' && pendapatan.listingProducts.length > 0 && (
               <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 mt-3">
                 {pendapatan.listingProducts.map((r, i) => (
@@ -2917,8 +3336,8 @@ function SuccessScreen({
       : pendapatan.jenis === 'promosi'
         ? sewaPeriodLabel(pendapatan.promosiPeriodeAwal, pendapatan.promosiDurasiBulan) || '-'
         : pendapatan.jenis === 'reward-insentif'
-          ? sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan) || '-'
-          : sewaPeriodLabel(pendapatan.eventPeriodeAwal, pendapatan.eventDurasiBulan) || '-';
+          ? dateRangeDurationLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardPeriodeAkhir) || '-'
+          : dateRangeDurationLabel(pendapatan.eventPeriodeAwal, pendapatan.eventPeriodeAkhir) || '-';
   const programName = programInfo.namaProgram || pendapatan.namaProgram || memoTypeLabel(jenisMemo);
   const credential = `KREDENSIAL KEASLIAN DOKUMEN | ${memoNo} | Supplier: ${identity?.supplier?.name || '-'} | Program: ${programName} | Periode: ${periode} | Outlet: ${outlets.join(', ') || '-'}`;
   const qrCells = makeQrCells(credential);
@@ -3127,7 +3546,7 @@ function SuccessScreen({
                     <PrintInfoRow label="Bentuk" value={pendapatan.rewardBentuk} />
                     <PrintInfoRow label="Cara Pembayaran" value={pendapatan.rewardPembayaran || '-'} />
                     <PrintInfoRow label="Nominal" value={pendapatan.rewardNominal ? `Rp ${pendapatan.rewardNominal.toLocaleString('id-ID')} (${pendapatan.rewardHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})` : '-'} />
-                    <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardDurasiBulan)} />
+                    <PrintInfoRow label="Periode" value={dateRangeDurationLabel(pendapatan.rewardPeriodeAwal, pendapatan.rewardPeriodeAkhir)} />
                     <PrintInfoRow label="Keterangan" value={pendapatan.rewardKeterangan || '-'} />
                   </div>
                 )}
@@ -3146,11 +3565,16 @@ function SuccessScreen({
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
                     <PrintInfoRow label="Nama Event" value={pendapatan.eventJenis} />
                     <PrintInfoRow label="Kategori Media" value={pendapatan.eventBentuk} />
-                    <PrintInfoRow label="Jenis Media" value={pendapatan.eventMediaJenis} />
+                    <PrintInfoRow label="Jenis Media" value={pendapatan.eventMediaJenis.join(', ')} />
                     <PrintInfoRow label="Nominal" value={`Rp ${pendapatan.eventNominal.toLocaleString('id-ID')} / bulan (${pendapatan.eventHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
                     <PrintInfoRow label="Cara Pembayaran" value={pendapatan.eventCaraPembayaran || '-'} />
-                    <PrintInfoRow label="Periode" value={sewaPeriodLabel(pendapatan.eventPeriodeAwal, pendapatan.eventDurasiBulan)} />
+                    <PrintInfoRow label="Periode" value={dateRangeDurationLabel(pendapatan.eventPeriodeAwal, pendapatan.eventPeriodeAkhir)} />
                     <PrintInfoRow label="Keterangan" value={pendapatan.eventKeterangan || '-'} />
+                    {pendapatan.eventBentuk === 'Media Display Produk' && (
+                      <div className="mt-3">
+                        <EventMediaDetailTables mediaTypes={pendapatan.eventMediaJenis} details={pendapatan.eventMediaDetails} print />
+                      </div>
+                    )}
                   </div>
                 )}
                 {pendapatan.jenis === 'listing' && pendapatan.listingProducts.map((row, i) => (
@@ -3206,14 +3630,14 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   jenis: '', namaProgram: '',
   sewaJenis: '', sewaProducts: [], sewaProductRows: {}, sewaNominal: 0, sewaHargaPajak: 'exclude', sewaCaraPembayaran: '', sewaDurasiBulan: 0, sewaPeriodeAwal: '', sewaPeriodeAkhir: '', sewaKeterangan: '',
   sewaPpnAktif: false, sewaPpnRate: '', sewaPphAktif: false, sewaPphRate: '',
-  rewardJenis: '', rewardBentuk: '', rewardPembayaran: '', rewardBank: '', rewardNoRekening: '', rewardNominal: 0, rewardHargaPajak: 'exclude', rewardProducts: [], rewardProductRows: {}, target: '', rewardMode: 'persen', rewardValue: 0, rewardDurasiBulan: 0, rewardPeriodeAwal: '', rewardPeriodeAkhir: '', rewardKeterangan: '',
+  rewardJenis: '', rewardBentuk: '', rewardPembayaran: '', rewardBank: '', rewardNoRekening: '', rewardNominal: 0, rewardHargaPajak: 'exclude', rewardProducts: [], rewardProductRows: {}, target: '', rewardMode: 'persen', rewardValue: 0, rewardPeriodeAwal: '', rewardPeriodeAkhir: '', rewardKeterangan: '',
   rewardPpnAktif: false, rewardPpnRate: '', rewardPphAktif: false, rewardPphRate: '',
   mediaTipe: '', mediaKeterangan: '', promosiNominal: 0, promosiHargaPajak: 'exclude', promosiCaraPembayaran: '', promosiPeriodeAwal: '', promosiDurasiBulan: 0,
   promosiPpnAktif: false, promosiPpnRate: '', promosiPphAktif: false, promosiPphRate: '',
   listingProducts: [emptyListingProductRow()],
   listingPkp: true, listingReturn: true, listingBiayaLabel: false, listingNominal: 0, listingHargaPajak: 'exclude', listingTempoPembayaran: '', listingCaraPembayaran: '',
   listingPpnAktif: false, listingPpnRate: '', listingPphAktif: false, listingPphRate: '',
-  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventMediaJenis: '', eventNominal: 0, eventHargaPajak: 'exclude', eventCaraPembayaran: '', eventDurasiBulan: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
+  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventMediaJenis: [], eventMediaDetails: [], eventNominal: 0, eventHargaPajak: 'exclude', eventCaraPembayaran: '', eventDurasiBulan: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
   eventPpnAktif: false, eventPpnRate: '', eventPphAktif: false, eventPphRate: '',
 };
 
@@ -3409,6 +3833,10 @@ export default function SupplierMemoWizard() {
     if (key === 'catatan') {
       if (jenisMemo === 'memo-program' && !programInfo.caraPembayaran) e.caraPembayaran = 'Pilih cara pembayaran.';
     }
+    if (key === 'pendapatan-jenis') {
+      if (!pendapatan.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
+      if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
+    }
     if (key === 'pendapatan') {
       if (!pendapatan.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
       if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
@@ -3428,7 +3856,7 @@ export default function SupplierMemoWizard() {
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardPembayaran) e.rewardPembayaran = 'Pilih cara pembayaran.';
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardNominal) e.rewardNominal = 'Isi nominal.';
         if (pendapatan.rewardBentuk === 'Uang' && !pendapatan.rewardHargaPajak) e.rewardNominal = e.rewardNominal || 'Pilih include atau exclude pajak.';
-        if (!pendapatan.rewardPeriodeAwal || !pendapatan.rewardDurasiBulan) e.target = e.target || 'Lengkapi tanggal mulai dan durasi periode.';
+        if (!pendapatan.rewardPeriodeAwal || !pendapatan.rewardPeriodeAkhir) e.target = e.target || 'Lengkapi tanggal mulai dan tanggal sampai.';
         if (!pendapatan.rewardPpnAktif && !pendapatan.rewardPphAktif) e.rewardPpnRate = 'Aktifkan PPN dan/atau PPh untuk reward/insentif ini.';
         if (pendapatan.rewardPpnAktif && !pendapatan.rewardPpnRate) e.rewardPpnRate = 'Pilih tarif PPN.';
         if (pendapatan.rewardPphAktif && !pendapatan.rewardPphRate) e.rewardPphRate = 'Pilih tarif PPh.';
@@ -3464,11 +3892,16 @@ export default function SupplierMemoWizard() {
       if (pendapatan.jenis === 'event-blbms') {
         if (!pendapatan.eventJenis) e.eventJenis = 'Pilih nama event.';
         if (!pendapatan.eventBentuk) e.eventBentuk = 'Pilih kategori media.';
-        if (!pendapatan.eventMediaJenis) e.eventMediaJenis = 'Pilih jenis media.';
+        if (pendapatan.eventMediaJenis.length === 0) e.eventMediaJenis = pendapatan.eventBentuk === 'Media Display Produk' ? 'Pilih minimal satu jenis media.' : 'Pilih jenis media.';
+        if (pendapatan.eventBentuk === 'Media Display Produk') {
+          const detailInvalid = pendapatan.eventMediaJenis.some((media) => !pendapatan.eventMediaDetails.some((row) => row.mediaJenis === media && row.nama.trim() && row.nominal >= 0 && row.tanggalMulai && row.tanggalSelesai));
+          if (detailInvalid) e.eventMediaJenis = e.eventMediaJenis || 'Lengkapi minimal satu detail untuk setiap jenis media yang dipilih.';
+        }
         if (!pendapatan.eventNominal) e.eventJenis = e.eventJenis || 'Lengkapi nilai sewa.';
         if (!pendapatan.eventHargaPajak) e.eventJenis = e.eventJenis || 'Pilih include atau exclude pajak.';
         if (!pendapatan.eventCaraPembayaran) e.eventJenis = e.eventJenis || 'Pilih cara pembayaran.';
-        if (!pendapatan.eventPeriodeAwal || !pendapatan.eventDurasiBulan) e.eventJenis = e.eventJenis || 'Lengkapi tanggal mulai dan durasi sewa.';
+        if (!pendapatan.eventPeriodeAwal || !pendapatan.eventPeriodeAkhir) e.eventJenis = e.eventJenis || 'Lengkapi tanggal mulai dan tanggal selesai sewa.';
+        if (pendapatan.eventPeriodeAwal && pendapatan.eventPeriodeAkhir && pendapatan.eventPeriodeAkhir < pendapatan.eventPeriodeAwal) e.eventJenis = e.eventJenis || 'Tanggal selesai tidak boleh sebelum tanggal mulai.';
         if (!pendapatan.eventPpnAktif && !pendapatan.eventPphAktif) e.eventPpnRate = 'Aktifkan PPN dan/atau PPh untuk event/BLBMS ini.';
         if (pendapatan.eventPpnAktif && !pendapatan.eventPpnRate) e.eventPpnRate = 'Pilih tarif PPN.';
         if (pendapatan.eventPphAktif && !pendapatan.eventPphRate) e.eventPphRate = 'Pilih tarif PPh.';
@@ -3575,7 +4008,8 @@ export default function SupplierMemoWizard() {
             offError={errors.offProduk}
           />
         )}
-        {currentKey === 'pendapatan' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} />}
+        {currentKey === 'pendapatan-jenis' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} mode="jenis" />}
+        {currentKey === 'pendapatan' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} mode="detail" />}
         {currentKey === 'catatan' && <NotesStep catatan={catatan} setCatatan={setCatatan} jenisMemo={jenisMemo} programInfo={programInfo} setProgramField={setPF} errors={errors} />}
         {currentKey === 'tinjau' && (
           <ReviewStep
@@ -3609,6 +4043,3 @@ export default function SupplierMemoWizard() {
     </div>
   );
 }
-
-
-
