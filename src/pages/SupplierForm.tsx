@@ -148,6 +148,8 @@ const EVENT_MEDIA_BY_CATEGORY: Record<string, string[]> = {
   'Media Branding & Publish': PROMOSI_MEDIA_OPTIONS,
   'Area dan Fasilitas': ['Openbooth/Tenant', 'Showroom', 'Buildings', 'Free Drink', 'Free Test','Open Table', 'Fasilitas Air', 'Fasilitas Listrik', 'Fasilitas Internet'],
 };
+const EVENT_MEDIA_AREA_REQUIRED = ['End Gondola', 'Wing Gondola', 'Shelving', 'Clip Strip'];
+const EVENT_MEDIA_AREA_OPTIONS = ['Area Food and Drink', 'Area Toiletris', 'Area Body Care', 'Area Home Care', 'Area Alat Rumah Tangga', 'Area Depthstore'];
 
 const SATUAN_OPTIONS = ['PCS', 'BANDED', 'DUS', 'BOX', 'KARTON', 'LUSIN', 'PACK'];
 
@@ -799,14 +801,14 @@ function DateRangeLikePicker({
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label req>Tanggal Pemakaian Jasa / Sewa</Label>
+          <Label req>Tanggal Mulai Sewa</Label>
           <div className="grid grid-cols-[38px_1fr] rounded-lg border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
             <div className="flex items-center justify-center bg-slate-100 border-r border-slate-300 text-slate-500"><Calendar className="h-4 w-4" /></div>
             <input type="date" value={start} onChange={(e) => onStart(e.target.value)} className="px-3 py-2.5 text-[13px] outline-none text-slate-700" />
           </div>
         </div>
         <div>
-          <Label req>Tanggal Jatuh Tempo</Label>
+          <Label req>Tanggal Selesai Sewa</Label>
           <div className="grid grid-cols-[38px_1fr] rounded-lg border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
             <div className="flex items-center justify-center bg-slate-100 border-r border-slate-300 text-slate-500"><Calendar className="h-4 w-4" /></div>
             <input type="date" value={end} onChange={(e) => onEnd(e.target.value)} className="px-3 py-2.5 text-[13px] outline-none text-slate-700" />
@@ -814,7 +816,7 @@ function DateRangeLikePicker({
         </div>
       </div>
       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
-        {start && end ? `${start} sampai ${end}` : 'Pilih tanggal pemakaian dan tanggal jatuh tempo.'}
+        {start && end ? `${start} sampai ${end}` : 'Pilih tanggal pemakaian dan tanggal selesai sewa.'}
       </div>
     </div>
   );
@@ -842,6 +844,14 @@ function dateRangeDurationLabel(startValue: string, endValue: string) {
   }
   const days = Math.floor((end.getTime() - anchor.getTime()) / 86400000) + 1;
   return `${formatDateShort(startValue)} sampai ${formatDateShort(endValue)} (${months ? `${months} bulan` : ''}${months && days ? ' ' : ''}${days ? `${days} hari` : ''})`;
+}
+
+function parseKassaNumber(value: string) {
+  return (value.match(/\d+/g) || [])[0] || '';
+}
+
+function formatKassaNumber(value: string) {
+  return value ? `Kassa ${value}` : '';
 }
 
 function DualCalendarRangePicker({
@@ -2337,9 +2347,12 @@ interface EventMediaDetailRow {
   id: string;
   mediaJenis: string;
   nama: string;
+  area: string;
+  pos: string;
   nominal: number;
   tanggalMulai: string;
   tanggalSelesai: string;
+  durasiBulan: number;
 }
 
 function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: PendapatanState; setField: <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => void; errors: FormErrors; mode?: 'jenis' | 'detail' }) {
@@ -2374,7 +2387,7 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
   const addEventMediaDetail = (mediaJenis: string) => {
     setField('eventMediaDetails', [
       ...state.eventMediaDetails,
-      { id: `${mediaJenis}-${Date.now()}`, mediaJenis, nama: '', nominal: 0, tanggalMulai: state.eventPeriodeAwal || '', tanggalSelesai: '' },
+      { id: `${mediaJenis}-${Date.now()}`, mediaJenis, nama: '', area: '', pos: '', nominal: 0, tanggalMulai: state.eventPeriodeAwal || '', tanggalSelesai: '', durasiBulan: 0 },
     ]);
   };
   const updateEventMediaDetail = (id: string, patch: Partial<EventMediaDetailRow>) => {
@@ -2398,6 +2411,8 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
     return `${months > 0 ? `${months} bulan` : ''}${months > 0 && days > 0 ? ' ' : ''}${days > 0 ? `${days} hari` : ''}` || '0 hari';
   };
   const eventUsesMediaDetails = state.eventBentuk === 'Media Display Produk';
+  const requiresEventArea = (media: string) => EVENT_MEDIA_AREA_REQUIRED.includes(media);
+  const requiresEventPos = (media: string) => media === 'COC';
 
   return (
     <Card title={mode === 'jenis' ? 'Pilih Jenis Program' : 'Detail Program Lain-lain'} icon={Building2} subtitle={mode === 'jenis' ? 'Pilih jenis program yang ingin diajukan' : 'Lengkapi detail berdasarkan jenis program yang dipilih'}>
@@ -2787,13 +2802,60 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
                         <div><Label req>Nama {media}</Label><input type="text" value={row.nama} onChange={(e) => updateEventMediaDetail(row.id, { nama: e.target.value })} className={inp} placeholder={`cth: ${media} Nama Clip Strip`} /></div>
                         <div><Label req>Nilai Sewa (Rp)</Label><input type="number" min={0} value={row.nominal || ''} onChange={(e) => updateEventMediaDetail(row.id, { nominal: parseFloat(e.target.value) || 0 })} className={inp} placeholder="0" /></div>
                       </div>
+                      {requiresEventArea(media) && (
+                        <div>
+                          <Label req>Area Penempatan</Label>
+                          <SingleChoiceChips
+                            options={EVENT_MEDIA_AREA_OPTIONS.map((area) => ({ key: area, label: area }))}
+                            value={row.area}
+                            onChange={(value) => updateEventMediaDetail(row.id, { area: value })}
+                          />
+                        </div>
+                      )}
+                      {requiresEventPos(media) && (
+                        <div>
+                          <Label req>Nomor Kassa / POS</Label>
+                          {(() => {
+                            const current = parseKassaNumber(row.pos);
+                            return (
+                              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={current}
+                                  onChange={(e) => updateEventMediaDetail(row.id, { pos: formatKassaNumber(e.target.value) })}
+                                  className={inp}
+                                  placeholder="cth: 1"
+                                />
+                                <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-semibold text-blue-700">
+                                  Pilihan: {row.pos || 'Isi satu nomor kassa/POS.'}
+                                </p>
+                              </div>
+                            );
+                          })()}
+                          <p className="mt-1 text-[11px] text-slate-400">Pilih satu nomor kassa/POS sesuai outlet MK.</p>
+                        </div>
+                      )}
                       <DateRangeLikePicker
                         start={row.tanggalMulai}
                         end={row.tanggalSelesai}
                         onStart={(value) => updateEventMediaDetail(row.id, { tanggalMulai: value })}
                         onEnd={(value) => updateEventMediaDetail(row.id, { tanggalSelesai: value })}
                       />
-                      <p className="rounded-lg bg-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-600">Durasi: {eventDetailDuration(row)}</p>
+                      <div className="max-w-[180px]">
+                        <Label req>Durasi</Label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={1}
+                            value={row.durasiBulan || ''}
+                            onChange={(e) => updateEventMediaDetail(row.id, { durasiBulan: parseInt(e.target.value) || 0 })}
+                            className={`${inp} pr-16`}
+                            placeholder="cth: 3"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
+                        </div>
+                      </div>
                     </div>
                   ))}
                   {state.eventMediaDetails.filter((row) => row.mediaJenis === media).length === 0 && (
@@ -3009,6 +3071,7 @@ function EventMediaDetailTables({ mediaTypes, details, print = false }: { mediaT
               <thead>
                 <tr className="bg-slate-100">
                   <th className="border border-slate-300 px-2 py-1 text-left">Nama Detail</th>
+                  <th className="border border-slate-300 px-2 py-1 text-left">Area / POS</th>
                   <th className="border border-slate-300 px-2 py-1 text-left">Nilai Sewa</th>
                   <th className="border border-slate-300 px-2 py-1 text-left">Periode</th>
                   <th className="border border-slate-300 px-2 py-1 text-left">Durasi</th>
@@ -3018,13 +3081,14 @@ function EventMediaDetailTables({ mediaTypes, details, print = false }: { mediaT
                 {rows.length > 0 ? rows.map((row) => (
                   <tr key={row.id}>
                     <td className="border border-slate-200 px-2 py-1 font-semibold">{row.nama || '-'}</td>
+                    <td className="border border-slate-200 px-2 py-1">{row.area || row.pos || '-'}</td>
                     <td className="border border-slate-200 px-2 py-1">Rp {row.nominal.toLocaleString('id-ID')}</td>
                     <td className="border border-slate-200 px-2 py-1">{row.tanggalMulai || '-'} s/d {row.tanggalSelesai || '-'}</td>
-                    <td className="border border-slate-200 px-2 py-1">{dateRangeDurationLabel(row.tanggalMulai, row.tanggalSelesai) || '-'}</td>
+                    <td className="border border-slate-200 px-2 py-1">{row.durasiBulan ? `${row.durasiBulan} bulan` : '-'}</td>
                   </tr>
                 )) : (
                   <tr>
-                    <td className="border border-slate-200 px-2 py-1 text-slate-400" colSpan={4}>Belum ada detail media.</td>
+                    <td className="border border-slate-200 px-2 py-1 text-slate-400" colSpan={5}>Belum ada detail media.</td>
                   </tr>
                 )}
               </tbody>
@@ -3931,7 +3995,16 @@ export default function SupplierMemoWizard() {
         if (!pendapatan.eventBentuk) e.eventBentuk = 'Pilih kategori media.';
         if (pendapatan.eventMediaJenis.length === 0) e.eventMediaJenis = pendapatan.eventBentuk === 'Media Display Produk' ? 'Pilih minimal satu jenis media.' : 'Pilih jenis media.';
         if (pendapatan.eventBentuk === 'Media Display Produk') {
-          const detailInvalid = pendapatan.eventMediaJenis.some((media) => !pendapatan.eventMediaDetails.some((row) => row.mediaJenis === media && row.nama.trim() && row.nominal >= 0 && row.tanggalMulai && row.tanggalSelesai));
+          const detailInvalid = pendapatan.eventMediaJenis.some((media) => !pendapatan.eventMediaDetails.some((row) => (
+            row.mediaJenis === media
+            && row.nama.trim()
+            && row.nominal >= 0
+            && row.tanggalMulai
+            && row.tanggalSelesai
+            && row.durasiBulan > 0
+            && (!EVENT_MEDIA_AREA_REQUIRED.includes(media) || row.area)
+            && (media !== 'COC' || row.pos.trim())
+          )));
           if (detailInvalid) e.eventMediaJenis = e.eventMediaJenis || 'Lengkapi minimal satu detail untuk setiap jenis media yang dipilih.';
         }
         if (!pendapatan.eventNominal) e.eventJenis = e.eventJenis || 'Lengkapi nilai sewa.';
