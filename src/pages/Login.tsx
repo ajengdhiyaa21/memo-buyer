@@ -5,10 +5,30 @@ import { Eye, EyeOff, ArrowRight } from "lucide-react"
 export function Login() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    navigate("/dashboard")
+    const accounts = {
+      akuntansi: { password: 'akuntansi123', role: 'Akuntansi' },
+      pembelian: { password: 'pembelian123', role: 'Pembelian' },
+      'akuntansi@bm.co.id': { password: 'akuntansi123', role: 'Akuntansi' },
+      'pembelian@bm.co.id': { password: 'pembelian123', role: 'Pembelian' },
+    } as Record<string, { password: string; role: string }>
+    const account = accounts[username.trim().toLowerCase()]
+    if (account) {
+      if (account.password !== password) { setError('Username atau password salah.'); return }
+      localStorage.setItem('bm-role', account.role)
+      navigate('/memo-report')
+      return
+    }
+    // Akun internal memakai kredensial khusus di atas. Login lain dianggap
+    // sebagai akun aplikasi biasa agar role internal lama tidak terbawa.
+    if (!username.trim() || !password) { setError('Username dan password wajib diisi.'); return }
+    localStorage.removeItem('bm-role')
+    navigate('/dashboard')
   }
 
   return (
@@ -120,6 +140,8 @@ export function Login() {
                     e.currentTarget.style.boxShadow = "none"
                   }}
                   placeholder="admin@example.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
@@ -160,6 +182,8 @@ export function Login() {
                       e.currentTarget.style.boxShadow = "none"
                     }}
                     placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                   <button
@@ -205,6 +229,7 @@ export function Login() {
                 Masuk ke Sistem
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
               </button>
+              {error && <p className="text-center text-[12px] text-red-400">{error}</p>}
             </form>
 
             {/* Divider */}

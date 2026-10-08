@@ -1,0 +1,68 @@
+.memo-report-page {
+  background: #f4f7fb;
+}
+
+.memo-report-page section {
+  border-color: #e2e8f0 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .045) !important;
+}
+
+.memo-report-page table thead {
+  background: #f8fafc !important;
+}
+
+.memo-report-page table thead th {
+  color: #64748b !important;
+  font-size: 10px !important;
+  letter-spacing: .08em;
+}
+
+.memo-report-page table tbody tr {
+  transition: background-color .15s ease, box-shadow .15s ease;
+}
+
+.memo-report-page table tbody tr:hover {
+  background: #fffbeb;
+}
+
+/* Tampilan tanpa garis pemisah di setiap item; card/section tetap memiliki batas luar. */
+.memo-report-page table th,
+.memo-report-page table td {
+  border-width: 0 !important;
+}
+
+.memo-report-page table tbody tr,
+.memo-report-page .divide-y > :not([hidden]) ~ :not([hidden]),
+.memo-report-page section > .grid > div {
+  border-top-width: 0 !important;
+  border-bottom-width: 0 !important;
+}
+
+.memo-report-page input,
+.memo-report-page select {
+  border-color: #e2e8f0;
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.memo-report-page input:focus,
+.memo-report-page select:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, .12);
+  outline: none;
+}
+
+/* Search memakai border milik wrapper, bukan border ganda pada input di dalamnya. */
+.memo-report-page .bg-slate-50 input {
+  min-height: 38px;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.memo-report-page .bg-slate-50:focus-within {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, .12) !important;
+}

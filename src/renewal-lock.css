@@ -1,0 +1,62 @@
+/* Fields locked during lease renewal are intentionally visibly disabled. */
+.pointer-events-none input,
+.pointer-events-none textarea,
+.pointer-events-none select {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+}
+.pointer-events-none button {
+  filter: grayscale(1);
+  cursor: not-allowed !important;
+}
+
+/* In renewal mode only date fields remain editable. */
+.renewal-locked input:not([type='date']):not(.renewal-editable),
+.renewal-locked textarea,
+.renewal-locked select,
+.renewal-locked button {
+  pointer-events: none !important;
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  opacity: .72;
+}
+
+.renewal-locked input.renewal-editable {
+  pointer-events: auto !important;
+  background-color: #ffffff !important;
+  border-color: #f59e0b !important;
+  color: #334155 !important;
+  cursor: text !important;
+  opacity: 1;
+}
+
+/* Duration is the one numeric field intentionally editable during renewal. */
+.renewal-locked .renewal-duration-field,
+.renewal-locked .renewal-duration-field input,
+.renewal-locked .renewal-duration-field input.renewal-editable {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+.renewal-locked .renewal-duration-field input {
+  background-color: #fff !important;
+  border-color: #f59e0b !important;
+  color: #334155 !important;
+  cursor: text !important;
+}
+
+.renewal-locked .renewal-duration-field input[type='number'] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.renewal-locked input:not([type='date'])::placeholder,
+.renewal-locked textarea::placeholder {
+  color: #94a3b8 !important;
+}

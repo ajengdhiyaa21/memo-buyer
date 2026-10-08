@@ -13,6 +13,7 @@ import { SellOutDetail } from './pages/SellOutDetail';
 import { SettingHarga } from './pages/SettingHarga';
 import SupplierForm from './pages/SupplierForm';
 import { CredentialPage } from './pages/CredentialPage';
+import MemoReport from './pages/MemoReportGrouped';
 
 // Import komponen Penjualan yang baru dibuat
 import { PenjualanMasterPage } from './pages/PenjualanMasterPage';
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', Component: Dashboard },
+      { path: 'memo-report', Component: MemoReport },
       
       // Rute spesifik untuk master-data penjualan diletakkan di sini 
       // agar tidak bertabrakan dengan master-data/:type

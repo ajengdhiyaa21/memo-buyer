@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "api": "node server/api.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt"

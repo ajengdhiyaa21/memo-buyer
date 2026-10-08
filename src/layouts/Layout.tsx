@@ -300,7 +300,7 @@ function SideNavLink({ to, icon: Icon, label, badge, onClick }: { to: string; ic
 }
 
 /* ── Sidebar content ── */
-function SidebarContent({ openMenus, toggleMenu, onNavClick, onLogout, isProgramActive, isMasterActive, isLaporanActive, isPenjualanActive }: {
+function SidebarContent({ openMenus, toggleMenu, onNavClick, onLogout, isProgramActive, isMasterActive, isLaporanActive, isPenjualanActive, internalOnly }: {
   openMenus: Record<string, boolean>;
   toggleMenu: (id: string) => void;
   onNavClick?: () => void;
@@ -309,7 +309,9 @@ function SidebarContent({ openMenus, toggleMenu, onNavClick, onLogout, isProgram
   isMasterActive: boolean;
   isLaporanActive: boolean;
   isPenjualanActive: boolean;
+  internalOnly?: boolean;
 }) {
+  if (internalOnly) return <><nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1"><NavLink to="/memo-report" onClick={onNavClick} className={({ isActive }) => clsx('flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150', isActive ? 'font-bold text-amber-700 bg-[#FEF3C7]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium')}><BarChart2 className="h-4 w-4 text-amber-600"/>Laporan Memo</NavLink></nav><div className="shrink-0 border-t border-slate-100 bg-white p-3"><button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4"/>Logout</button></div></>;
   return (
     <>
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -361,6 +363,7 @@ function SidebarContent({ openMenus, toggleMenu, onNavClick, onLogout, isProgram
         <div className="pt-4 pb-2">
           <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Analytics</p>
           <NavGroup label="Laporan" icon={BarChart2} id="laporan" open={openMenus.laporan} onToggle={toggleMenu} active={isLaporanActive}>
+            <SideNavLink to="/memo-report" icon={FileText} label="Laporan Memo" onClick={onNavClick} />
             <SideNavLink to="/laporan/sell-out" icon={FileText} label="Riwayat Sell Out" onClick={onNavClick} />
           </NavGroup>
         </div>
@@ -386,7 +389,11 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, selectedOutlet } = useApp();
+  const sessionRole = localStorage.getItem('bm-role');
+  const roleLabel = sessionRole || currentUser.role;
+  const isInternalReportRole = sessionRole === 'Akuntansi' || sessionRole === 'Pembelian';
   const outletLabel = selectedOutlet ?? 'Semua Outlet';
+  const internalOnly = ['Akuntansi', 'Pembelian'].includes(localStorage.getItem('bm-role') || '');
   const notifications = buildNotifications(selectedOutlet);
 
   const isMasterActive = location.pathname.startsWith('/master-data');
@@ -426,7 +433,7 @@ export function Layout() {
   }, [location.pathname]);
 
   const toggleMenu = (menu: string) => setOpenMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
-  const handleLogout = () => navigate('/login');
+  const handleLogout = () => { localStorage.removeItem('bm-role'); navigate('/login'); };
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50 font-sans text-slate-900">
@@ -449,6 +456,7 @@ export function Layout() {
           isMasterActive={isMasterActive}
           isLaporanActive={isLaporanActive}
           isPenjualanActive={isPenjualanActive}
+          internalOnly={internalOnly}
         />
       </aside>
 
@@ -484,6 +492,7 @@ export function Layout() {
               isMasterActive={isMasterActive}
               isLaporanActive={isLaporanActive}
               isPenjualanActive={isPenjualanActive}
+              internalOnly={internalOnly}
             />
           </aside>
         </>
@@ -512,9 +521,11 @@ export function Layout() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden md:block">
-              <OutletHeaderBadge />
-            </div>
+            {isInternalReportRole ? (
+              <div className="hidden items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 md:flex">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />Semua Outlet MK
+              </div>
+            ) : <div className="hidden md:block"><OutletHeaderBadge /></div>}
 
             <button className="sm:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors">
               <Search className="w-5 h-5" />
@@ -558,7 +569,7 @@ export function Layout() {
                 </div>
                 <div className="hidden md:block text-left">
                   <p className="text-[13px] font-bold leading-tight text-slate-800">{currentUser.nama}</p>
-                  <p className="text-[11px] leading-tight text-slate-500 mt-0.5">{currentUser.role}</p>
+                  <p className="text-[11px] leading-tight text-slate-500 mt-0.5">{roleLabel}</p>
                 </div>
                 <ChevronDown className={clsx('w-3.5 h-3.5 text-slate-400 transition-transform duration-150 hidden md:block', profileOpen && 'rotate-180')} />
               </button>
@@ -567,7 +578,7 @@ export function Layout() {
                 <ProfileDropdown
                   initials={currentUser.initials}
                   name={currentUser.nama}
-                  role={currentUser.role}
+                  role={roleLabel}
                   onClose={() => setProfileOpen(false)}
                   onChangePassword={() => setShowPwdModal(true)}
                   onLogout={handleLogout}

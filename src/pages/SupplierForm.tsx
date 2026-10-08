@@ -7,6 +7,7 @@ import {
   Gift, Megaphone, Receipt, Layers, Printer, Calendar,
 } from 'lucide-react';
 import mannaKampusLogo from '../../logo.png';
+import '../renewal-lock.css';
 
 /* ───────────────────────── Data ───────────────────────── */
 const ALL_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3'];
@@ -60,6 +61,7 @@ const PRODUCT_CATALOG: Product[] = [
   { plu: 'PRD-013', nama: 'GIV Body Soap 90g', satuan: 'PCS', supplierId: 'SUP-004', subKategori: 'Sabun Mandi' },
   { plu: 'PRD-014', nama: 'Chitato Sapi Panggang 68g', satuan: 'PCS', supplierId: 'SUP-003', subKategori: 'Snack' },
   { plu: 'PRD-015', nama: 'Good Day Cappuccino 200ml', satuan: 'BTL', supplierId: 'SUP-003', subKategori: 'Minuman Kopi' },
+  { plu: 'PRD-016', nama: 'Teh Kita Jasmine 350ml', satuan: 'BTL', supplierId: 'SUP-001', subKategori: 'Minuman Teh' },
 ];
 
 /* Mock ID cards -> what a barcode scan would resolve to. This app is supplier-only. */
@@ -76,7 +78,10 @@ const MOCK_ID_CARDS: IdCardData[] = [
   { cardId: 'MK-SPV-00123', supplier: SUPPLIERS.find((s) => s.id === 'SUP-001')!, principal: null, picName: 'Budi Santoso', picPhone: '0812-3456-7890', noRekening: '2200011234 - Bank BCA' },
   { cardId: 'MK-SPV-00456', supplier: SUPPLIERS.find((s) => s.id === 'SUP-004')!, principal: null, picName: 'Siti Aminah', picPhone: '0813-2211-9988', noRekening: '5500098765 - Bank Mandiri' },
   { cardId: 'MK-SPV-00789', supplier: SUPPLIERS.find((s) => s.id === 'SUP-005')!, principal: null, picName: 'Andi Wijaya', picPhone: '0857-6633-2210', noRekening: '1160077889 - Bank BNI' },
+  { cardId: 'MK-SPV-00234', supplier: SUPPLIERS.find((s) => s.id === 'SUP-002')!, principal: null, picName: 'Rina Kurniawati', picPhone: '0812-7788-9900', noRekening: '6600123456 - Bank BCA' },
+  { cardId: 'MK-SPV-00345', supplier: SUPPLIERS.find((s) => s.id === 'SUP-003')!, principal: null, picName: 'Fajar Nugroho', picPhone: '0813-6677-8899', noRekening: '7700234567 - Bank Mandiri' },
   { cardId: 'MK-PRI-00234', supplier: SUPPLIERS.find((s) => s.id === 'PRI-001')!, principal: SUPPLIERS.find((s) => s.id === 'SUP-002')!, picName: 'Rahmat Hidayat', picPhone: '0821-9900-1122', noRekening: '3300112233 - Bank BCA' },
+  { cardId: 'MK-PRI-00345', supplier: SUPPLIERS.find((s) => s.id === 'PRI-002')!, principal: null, picName: 'Dewi Lestari', picPhone: '0822-4455-6677', noRekening: '4400223344 - Bank Mandiri' },
 ];
 
 const BANK_OPTIONS = ['BCA', 'Bank Mandiri', 'BNI', 'BRI', 'CIMB Niaga', 'Bank Permata', 'BTN', 'Bank Danamon', 'BSI', 'Bank Jateng'];
@@ -135,6 +140,8 @@ const VISIBLE_PENDAPATAN_OPTIONS = PENDAPATAN_OPTIONS.filter((option) => !['sewa
 
 const SEWA_VISIBILITY_JENIS = ['End Gondola', 'Wing Gondola', 'Shelving', 'COC', 'Dancing Up', 'Floor', 'Dumbin', 'Backwall Kosmetik', 'Clip Strip', 'Dumbin/Mini Wings'];
 const PROMOSI_MEDIA_OPTIONS = ['Neonbox Instore', 'Spanduk/Banner In Store', 'Spanduk/Banner Out Store', 'Banner Mobil', 'TVC/Digital Signage', 'Brosur', 'Sosial Media', 'Audio Instore Promo', 'Rollup Banner'];
+const BRANDING_PUBLISH_MEDIA_OPTIONS = [...PROMOSI_MEDIA_OPTIONS, 'Fasilitas Display', 'Shopping Trolley'];
+const FASILITAS_DISPLAY_OPTIONS = ['Wing Gondola', 'End Gondola', 'Counter Image', 'Price Check'];
 const REWARD_JENIS_OPTIONS = ['Reward', 'Insentif'];
 const REWARD_BENTUK_OPTIONS = ['Uang', 'Barang', 'Hadiah', 'Trip'];
 
@@ -142,10 +149,10 @@ const REWARD_BENTUK_OPTIONS = ['Uang', 'Barang', 'Hadiah', 'Trip'];
 const EVENT_JENIS_OPTIONS = ['Belanja Luar Biasa Murah Spektakuler (BLBMS)', 'Pra Ramadhan & Lebaran', 'Anniversary', 'Tahun Ajaran Baru', 'Natal dan Tahun Baru', 'Grand Opening (New Store)', 'Additional Event', 'Regular Event'];
 
 /** Bentuk/fasilitas yang dipilih setelah Jenis Event — gabungan Reward/Insentif, Promosi, dan Sewa/Visibility. */
-const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publish', 'Area dan Fasilitas'];
+const EVENT_MEDIA_CATEGORIES = ['Media Display Produk', 'Media Branding & Publication', 'Area dan Fasilitas'];
 const EVENT_MEDIA_BY_CATEGORY: Record<string, string[]> = {
   'Media Display Produk': SEWA_VISIBILITY_JENIS,
-  'Media Branding & Publish': PROMOSI_MEDIA_OPTIONS,
+  'Media Branding & Publication': BRANDING_PUBLISH_MEDIA_OPTIONS,
   'Area dan Fasilitas': ['Openbooth/Tenant', 'Showroom', 'Buildings', 'Free Drink', 'Free Test','Open Table', 'Fasilitas Air', 'Fasilitas Listrik', 'Fasilitas Internet'],
 };
 const EVENT_MEDIA_AREA_REQUIRED = ['End Gondola', 'Wing Gondola', 'Shelving', 'Clip Strip'];
@@ -186,12 +193,13 @@ type DiskonMode = 'persen' | 'rp';
 
 interface StepDef { key: string; label: string; }
 
-function getSteps(jenisMemo: JenisMemo, tipeProgram: string[]): StepDef[] {
+function getSteps(jenisMemo: JenisMemo, tipeProgram: string[], pendapatanJenis = ''): StepDef[] {
   const steps: StepDef[] = [
     { key: 'scan', label: 'Scan ID' },
     { key: 'outlet', label: 'Outlet' },
     { key: 'jenis-memo', label: 'Jenis Memo' },
   ];
+  if (jenisMemo === 'memo-program') steps.push({ key: 'sewa-mode', label: 'Sewa' });
   if (jenisMemo === 'update-informasi') steps.push({ key: 'update-informasi', label: 'Update Info' });
   if (jenisMemo === 'memo-program') {
     steps.push({ key: 'program-info', label: 'Info Program' });
@@ -199,11 +207,79 @@ function getSteps(jenisMemo: JenisMemo, tipeProgram: string[]): StepDef[] {
   }
   if (jenisMemo === 'pendapatan-lain') {
     steps.push({ key: 'pendapatan-jenis', label: 'Jenis Program' });
+    if (['sewa-visibility', 'promosi', 'event-blbms'].includes(pendapatanJenis)) steps.push({ key: 'sewa-mode', label: 'Sewa' });
     steps.push({ key: 'pendapatan', label: 'Detail Program' });
   }
   steps.push({ key: 'catatan', label: 'Catatan' });
   steps.push({ key: 'tinjau', label: 'Tinjau & TTD' });
   return steps;
+}
+
+type SewaMode = 'baru' | 'perpanjang';
+const ADDITIONAL_SIMULATED_LEASES: Array<any> = [
+  { id: 'SEWA-005', memoJenis: 'memo-program', supplierId: 'PRI-001', kind: 'memo-program', label: 'Program On Faktur & Off Faktur Indofood - MK5, MK6', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2026-12-15', total: 'Rp 18.500.000', program: 'Program Promo Mie Instan Desember', tipe: ['on-faktur', 'off-faktur'], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'PRI-001') },
+  { id: 'SEWA-006', memoJenis: 'pendapatan-lain', supplierId: 'PRI-001', kind: 'promosi', label: 'Digital Signage Indofood - MK8', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2026-12-20', total: 'Rp 9.000.000', program: 'Promosi Digital Signage Indofood', tipe: [], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur.', pembayaran: 'Transfer', mediaTipe: 'TVC/Digital Signage', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-007', memoJenis: 'memo-program', supplierId: 'PRI-002', kind: 'memo-program', label: 'Program On Faktur Unilever - MK5, MK6', supplier: 'PT. Unilever Indonesia Tbk', end: '2026-12-05', total: 'Rp 14.000.000', program: 'Program Home Care Akhir Tahun', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'PRI-002') },
+  { id: 'SEWA-008', memoJenis: 'pendapatan-lain', supplierId: 'PRI-002', kind: 'event-blbms', label: 'Event Home Care Unilever - MK5', supplier: 'PT. Unilever Indonesia Tbk', end: '2026-12-12', total: 'Rp 7.500.000', program: 'Event Home Care Desember', tipe: [], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'unilever-event-1', mediaJenis: 'End Gondola', nama: 'End Gondola Unilever', area: 'MK5', pos: '', nominal: 7500000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-11-13', tanggalSelesai: '2026-12-12', durasiBulan: 1 }] },
+  { id: 'SEWA-009', memoJenis: 'pendapatan-lain', supplierId: 'PRI-002', kind: 'promosi', label: 'Branding Unilever - MK6', supplier: 'PT. Unilever Indonesia Tbk', end: '2027-01-10', total: 'Rp 6.000.000', program: 'Branding Home Care Januari', tipe: [], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: 'Spanduk/Banner In Store', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-010', memoJenis: 'memo-program', supplierId: 'SUP-004', kind: 'memo-program', label: 'Program On Faktur Wings - MK1, MK2', supplier: 'PT. Wings Surya', end: '2026-12-18', total: 'Rp 11.000.000', program: 'Program Detergen Akhir Tahun', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-004') },
+  { id: 'SEWA-011', memoJenis: 'pendapatan-lain', supplierId: 'SUP-004', kind: 'sewa-visibility', label: 'Visibility Wings - MK3', supplier: 'PT. Wings Surya', end: '2027-01-05', total: 'Rp 5.500.000', program: 'Visibility Produk Wings', tipe: [], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: 'Wing Gondola', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-012', memoJenis: 'pendapatan-lain', supplierId: 'SUP-004', kind: 'event-blbms', label: 'Event Wings - MK8', supplier: 'PT. Wings Surya', end: '2026-12-28', total: 'Rp 8.000.000', program: 'Event Promo Wings', tipe: [], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'wings-event-1', mediaJenis: 'End Gondola', nama: 'End Gondola Wings', area: 'MK8', pos: '', nominal: 8000000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-11-29', tanggalSelesai: '2026-12-28', durasiBulan: 1 }] },
+  { id: 'SEWA-013', memoJenis: 'memo-program', supplierId: 'SUP-001', kind: 'memo-program', label: 'Program On Faktur Sumber Rejeki - MK1', supplier: 'CV. Sumber Rejeki', end: '2026-12-08', total: 'Rp 4.500.000', program: 'Program Minuman Teh Desember', tipe: ['on-faktur'], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-001') },
+  { id: 'SEWA-014', memoJenis: 'pendapatan-lain', supplierId: 'SUP-001', kind: 'sewa-visibility', label: 'Visibility Sumber Rejeki - MK2', supplier: 'CV. Sumber Rejeki', end: '2026-12-22', total: 'Rp 3.500.000', program: 'Visibility Minuman Teh', tipe: [], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: 'Shelving', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-015', memoJenis: 'pendapatan-lain', supplierId: 'SUP-001', kind: 'promosi', label: 'Banner Sumber Rejeki - MK3', supplier: 'CV. Sumber Rejeki', end: '2027-01-15', total: 'Rp 2.750.000', program: 'Banner Minuman Teh', tipe: [], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: 'Spanduk/Banner In Store', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-016', memoJenis: 'pendapatan-lain', supplierId: 'SUP-001', kind: 'event-blbms', label: 'Event Sumber Rejeki - MK8', supplier: 'CV. Sumber Rejeki', end: '2026-12-30', total: 'Rp 4.000.000', program: 'Event Minuman Teh', tipe: [], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'sumber-event-1', mediaJenis: 'End Gondola', nama: 'End Gondola Minuman', area: 'MK8', pos: '', nominal: 4000000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-01', tanggalSelesai: '2026-12-30', durasiBulan: 1 }] },
+  { id: 'SEWA-017', memoJenis: 'memo-program', supplierId: 'SUP-005', kind: 'memo-program', label: 'Program On Faktur Nestle - MK5', supplier: 'PT. Nestle Indonesia', end: '2026-12-14', total: 'Rp 13.500.000', program: 'Program Susu Akhir Tahun', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-005') },
+  { id: 'SEWA-018', memoJenis: 'pendapatan-lain', supplierId: 'SUP-005', kind: 'sewa-visibility', label: 'Visibility Nestle - MK6', supplier: 'PT. Nestle Indonesia', end: '2026-12-24', total: 'Rp 6.500.000', program: 'Visibility Produk Nestle', tipe: [], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: 'End Gondola', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-019', memoJenis: 'pendapatan-lain', supplierId: 'SUP-005', kind: 'promosi', label: 'Digital Signage Nestle - MK8', supplier: 'PT. Nestle Indonesia', end: '2027-01-20', total: 'Rp 7.000.000', program: 'Promosi Digital Nestle', tipe: [], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: 'TVC/Digital Signage', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-020', memoJenis: 'pendapatan-lain', supplierId: 'SUP-005', kind: 'event-blbms', label: 'Event Nestle - MK1', supplier: 'PT. Nestle Indonesia', end: '2026-12-31', total: 'Rp 5.000.000', program: 'Event Produk Nestle', tipe: [], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'nestle-event-1', mediaJenis: 'End Gondola', nama: 'End Gondola Nestle', area: 'MK1', pos: '', nominal: 5000000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-02', tanggalSelesai: '2026-12-31', durasiBulan: 1 }] },
+  { id: 'SEWA-021', memoJenis: 'memo-program', supplierId: 'SUP-002', kind: 'memo-program', label: 'Program Display Mitra Distribusi - MK1, MK5', supplier: 'PT. Mitra Distribusi Nusantara', end: '2026-12-10', total: 'Rp 8.500.000', program: 'Program Display Minuman Desember', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: [] },
+  { id: 'SEWA-022', memoJenis: 'pendapatan-lain', supplierId: 'SUP-002', kind: 'sewa-visibility', label: 'Shelving Mitra Distribusi - MK5', supplier: 'PT. Mitra Distribusi Nusantara', end: '2026-12-18', total: 'Rp 4.250.000', program: 'Visibility Produk Minuman', tipe: [], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: 'Shelving', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-023', memoJenis: 'pendapatan-lain', supplierId: 'SUP-002', kind: 'event-blbms', label: 'Event Mitra Distribusi - MK8', supplier: 'PT. Mitra Distribusi Nusantara', end: '2027-01-05', total: 'Rp 6.750.000', program: 'Event Display Minuman', tipe: [], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'mitra-event-1', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Mitra Distribusi', area: 'MK8', pos: '', nominal: 6750000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-06', tanggalSelesai: '2027-01-05', durasiBulan: 1 }] },
+  { id: 'SEWA-024', memoJenis: 'memo-program', supplierId: 'SUP-003', kind: 'memo-program', label: 'Program Snack Makmur Jaya - MK2, MK3', supplier: 'UD. Makmur Jaya', end: '2026-12-12', total: 'Rp 5.800.000', program: 'Program Snack Akhir Tahun', tipe: ['off-faktur'], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Potong Tagihan', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-003') },
+  { id: 'SEWA-025', memoJenis: 'pendapatan-lain', supplierId: 'SUP-003', kind: 'sewa-visibility', label: 'End Gondola Makmur Jaya - MK2', supplier: 'UD. Makmur Jaya', end: '2026-12-20', total: 'Rp 3.900.000', program: 'Visibility Snack Makmur Jaya', tipe: [], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Transfer', mediaTipe: 'End Gondola', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-026', memoJenis: 'pendapatan-lain', supplierId: 'SUP-003', kind: 'promosi', label: 'Banner Makmur Jaya - MK3', supplier: 'UD. Makmur Jaya', end: '2027-01-12', total: 'Rp 2.600.000', program: 'Promosi Snack Makmur Jaya', tipe: [], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Transfer', mediaTipe: 'Spanduk/Banner In Store', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-027', memoJenis: 'pendapatan-lain', supplierId: 'PRI-001', kind: 'event-blbms', label: 'Event Indofood - MK5', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2027-01-10', total: 'Rp 7.250.000', program: 'Event Mie Instan Januari', tipe: [], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'indofood-event-2', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Indofood', area: 'MK5', pos: '', nominal: 7250000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-11', tanggalSelesai: '2027-01-10', durasiBulan: 1 }] },
+  { id: 'SEWA-028', memoJenis: 'pendapatan-lain', supplierId: 'PRI-001', kind: 'event-blbms', label: 'Event Indofood - MK8', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2027-01-25', total: 'Rp 9.000.000', program: 'Event Produk Indofood Januari', tipe: [], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'indofood-event-3', mediaJenis: 'End Gondola', nama: 'End Gondola Indofood', area: 'MK8', pos: '', nominal: 9000000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-27', tanggalSelesai: '2027-01-25', durasiBulan: 1 }] },
+  { id: 'SEWA-029', memoJenis: 'pendapatan-lain', supplierId: 'PRI-002', kind: 'event-blbms', label: 'Event Unilever - MK2', supplier: 'PT. Unilever Indonesia Tbk', end: '2027-01-08', total: 'Rp 6.250.000', program: 'Event Home Care Januari', tipe: [], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'unilever-event-2', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Unilever', area: 'MK2', pos: '', nominal: 6250000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-09', tanggalSelesai: '2027-01-08', durasiBulan: 1 }] },
+  { id: 'SEWA-030', memoJenis: 'pendapatan-lain', supplierId: 'PRI-002', kind: 'event-blbms', label: 'Event Unilever - MK6', supplier: 'PT. Unilever Indonesia Tbk', end: '2027-01-22', total: 'Rp 8.100.000', program: 'Event Produk Unilever Januari', tipe: [], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'unilever-event-3', mediaJenis: 'End Gondola', nama: 'End Gondola Unilever', area: 'MK6', pos: '', nominal: 8100000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-24', tanggalSelesai: '2027-01-22', durasiBulan: 1 }] },
+  { id: 'SEWA-031', memoJenis: 'pendapatan-lain', supplierId: 'SUP-004', kind: 'event-blbms', label: 'Event Wings - MK2', supplier: 'PT. Wings Surya', end: '2027-01-14', total: 'Rp 6.800.000', program: 'Event Detergen Januari', tipe: [], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'wings-event-2', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Wings', area: 'MK2', pos: '', nominal: 6800000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-15', tanggalSelesai: '2027-01-14', durasiBulan: 1 }] },
+  { id: 'SEWA-032', memoJenis: 'pendapatan-lain', supplierId: 'SUP-004', kind: 'event-blbms', label: 'Event Wings - MK6', supplier: 'PT. Wings Surya', end: '2027-01-28', total: 'Rp 7.900.000', program: 'Event Produk Wings Januari', tipe: [], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'wings-event-3', mediaJenis: 'End Gondola', nama: 'End Gondola Wings', area: 'MK6', pos: '', nominal: 7900000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-29', tanggalSelesai: '2027-01-28', durasiBulan: 1 }] },
+  { id: 'SEWA-033', memoJenis: 'pendapatan-lain', supplierId: 'SUP-001', kind: 'event-blbms', label: 'Event Sumber Rejeki - MK3', supplier: 'CV. Sumber Rejeki', end: '2027-01-16', total: 'Rp 3.750.000', program: 'Event Minuman Teh Januari', tipe: [], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'sumber-event-2', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Minuman', area: 'MK3', pos: '', nominal: 3750000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-17', tanggalSelesai: '2027-01-16', durasiBulan: 1 }] },
+  { id: 'SEWA-034', memoJenis: 'pendapatan-lain', supplierId: 'SUP-001', kind: 'event-blbms', label: 'Event Sumber Rejeki - MK5', supplier: 'CV. Sumber Rejeki', end: '2027-01-30', total: 'Rp 4.600.000', program: 'Event Produk Teh Januari', tipe: [], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'sumber-event-3', mediaJenis: 'End Gondola', nama: 'End Gondola Minuman', area: 'MK5', pos: '', nominal: 4600000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2027-01-01', tanggalSelesai: '2027-01-30', durasiBulan: 1 }] },
+  { id: 'SEWA-035', memoJenis: 'pendapatan-lain', supplierId: 'SUP-005', kind: 'event-blbms', label: 'Event Nestle - MK2', supplier: 'PT. Nestle Indonesia', end: '2027-01-18', total: 'Rp 5.900.000', program: 'Event Susu Januari', tipe: [], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'nestle-event-2', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Nestle', area: 'MK2', pos: '', nominal: 5900000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-19', tanggalSelesai: '2027-01-18', durasiBulan: 1 }] },
+  { id: 'SEWA-036', memoJenis: 'pendapatan-lain', supplierId: 'SUP-005', kind: 'event-blbms', label: 'Event Nestle - MK6', supplier: 'PT. Nestle Indonesia', end: '2027-02-02', total: 'Rp 7.200.000', program: 'Event Produk Nestle Februari', tipe: [], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'nestle-event-3', mediaJenis: 'End Gondola', nama: 'End Gondola Nestle', area: 'MK6', pos: '', nominal: 7200000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2027-01-04', tanggalSelesai: '2027-02-02', durasiBulan: 1 }] },
+  { id: 'SEWA-037', memoJenis: 'pendapatan-lain', supplierId: 'SUP-002', kind: 'event-blbms', label: 'Event Mitra Distribusi - MK1', supplier: 'PT. Mitra Distribusi Nusantara', end: '2027-01-20', total: 'Rp 5.400.000', program: 'Event Minuman Januari', tipe: [], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'mitra-event-2', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Mitra Distribusi', area: 'MK1', pos: '', nominal: 5400000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-21', tanggalSelesai: '2027-01-20', durasiBulan: 1 }] },
+  { id: 'SEWA-038', memoJenis: 'pendapatan-lain', supplierId: 'SUP-002', kind: 'event-blbms', label: 'Event Mitra Distribusi - MK6', supplier: 'PT. Mitra Distribusi Nusantara', end: '2027-02-03', total: 'Rp 6.300.000', program: 'Event Produk Minuman Februari', tipe: [], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'mitra-event-3', mediaJenis: 'End Gondola', nama: 'End Gondola Mitra Distribusi', area: 'MK6', pos: '', nominal: 6300000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2027-01-05', tanggalSelesai: '2027-02-03', durasiBulan: 1 }] },
+  { id: 'SEWA-039', memoJenis: 'pendapatan-lain', supplierId: 'SUP-003', kind: 'event-blbms', label: 'Event Makmur Jaya - MK3', supplier: 'UD. Makmur Jaya', end: '2027-01-24', total: 'Rp 3.250.000', program: 'Event Snack Januari', tipe: [], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Regular Event', eventBentuk: 'Media Display Produk', eventMediaJenis: ['Wing Gondola'], eventMediaDetails: [{ id: 'makmur-event-1', mediaJenis: 'Wing Gondola', nama: 'Wing Gondola Makmur Jaya', area: 'MK3', pos: '', nominal: 3250000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-12-25', tanggalSelesai: '2027-01-24', durasiBulan: 1 }] },
+  { id: 'SEWA-040', memoJenis: 'pendapatan-lain', supplierId: 'SUP-003', kind: 'event-blbms', label: 'Event Makmur Jaya - MK7', supplier: 'UD. Makmur Jaya', end: '2027-02-07', total: 'Rp 4.100.000', program: 'Event Produk Snack Februari', tipe: [], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'makmur-event-2', mediaJenis: 'End Gondola', nama: 'End Gondola Makmur Jaya', area: 'MK7', pos: '', nominal: 4100000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2027-01-08', tanggalSelesai: '2027-02-07', durasiBulan: 1 }] },
+  { id: 'SEWA-041', memoJenis: 'memo-program', supplierId: 'PRI-001', kind: 'memo-program', label: 'Program Display Indofood - MK4', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2027-01-15', total: 'Rp 10.500.000', program: 'Program Display Mie Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur.', pembayaran: 'Potong Tagihan', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'PRI-001').slice(0, 3) },
+  { id: 'SEWA-042', memoJenis: 'memo-program', supplierId: 'PRI-002', kind: 'memo-program', label: 'Program Display Unilever - MK2', supplier: 'PT. Unilever Indonesia Tbk', end: '2027-01-17', total: 'Rp 9.200.000', program: 'Program Home Care Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'PRI-002') },
+  { id: 'SEWA-043', memoJenis: 'memo-program', supplierId: 'PRI-002', kind: 'memo-program', label: 'Program Display Unilever - MK8', supplier: 'PT. Unilever Indonesia Tbk', end: '2027-02-01', total: 'Rp 12.400.000', program: 'Program Produk Unilever Februari', tipe: ['off-faktur'], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'PRI-002') },
+  { id: 'SEWA-044', memoJenis: 'memo-program', supplierId: 'SUP-004', kind: 'memo-program', label: 'Program Display Wings - MK4', supplier: 'PT. Wings Surya', end: '2027-01-19', total: 'Rp 8.750.000', program: 'Program Detergen Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-004') },
+  { id: 'SEWA-045', memoJenis: 'memo-program', supplierId: 'SUP-004', kind: 'memo-program', label: 'Program Display Wings - MK7', supplier: 'PT. Wings Surya', end: '2027-02-04', total: 'Rp 10.800.000', program: 'Program Produk Wings Februari', tipe: ['off-faktur'], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-004') },
+  { id: 'SEWA-046', memoJenis: 'memo-program', supplierId: 'SUP-001', kind: 'memo-program', label: 'Program Display Sumber Rejeki - MK4', supplier: 'CV. Sumber Rejeki', end: '2027-01-21', total: 'Rp 4.800.000', program: 'Program Minuman Teh Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-001') },
+  { id: 'SEWA-047', memoJenis: 'memo-program', supplierId: 'SUP-001', kind: 'memo-program', label: 'Program Display Sumber Rejeki - MK7', supplier: 'CV. Sumber Rejeki', end: '2027-02-06', total: 'Rp 6.100.000', program: 'Program Produk Teh Februari', tipe: ['off-faktur'], redaksi: 'Atas Nama CV. Sumber Rejeki.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-001') },
+  { id: 'SEWA-048', memoJenis: 'memo-program', supplierId: 'SUP-005', kind: 'memo-program', label: 'Program Display Nestle - MK3', supplier: 'PT. Nestle Indonesia', end: '2027-01-23', total: 'Rp 11.200.000', program: 'Program Susu Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-005') },
+  { id: 'SEWA-049', memoJenis: 'memo-program', supplierId: 'SUP-005', kind: 'memo-program', label: 'Program Display Nestle - MK8', supplier: 'PT. Nestle Indonesia', end: '2027-02-08', total: 'Rp 13.000.000', program: 'Program Produk Nestle Februari', tipe: ['off-faktur'], redaksi: 'Atas Nama PT. Nestle Indonesia.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-005') },
+  { id: 'SEWA-050', memoJenis: 'memo-program', supplierId: 'SUP-002', kind: 'memo-program', label: 'Program Display Mitra Distribusi - MK3', supplier: 'PT. Mitra Distribusi Nusantara', end: '2027-01-26', total: 'Rp 7.600.000', program: 'Program Minuman Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: [] },
+  { id: 'SEWA-051', memoJenis: 'memo-program', supplierId: 'SUP-002', kind: 'memo-program', label: 'Program Display Mitra Distribusi - MK7', supplier: 'PT. Mitra Distribusi Nusantara', end: '2027-02-10', total: 'Rp 9.400.000', program: 'Program Produk Minuman Februari', tipe: ['off-faktur'], redaksi: 'Atas Nama PT. Mitra Distribusi Nusantara.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: [] },
+  { id: 'SEWA-052', memoJenis: 'memo-program', supplierId: 'SUP-003', kind: 'memo-program', label: 'Program Display Makmur Jaya - MK4', supplier: 'UD. Makmur Jaya', end: '2027-01-29', total: 'Rp 5.200.000', program: 'Program Snack Januari', tipe: ['on-faktur'], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-003') },
+  { id: 'SEWA-053', memoJenis: 'memo-program', supplierId: 'SUP-003', kind: 'memo-program', label: 'Program Display Makmur Jaya - MK8', supplier: 'UD. Makmur Jaya', end: '2027-02-12', total: 'Rp 6.700.000', program: 'Program Produk Snack Februari', tipe: ['off-faktur'], redaksi: 'Atas Nama UD. Makmur Jaya.', pembayaran: 'Transfer', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'SUP-003') },
+];
+const SIMULATED_LEASES: Array<any> = [
+  { id: 'SEWA-001', memoJenis: 'memo-program', supplierId: 'PRI-001', kind: 'memo-program', label: 'Program Indofood — On Faktur & Off Faktur — MK1, MK2, MK3', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2026-10-31', total: 'Rp 12.000.000', program: 'Program Display Produk Akhir Tahun', tipe: ['on-faktur', 'off-faktur'], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur - Program display produk.', pembayaran: 'Potong Tagihan', mediaTipe: '', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[], programProducts: PRODUCT_CATALOG.filter((product) => product.supplierId === 'PRI-001').slice(0, 3) },
+  { id: 'SEWA-002', memoJenis: 'pendapatan-lain', supplierId: 'PRI-002', kind: 'sewa-visibility', label: 'Wing Gondola Unilever — MK5, MK6', supplier: 'PT. Unilever Indonesia Tbk', end: '2026-10-20', total: 'Rp 8.500.000', program: 'Promo Wing Gondola', tipe: ['off-faktur'], redaksi: 'Atas Nama PT. Unilever Indonesia Tbk.', pembayaran: 'Transfer', mediaTipe: 'Wing Gondola', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-003', memoJenis: 'pendapatan-lain', supplierId: 'SUP-004', kind: 'promosi', label: 'Digital Signage Wings — MK1, MK2, MK8', supplier: 'PT. Wings Surya', end: '2026-11-30', total: 'Rp 15.000.000', program: 'Promosi Digital Signage', tipe: ['off-faktur'], redaksi: 'Atas Nama PT. Wings Surya.', pembayaran: 'Transfer', mediaTipe: 'TVC/Digital Signage', eventJenis: '', eventBentuk: '', eventMediaJenis: [] as string[] },
+  { id: 'SEWA-004', memoJenis: 'pendapatan-lain', supplierId: 'PRI-001', kind: 'event-blbms', label: 'Event BLBMS Indofood — MK1, MK3', supplier: 'PT. Indofood CBP Sukses Makmur', end: '2026-10-25', total: 'Rp 10.000.000', program: 'Event BLBMS Indofood', tipe: [], redaksi: 'Atas Nama PT. Indofood CBP Sukses Makmur.', pembayaran: 'Transfer', mediaTipe: 'Media Display Produk', eventJenis: 'Belanja Luar Biasa Murah Spektakuler (BLBMS)', eventBentuk: 'Media Display Produk', eventMediaJenis: ['End Gondola'], eventMediaDetails: [{ id: 'old-event-1', mediaJenis: 'End Gondola', nama: 'End Gondola Indofood', area: 'MK1', pos: '', nominal: 10000000, hargaPajak: 'exclude', caraPembayaran: 'Transfer', tanggalMulai: '2026-10-01', tanggalSelesai: '2026-10-25', durasiBulan: 1 }] },
+];
+
+function SewaModeStep({ mode, setMode, selectedId, setSelectedId, error, memoJenis, supplierIds = [], supplierNames = [], programJenis }: { mode: SewaMode; setMode: (v: SewaMode) => void; selectedId: string; setSelectedId: (v: string) => void; error?: string; memoJenis?: JenisMemo; supplierIds?: string[]; supplierNames?: string[]; programJenis?: string }) {
+  return <Card title="Jenis Pengajuan Sewa" icon={Calendar} subtitle="Pilih sewa baru atau perpanjang sewa yang sudah ada.">
+    <div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setMode('baru')} className={`rounded-xl border p-4 text-left ${mode === 'baru' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-white'}`}><p className="font-bold text-slate-800">Sewa Baru</p><p className="mt-1 text-xs text-slate-500">Isi seluruh data program/media seperti biasa.</p></button><button type="button" onClick={() => setMode('perpanjang')} className={`rounded-xl border p-4 text-left ${mode === 'perpanjang' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-white'}`}><p className="font-bold text-slate-800">Perpanjang Sewa</p><p className="mt-1 text-xs text-slate-500">Data lama terkunci; hanya periode yang dapat diubah.</p></button></div>
+    {mode === 'perpanjang' && <div className="mt-4 space-y-2"><Label req>Pilih sewa yang akan diperpanjang</Label><select value={selectedId} onChange={e => setSelectedId(e.target.value)} className={`${error ? inpErr : inp} cursor-pointer`}><option value="">Pilih data sewa...</option>{[...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES].filter(x => (!memoJenis || (x.memoJenis || (x.kind === 'memo-program' ? 'memo-program' : 'pendapatan-lain')) === memoJenis) && ((!supplierIds.length && !supplierNames.length) || supplierIds.includes(x.supplierId) || supplierNames.includes(x.supplier)) && (!programJenis || memoJenis === 'memo-program' || x.kind === programJenis)).map(x => <option value={x.id} key={x.id}>{x.label} · Berakhir {x.end} · {x.total}</option>)}</select>{selectedId && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Data aktif: <b>{[...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES].find(x => x.id === selectedId)?.label}</b>. Detail program dan media lama akan tampil otomatis pada langkah berikutnya.</div>}</div>}
+    <FieldError message={error} />
+  </Card>;
 }
 
 type FormErrors = Record<string, string>;
@@ -262,9 +338,9 @@ function RewardTypeNote({ type }: { type: string }) {
   );
 }
 
-function Card({ title, icon: Icon, subtitle, children }: { title: string; icon: React.ElementType; subtitle?: string; children: React.ReactNode }) {
+function Card({ title, icon: Icon, subtitle, children, className = '' }: { title: string; icon: React.ElementType; subtitle?: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm relative">
+    <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm relative ${className}`}>
       <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-amber-50/50 rounded-t-2xl">
         <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-600/10 shrink-0">
           <Icon className="w-4 h-4 text-amber-700" />
@@ -1637,20 +1713,21 @@ function KetentuanPajakSection({ ppnAktif, ppnRate, onPpnAktif, onPpnRate, pphAk
   );
 }
 
-function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState; setField: <K extends keyof ProgramInfoState>(f: K, v: ProgramInfoState[K]) => void; errors: FormErrors }) {
+function ProgramInfoStep({ state, setField, errors, locked = false }: { state: ProgramInfoState; setField: <K extends keyof ProgramInfoState>(f: K, v: ProgramInfoState[K]) => void; errors: FormErrors; locked?: boolean }) {
   const paymentDueDate = addMonthsDateLabel(state.periodeAkhir, 2);
   return (
     <Card title="Informasi Program" icon={Tag} subtitle="Program dapat mencakup lebih dari satu tipe sekaligus">
-      <div><Label req>Nama Program</Label><input type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={errors.namaProgram ? inpErr : inp} placeholder="cth: Program Akhir Tahun 2026" /><FieldError message={errors.namaProgram} /></div>
+      {locked && <InfoNote tone="amber">Mode perpanjang sewa aktif. Data program lama dikunci; hanya periode yang dapat diubah.</InfoNote>}
+      <div className={locked ? 'pointer-events-none opacity-65' : ''}><Label req>Nama Program</Label><input readOnly={locked} type="text" value={state.namaProgram} onChange={(e) => setField('namaProgram', e.target.value)} className={errors.namaProgram ? inpErr : inp} placeholder="cth: Program Akhir Tahun 2026" /><FieldError message={errors.namaProgram} /></div>
 
-      <div>
+      <div className={locked ? 'pointer-events-none opacity-65' : ''}>
         <Label req>Tipe Program</Label>
         <MultiChoiceChips options={PROGRAM_TIPE_OPTIONS} value={state.tipe} onChange={(v) => setField('tipe', v)} />
         <FieldError message={errors.tipe} />
         <p className="mt-2 text-[11px] text-slate-400">Bisa memilih lebih dari satu, misalnya On Faktur dan Off Faktur dalam satu program.</p>
       </div>
 
-      <div className="border-t border-slate-100 pt-5">
+      <div className={`border-t border-slate-100 pt-5 ${locked ? 'pointer-events-none opacity-65' : ''}`}>
         <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
           <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">%</span>
           Ketentuan Pajak
@@ -1663,7 +1740,7 @@ function ProgramInfoStep({ state, setField, errors }: { state: ProgramInfoState;
         />
       </div>
 
-      <div>
+      <div className={locked ? 'pointer-events-none opacity-65' : ''}>
         <Label req>Redaksi</Label>
         <textarea
           rows={4}
@@ -1985,6 +2062,7 @@ function ProgramDetailStep({
   tipe,
   onGroups, updateOnGroup, updateOnGroupProducts, updateOnGroupRow, addOnGroup, removeOnGroup, onError,
   offGroups, updateOffGroup, updateOffGroupProducts, updateOffGroupRow, addOffGroup, removeOffGroup, offError,
+  locked = false,
 }: {
   tipe: string[];
   onGroups: OnFakturGroup[];
@@ -2001,6 +2079,7 @@ function ProgramDetailStep({
   addOffGroup: () => void;
   removeOffGroup: (index: number) => void;
   offError?: string;
+  locked?: boolean;
 }) {
   const hasOn = tipe.includes('on-faktur');
   const hasOff = tipe.includes('off-faktur');
@@ -2036,7 +2115,8 @@ function ProgramDetailStep({
   );
 
   return (
-    <Card title="Kelompok Potongan & Produk" icon={Receipt} subtitle="Kelompokkan PLU yang memiliki nilai potongan sama">
+    <Card title="Kelompok Potongan & Produk" icon={Receipt} subtitle="Kelompokkan PLU yang memiliki nilai potongan sama" className={locked ? 'renewal-locked' : ''}>
+      {locked && <InfoNote tone="amber">Data kelompok dan produk dari sewa sebelumnya sudah dimuat otomatis. Data dikunci; ubah periode saja.</InfoNote>}
       {hasOn && (
         <div className="space-y-4">
           <InfoNote tone="amber">Buat satu kelompok untuk PLU dengan nilai potongan yang sama. Banded, syarat strata, alokasi, budget, dan keterangan tetap diisi per PLU.</InfoNote>
@@ -2332,6 +2412,7 @@ interface PendapatanState {
   eventJenis: string; eventJenisLainnya: string;
   eventBentuk: string;
   eventMediaJenis: string[];
+  eventMediaSubJenis: string;
   eventMediaDetails: EventMediaDetailRow[];
   eventNominal: number;
   eventHargaPajak: string;
@@ -2357,7 +2438,7 @@ interface EventMediaDetailRow {
   durasiBulan: number;
 }
 
-function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: PendapatanState; setField: <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => void; errors: FormErrors; mode?: 'jenis' | 'detail' }) {
+function PendapatanStep({ state, setField, errors, mode = 'detail', locked = false }: { state: PendapatanState; setField: <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => void; errors: FormErrors; mode?: 'jenis' | 'detail'; locked?: boolean }) {
   const [activeEventAreas, setActiveEventAreas] = useState<Record<string, string>>({});
   const syncProductRows = (products: Product[], rows: Record<string, ProductQtyRow>) => {
     const next: Record<string, ProductQtyRow> = {};
@@ -2429,7 +2510,8 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
   };
 
   return (
-    <Card title={mode === 'jenis' ? 'Pilih Jenis Program' : 'Detail Program Lain-lain'} icon={Building2} subtitle={mode === 'jenis' ? 'Pilih jenis program yang ingin diajukan' : 'Lengkapi detail berdasarkan jenis program yang dipilih'}>
+    <Card title={mode === 'jenis' ? 'Pilih Jenis Program' : 'Detail Program Lain-lain'} icon={Building2} subtitle={mode === 'jenis' ? 'Pilih jenis program yang ingin diajukan' : 'Lengkapi detail berdasarkan jenis program yang dipilih'} className={locked ? 'renewal-locked' : ''}>
+      {locked && mode === 'detail' && <InfoNote tone="amber">Mode perpanjang sewa aktif. Semua data program dan media lama dikunci. Hanya periode yang dapat diubah.</InfoNote>}
       {mode === 'jenis' && (
         <>
       <div>
@@ -2498,8 +2580,8 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
             <div><Label req>Mulai Sewa</Label><input type="date" value={state.sewaPeriodeAwal} onChange={(e) => setField('sewaPeriodeAwal', e.target.value)} className={inp} /></div>
             <div>
               <Label req>Durasi Sewa</Label>
-              <div className="relative">
-                <input type="number" min={1} value={state.sewaDurasiBulan || ''} onChange={(e) => setField('sewaDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
+              <div className="relative renewal-duration-field" style={{ pointerEvents: 'auto' }}>
+                <input type="number" min={1} value={state.sewaDurasiBulan || ''} onChange={(e) => setField('sewaDurasiBulan', parseInt(e.target.value) || 0)} readOnly={false} style={{ pointerEvents: 'auto', opacity: 1, position: 'relative', zIndex: 20 }} className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700`} placeholder="cth: 3" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
               </div>
             </div>
@@ -2626,8 +2708,8 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
             <div><Label req>Tanggal Mulai Sewa</Label><input type="date" value={state.promosiPeriodeAwal} onChange={(e) => setField('promosiPeriodeAwal', e.target.value)} className={inp} /></div>
             <div>
               <Label req>Durasi Sewa</Label>
-              <div className="relative">
-                <input type="number" min={1} value={state.promosiDurasiBulan || ''} onChange={(e) => setField('promosiDurasiBulan', parseInt(e.target.value) || 0)} className={`${inp} pr-16`} placeholder="cth: 3" />
+              <div className="relative renewal-duration-field" style={{ pointerEvents: 'auto' }}>
+                <input type="number" min={1} value={state.promosiDurasiBulan || ''} onChange={(e) => setField('promosiDurasiBulan', parseInt(e.target.value) || 0)} readOnly={false} style={{ pointerEvents: 'auto', opacity: 1, position: 'relative', zIndex: 20 }} className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700`} placeholder="cth: 3" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
               </div>
             </div>
@@ -2712,7 +2794,7 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label req>Tempo Pembayaran</Label>
-                <div className="relative">
+                <div className="relative renewal-duration-field">
                   <input type="number" min={0} value={state.listingTempoPembayaran} onChange={(e) => setField('listingTempoPembayaran', e.target.value)} className={`${inp} pr-14`} placeholder="cth: 30" />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">hari</span>
                 </div>
@@ -2766,6 +2848,7 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
               onChange={(v) => {
                 setField('eventBentuk', v);
                 setField('eventMediaJenis', []);
+                setField('eventMediaSubJenis', '');
                 setField('eventMediaDetails', []);
               }}
             />
@@ -2789,11 +2872,23 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
                   value={state.eventMediaJenis[0] || ''}
                   onChange={(value) => {
                     setField('eventMediaJenis', value ? [value] : []);
+                    setField('eventMediaSubJenis', '');
                     setField('eventMediaDetails', []);
                   }}
                 />
               )}
               <FieldError message={errors.eventMediaJenis} />
+            </div>
+          )}
+          {state.eventBentuk === 'Media Branding & Publication' && state.eventMediaJenis[0] === 'Fasilitas Display' && (
+            <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+              <Label req>Jenis Fasilitas Display</Label>
+              <SingleChoiceChips
+                options={FASILITAS_DISPLAY_OPTIONS.map((option) => ({ key: option, label: option }))}
+                value={state.eventMediaSubJenis}
+                onChange={(value) => setField('eventMediaSubJenis', value)}
+              />
+              <p className="mt-2 text-[11px] text-amber-700">Pilih jenis media display yang digunakan: Wing Gondola, End Gondola, Counter Image, atau Price Check.</p>
             </div>
           )}
           {state.eventBentuk && !eventUsesMediaDetails && (
@@ -2836,13 +2931,15 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
               <PaymentDueWarning dueDate={addMonthsDateLabel(state.eventPeriodeAkhir, 2)} />
               <div className="max-w-[180px]">
                 <Label req>Durasi</Label>
-                <div className="relative">
+                <div className="relative renewal-duration-field" style={{ pointerEvents: 'auto' }}>
                   <input
                     type="number"
                     min={1}
                     value={state.eventDurasiBulan || ''}
                     onChange={(e) => setField('eventDurasiBulan', parseInt(e.target.value) || 0)}
-                    className={`${inp} pr-16`}
+                    readOnly={false}
+                    style={{ pointerEvents: 'auto', opacity: 1, backgroundColor: '#fff', cursor: 'text', position: 'relative', zIndex: 20 }}
+                    className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700`}
                     placeholder="cth: 3"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
@@ -2930,8 +3027,8 @@ function PendapatanStep({ state, setField, errors, mode = 'detail' }: { state: P
                             <DateRangeLikePicker start={row.tanggalMulai} end={row.tanggalSelesai} onStart={(value) => updateEventMediaDetail(row.id, { tanggalMulai: value })} onEnd={(value) => updateEventMediaDetail(row.id, { tanggalSelesai: value })} />
                             <div className="max-w-[180px]">
                               <Label req>Durasi</Label>
-                              <div className="relative">
-                                <input type="number" min={1} value={row.durasiBulan || ''} onChange={(e) => updateEventMediaDetail(row.id, { durasiBulan: parseInt(e.target.value) || 0 })} className={`${inp} pr-16`} placeholder="cth: 3" />
+                              <div className="relative renewal-duration-field" style={locked ? { pointerEvents: 'auto' } : undefined}>
+                                <input type="number" min={1} value={row.durasiBulan || ''} onChange={(e) => updateEventMediaDetail(row.id, { durasiBulan: parseInt(e.target.value) || 0 })} readOnly={false} style={locked ? { pointerEvents: 'auto', opacity: 1, position: 'relative', zIndex: 20 } : undefined} className={`${inp} pr-16 ${locked ? 'renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700' : ''}`} placeholder="cth: 3" />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">bulan</span>
                               </div>
                             </div>
@@ -3425,7 +3522,7 @@ function ReviewStep({
                 <>
                   <Row label="Nama Event" value={pendapatan.eventJenis} />
                   <Row label="Kategori Media" value={pendapatan.eventBentuk} />
-                  <Row label="Jenis Media" value={pendapatan.eventMediaJenis.join(', ')} />
+                  <Row label="Jenis Media" value={[pendapatan.eventMediaJenis.join(', '), pendapatan.eventMediaSubJenis].filter(Boolean).join(' — ')} />
                   {pendapatan.eventBentuk !== 'Media Display Produk' && (
                     <>
                       <Row label="Nama Program" value={pendapatan.namaProgram} />
@@ -3743,7 +3840,7 @@ function SuccessScreen({
                 {pendapatan.jenis === 'event-blbms' && (
                   <div className="memo-detail-card rounded border border-slate-200 p-3">
                     <PrintInfoRow label="Kategori Media" value={pendapatan.eventBentuk} />
-                    <PrintInfoRow label="Jenis Media" value={pendapatan.eventMediaJenis.join(', ')} />
+                    <PrintInfoRow label="Jenis Media" value={[pendapatan.eventMediaJenis.join(', '), pendapatan.eventMediaSubJenis].filter(Boolean).join(' — ')} />
                     {pendapatan.eventBentuk !== 'Media Display Produk' && (
                       <>
                         <PrintInfoRow label="Nominal" value={`Rp ${pendapatan.eventNominal.toLocaleString('id-ID')} / bulan (${pendapatan.eventHargaPajak === 'include' ? 'Include Pajak' : 'Exclude Pajak'})`} />
@@ -3817,7 +3914,7 @@ const INITIAL_BUDGET_LINK: BudgetLinkState = { keterangan: '', nominal: 0 };
 const INITIAL_PENDAPATAN: PendapatanState = {
   jenis: '', namaProgram: '',
   sewaJenis: '', sewaProducts: [], sewaProductRows: {}, sewaNominal: 0, sewaHargaPajak: 'exclude', sewaCaraPembayaran: '', sewaDurasiBulan: 0, sewaPeriodeAwal: '', sewaPeriodeAkhir: '', sewaKeterangan: '',
-  sewaPpnAktif: false, sewaPpnRate: '', sewaPphAktif: false, sewaPphRate: '',
+  sewaPpnAktif: true, sewaPpnRate: 'PPN 11%', sewaPphAktif: true, sewaPphRate: 'PPh Pasal 23 - 2%',
   rewardJenis: '', rewardBentuk: '', rewardPembayaran: '', rewardBank: '', rewardNoRekening: '', rewardNominal: 0, rewardHargaPajak: 'exclude', rewardProducts: [], rewardProductRows: {}, target: '', rewardMode: 'persen', rewardValue: 0, rewardPeriodeAwal: '', rewardPeriodeAkhir: '', rewardKeterangan: '',
   rewardPpnAktif: false, rewardPpnRate: '', rewardPphAktif: false, rewardPphRate: '',
   mediaTipe: '', mediaKeterangan: '', promosiNominal: 0, promosiHargaPajak: 'exclude', promosiCaraPembayaran: '', promosiPeriodeAwal: '', promosiDurasiBulan: 0,
@@ -3825,8 +3922,9 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   listingProducts: [emptyListingProductRow()],
   listingPkp: true, listingReturn: true, listingBiayaLabel: false, listingNominal: 0, listingHargaPajak: 'exclude', listingTempoPembayaran: '', listingCaraPembayaran: '',
   listingPpnAktif: false, listingPpnRate: '', listingPphAktif: false, listingPphRate: '',
-  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventMediaJenis: [], eventMediaDetails: [], eventNominal: 0, eventHargaPajak: 'exclude', eventCaraPembayaran: '', eventDurasiBulan: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
-  eventPpnAktif: false, eventPpnRate: '', eventPphAktif: false, eventPphRate: '',
+  eventJenis: '', eventJenisLainnya: '', eventBentuk: '', eventMediaJenis: [], eventMediaSubJenis: '', eventMediaDetails: [], eventNominal: 0, eventHargaPajak: 'exclude', eventCaraPembayaran: '', eventDurasiBulan: 0, eventPeriodeAwal: '', eventPeriodeAkhir: '', eventKeterangan: '',
+  // Event merupakan memo sewa, jadi PPN dan PPh aktif secara default.
+  eventPpnAktif: true, eventPpnRate: 'PPN 11%', eventPphAktif: true, eventPphRate: 'PPh Pasal 23 - 2%',
 };
 
 export default function SupplierMemoWizard() {
@@ -3837,6 +3935,8 @@ export default function SupplierMemoWizard() {
   const [outlets, setOutlets] = useState<string[]>([]);
   const [outletScope, setOutletScope] = useState<OutletScope>('custom');
   const [jenisMemo, setJenisMemo] = useState<JenisMemo>('');
+  const [sewaMode, setSewaMode] = useState<SewaMode>('baru');
+  const [selectedSewaId, setSelectedSewaId] = useState('');
 
   const [updateInfo, setUpdateInfo] = useState<UpdateInfoState>(INITIAL_UPDATE_INFO);
   const [programInfo, setProgramInfo] = useState<ProgramInfoState>(INITIAL_PROGRAM_INFO);
@@ -3866,7 +3966,42 @@ export default function SupplierMemoWizard() {
   const setBL = <K extends keyof BudgetLinkState>(f: K, v: BudgetLinkState[K]) => setBudgetLink((p) => ({ ...p, [f]: v }));
   const setPendF = <K extends keyof PendapatanState>(f: K, v: PendapatanState[K]) => setPendapatan((p) => ({ ...p, [f]: v }));
 
-  const steps = getSteps(jenisMemo, programInfo.tipe);
+  useEffect(() => {
+    if (sewaMode !== 'perpanjang' || !selectedSewaId) return;
+    const lease = [...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES].find((item) => item.id === selectedSewaId);
+    if (!lease) return;
+    if (jenisMemo === 'memo-program') {
+      const renewalProducts = (lease.programProducts || PRODUCT_CATALOG.filter((product) => product.supplierId === identity?.supplier?.id || product.supplierId === identity?.principal?.id)).slice(0, 3);
+      const products = renewalProducts.length > 0 ? renewalProducts : PRODUCT_CATALOG.filter((product) => product.supplierId === (identity?.principal?.id || identity?.supplier?.id)).slice(0, 3);
+      const makeGroup = (id: string, mode: DiskonMode, basis: string) => ({
+        id,
+        keterangan: 'Data kelompok dari sewa sebelumnya',
+        diskonMode: mode,
+        diskonBasis: basis,
+        diskonValue: 5,
+        products,
+        rows: Object.fromEntries(products.map((product) => [product.plu, emptyOnFakturProductRow()])),
+      });
+      const makeOffGroup = (id: string) => ({
+        id,
+        keterangan: 'Data kelompok dari sewa sebelumnya',
+        diskonMode: 'persen' as DiskonMode,
+        diskonBasis: 'cbp',
+        diskonValue: 5,
+        products,
+        rows: Object.fromEntries(products.map((product) => [product.plu, emptyOffFakturProductRow()])),
+      });
+      setProgramInfo((prev) => ({ ...prev, namaProgram: lease.program, tipe: lease.tipe, redaksi: lease.redaksi, caraPembayaran: lease.pembayaran, periodeAwal: lease.start || lease.end, periodeAkhir: lease.end, ppnAktif: false, ppnRate: '', pphAktif: false, pphRate: '' }));
+      setOnGroups(lease.tipe.includes('on-faktur') ? [makeGroup(`renewal-on-${lease.id}`, 'persen', 'cbp')] : [emptyOnFakturGroup()]);
+      setOffGroups(lease.tipe.includes('off-faktur') ? [makeOffGroup(`renewal-off-${lease.id}`)] : [emptyOffFakturGroup()]);
+    }
+    if (jenisMemo === 'pendapatan-lain') {
+      const nominal = Number(lease.total.replace(/[^0-9]/g, '')) || 0;
+      setPendapatan((prev) => ({ ...prev, namaProgram: lease.program, sewaJenis: lease.mediaTipe, sewaNominal: nominal, sewaCaraPembayaran: lease.pembayaran, sewaPeriodeAwal: lease.start || lease.end, sewaDurasiBulan: 1, sewaPeriodeAkhir: lease.end, promosiNominal: nominal, mediaTipe: lease.mediaTipe, promosiCaraPembayaran: lease.pembayaran, promosiPeriodeAwal: lease.start || lease.end, promosiDurasiBulan: 1, promosiPeriodeAkhir: lease.end, eventNominal: nominal, eventMediaJenis: lease.eventMediaJenis || [], eventMediaDetails: lease.eventMediaDetails || [], eventJenis: lease.eventJenis, eventBentuk: lease.eventBentuk, eventCaraPembayaran: lease.pembayaran, eventPeriodeAwal: lease.start || lease.end, eventDurasiBulan: 1, eventPeriodeAkhir: lease.end, eventPpnAktif: lease.kind === 'event-blbms' ? true : prev.eventPpnAktif, eventPpnRate: lease.kind === 'event-blbms' ? 'PPN 11%' : prev.eventPpnRate, eventPphAktif: lease.kind === 'event-blbms' ? true : prev.eventPphAktif, eventPphRate: lease.kind === 'event-blbms' ? 'PPh Pasal 23 - 2%' : prev.eventPphRate, sewaKeterangan: `Perpanjangan dari ${lease.id}`, mediaKeterangan: `Perpanjangan dari ${lease.id}`, eventKeterangan: `Perpanjangan dari ${lease.id}` }));
+    }
+  }, [sewaMode, selectedSewaId, jenisMemo, identity]);
+
+  const steps = getSteps(jenisMemo, programInfo.tipe, pendapatan.jenis);
   const currentKey = steps[Math.min(step, steps.length - 1)].key;
 
   const onProducts = onGroups.flatMap((group) => group.products);
@@ -3910,6 +4045,7 @@ export default function SupplierMemoWizard() {
 
   const onJenisMemoChange = (v: JenisMemo) => {
     setJenisMemo(v);
+    setSewaMode('baru'); setSelectedSewaId('');
     setUpdateInfo(INITIAL_UPDATE_INFO); setProgramInfo(INITIAL_PROGRAM_INFO);
     setOnProductScope('per-plu'); setOnSelectedSubCategory(''); setOnGroups([emptyOnFakturGroup()]);
     setOffProductScope('per-plu'); setOffSelectedSubCategory(''); setOffGroups([emptyOffFakturGroup()]);
@@ -3948,6 +4084,7 @@ export default function SupplierMemoWizard() {
     if (key === 'scan') { if (!identity) e.scan = 'Scan kartu ID terlebih dahulu untuk melanjutkan.'; }
     if (key === 'outlet') { if (outlets.length === 0) e.outlet = 'Pilih minimal satu outlet.'; }
     if (key === 'jenis-memo') { if (!jenisMemo) e.jenisMemo = 'Pilih jenis memo yang ingin diajukan.'; }
+    if (key === 'sewa-mode' && sewaMode === 'perpanjang' && !selectedSewaId) e.selectedSewa = 'Pilih sewa yang akan diperpanjang.';
     if (key === 'update-informasi') {
       if (!updateInfo.jenisUpdate) e.jenisUpdate = 'Pilih jenis update terlebih dahulu.';
       if (updateInfo.jenisUpdate === 'produk') {
@@ -4025,6 +4162,20 @@ export default function SupplierMemoWizard() {
       if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
     }
     if (key === 'pendapatan') {
+      const renewingPendapatan = sewaMode === 'perpanjang' && Boolean(selectedSewaId);
+      // Existing event media data is already carried over from the selected lease.
+      // Renewal must not force the supplier to recreate area/detail rows; only
+      // the period and duration are changed in this step.
+      if (renewingPendapatan && pendapatan.jenis === 'event-blbms') {
+        if (pendapatan.eventBentuk === 'Media Display Produk') {
+          const hasPeriodAndDuration = pendapatan.eventMediaDetails.length > 0 && pendapatan.eventMediaDetails.every((row) => row.tanggalMulai && row.tanggalSelesai && row.durasiBulan > 0);
+          if (!hasPeriodAndDuration) e.eventMediaJenis = 'Lengkapi periode dan durasi setiap detail media.';
+        } else {
+          if (!pendapatan.eventPeriodeAwal || !pendapatan.eventPeriodeAkhir) e.eventJenis = 'Lengkapi tanggal mulai dan tanggal selesai sewa.';
+          if (!pendapatan.eventDurasiBulan) e.eventJenis = e.eventJenis || 'Lengkapi durasi sewa.';
+        }
+        return e;
+      }
       if (pendapatan.jenis !== 'event-blbms' && !pendapatan.namaProgram.trim()) e.namaProgram = 'Nama program wajib diisi.';
       if (!pendapatan.jenis) e.jenis = 'Pilih jenis program pendapatan.';
       if (pendapatan.jenis === 'sewa-visibility') {
@@ -4080,6 +4231,7 @@ export default function SupplierMemoWizard() {
         if (!pendapatan.eventJenis) e.eventJenis = 'Pilih nama event.';
         if (!pendapatan.eventBentuk) e.eventBentuk = 'Pilih kategori media.';
         if (pendapatan.eventMediaJenis.length === 0) e.eventMediaJenis = pendapatan.eventBentuk === 'Media Display Produk' ? 'Pilih minimal satu jenis media.' : 'Pilih jenis media.';
+        if (pendapatan.eventBentuk === 'Media Branding & Publication' && pendapatan.eventMediaJenis[0] === 'Fasilitas Display' && !pendapatan.eventMediaSubJenis) e.eventMediaJenis = 'Pilih jenis fasilitas display.';
         if (pendapatan.eventBentuk === 'Media Display Produk') {
           const detailInvalid = pendapatan.eventMediaJenis.some((media) => !pendapatan.eventMediaDetails.some((row) => (
             row.mediaJenis === media
@@ -4132,7 +4284,7 @@ export default function SupplierMemoWizard() {
   };
 
   const resetAll = () => {
-    setSubmitted(false); setStep(0); setIdentity(null); setOutlets([]); setOutletScope('custom'); setJenisMemo('');
+    setSubmitted(false); setStep(0); setIdentity(null); setOutlets([]); setOutletScope('custom'); setJenisMemo(''); setSewaMode('baru'); setSelectedSewaId('');
     setUpdateInfo(INITIAL_UPDATE_INFO); setProgramInfo(INITIAL_PROGRAM_INFO);
     setOnProductScope('per-plu'); setOnSelectedSubCategory(''); setOnGroups([emptyOnFakturGroup()]);
     setOffProductScope('per-plu'); setOffSelectedSubCategory(''); setOffGroups([emptyOffFakturGroup()]);
@@ -4188,8 +4340,9 @@ export default function SupplierMemoWizard() {
         {currentKey === 'scan' && <ScanIdStep identity={identity} onScanned={onScanned} error={errors.scan} />}
         {currentKey === 'outlet' && <OutletStep outlets={outlets} outletScope={outletScope} applyOutletScope={applyOutletScope} toggleOutlet={toggleOutlet} error={errors.outlet} />}
         {currentKey === 'jenis-memo' && <JenisMemoStep value={jenisMemo} onChange={onJenisMemoChange} error={errors.jenisMemo} />}
+        {currentKey === 'sewa-mode' && <SewaModeStep mode={sewaMode} setMode={setSewaMode} selectedId={selectedSewaId} setSelectedId={setSelectedSewaId} memoJenis={jenisMemo} supplierIds={[identity?.supplier?.id, identity?.principal?.id].filter(Boolean) as string[]} supplierNames={[identity?.supplier?.name, identity?.principal?.name].filter(Boolean) as string[]} programJenis={pendapatan.jenis} error={errors.selectedSewa} />}
         {currentKey === 'update-informasi' && <UpdateInformasiStep state={updateInfo} setField={setUF} onJenisUpdateChange={onJenisUpdateChange} identity={identity} errors={errors} />}
-        {currentKey === 'program-info' && <ProgramInfoStep state={programInfo} setField={setPF} errors={errors} />}
+        {currentKey === 'program-info' && <ProgramInfoStep state={programInfo} setField={setPF} errors={errors} locked={sewaMode === 'perpanjang' && Boolean(selectedSewaId)} />}
         {currentKey === 'program-detail' && (
           <ProgramDetailStep
             tipe={programInfo.tipe}
@@ -4207,10 +4360,11 @@ export default function SupplierMemoWizard() {
             addOffGroup={addOffGroup}
             removeOffGroup={removeOffGroup}
             offError={errors.offProduk}
+            locked={sewaMode === 'perpanjang' && Boolean(selectedSewaId)}
           />
         )}
         {currentKey === 'pendapatan-jenis' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} mode="jenis" />}
-        {currentKey === 'pendapatan' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} mode="detail" />}
+        {currentKey === 'pendapatan' && <PendapatanStep state={pendapatan} setField={setPendF} errors={errors} mode="detail" locked={sewaMode === 'perpanjang' && Boolean(selectedSewaId)} />}
         {currentKey === 'catatan' && <NotesStep catatan={catatan} setCatatan={setCatatan} jenisMemo={jenisMemo} programInfo={programInfo} setProgramField={setPF} errors={errors} />}
         {currentKey === 'tinjau' && (
           <ReviewStep
