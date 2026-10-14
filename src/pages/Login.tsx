@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
 import { Eye, EyeOff, ArrowRight } from "lucide-react"
+import mannaKampusLogo from "../../logo.png"
 
 export function Login() {
   const navigate = useNavigate()
@@ -65,17 +66,11 @@ export function Login() {
         {/* Logo mark */}
         <div className="flex justify-center mb-10">
           <div className="flex flex-col items-center gap-3">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl"
-              style={{
-                background: "linear-gradient(135deg, #B45309, #D97706)",
-                boxShadow: "0 8px 32px rgba(180,83,9,0.45)",
-              }}
-            >
-              <span className="text-white font-extrabold text-lg tracking-tight">
-                BM
-              </span>
-            </div>
+            <img
+              src={mannaKampusLogo}
+              alt="Logo Manna Kampus"
+              className="h-16 w-auto max-w-[190px] object-contain"
+            />
             <div className="text-center">
               <p className="text-white font-bold text-[15px] tracking-wide">
                 Buyer Memo System
@@ -155,13 +150,6 @@ export function Login() {
                   >
                     Password
                   </label>
-                  <a
-                    href="#"
-                    className="text-[11px] font-medium"
-                    style={{ color: "#D97706" }}
-                  >
-                    Lupa password?
-                  </a>
                 </div>
                 <div className="relative">
                   <input
@@ -200,23 +188,6 @@ export function Login() {
                     )}
                   </button>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 pt-1">
-                <div className="relative flex items-center">
-                  <input
-                    id="remember-me"
-                    type="checkbox"
-                    className="w-4 h-4 rounded cursor-pointer accent-amber-600"
-                  />
-                </div>
-                <label
-                  htmlFor="remember-me"
-                  className="text-[12px] cursor-pointer select-none"
-                  style={{ color: "#64748B" }}
-                >
-                  Ingat saya selama 30 hari
-                </label>
               </div>
 
               <button
