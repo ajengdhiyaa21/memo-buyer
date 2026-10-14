@@ -19,7 +19,8 @@ export function Login() {
     } as Record<string, { password: string; role: string }>
     const account = accounts[username.trim().toLowerCase()]
     if (account) {
-      if (account.password !== password) { setError('Username atau password salah.'); return }
+      const savedPassword = localStorage.getItem(`bm-password-${account.role}`)
+      if ((savedPassword || account.password) !== password) { setError('Username atau password salah.'); return }
       localStorage.setItem('bm-role', account.role)
       navigate('/memo-report')
       return

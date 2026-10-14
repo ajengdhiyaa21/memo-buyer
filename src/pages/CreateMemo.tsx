@@ -6,10 +6,10 @@ import {
 } from 'lucide-react';
 
 /* ── Data ── */
-const ALL_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK4', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3'];
-const NAYAN_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK8'];
+const ALL_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK4', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3', 'MINI4'];
+const NAYAN_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK8', 'MINI4'];
 const GODEAN_OUTLETS = ['MK5', 'MK6', 'MK7', 'MINI1', 'MINI2'];
-const ALL_MK_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3'];
+const ALL_MK_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3', 'MINI4'];
 
 const SUPPLIERS = [
   { id: 'PRI-001', name: 'PT. Indofood CBP Sukses Makmur', type: 'principal' as const },

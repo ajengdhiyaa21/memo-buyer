@@ -9,6 +9,7 @@ const esc = (v) => String(v ?? '-').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 const text = (v) => Array.isArray(v) ? v.join(', ') : typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? '-');
 const date = (v) => v ? new Date(`${v}T00:00:00`).toLocaleDateString('id-ID') : '-';
 const label = (v) => ({ 'memo-program': 'Memo Program', 'pendapatan-lain': 'Memo Lain-lain', 'update-informasi': 'Update Informasi' }[v] || v || 'Memo Supplier');
+const programType = (v) => ({ 'event-blbms': 'Event', 'reward-insentif': 'Reward Insentif', listing: 'Listing', 'sewa-visibility': 'Sewa / Visibility', promosi: 'Promosi', 'on-faktur': 'On Faktur', 'off-faktur': 'Off Faktur' }[v] || v || '-');
 
 function detailRows(memo) {
   const d = memo.data || {}, p = d.programInfo || {}, x = d.pendapatan || {}, rows = [
@@ -16,8 +17,8 @@ function detailRows(memo) {
     ['Periode', `${date(memo.periodeAwal)} s/d ${date(memo.periodeAkhir)}`], ['PIC Supplier', memo.picName],
     ['Outlet Berlaku', (memo.outlets || []).join(', ') || '-'],
   ];
-  if (memo.jenisMemo === 'memo-program') rows.push(['Cara Pembayaran', p.caraPembayaran], ['Redaksi', p.redaksi], ['Tipe Program', p.tipe]);
-  if (memo.jenisMemo === 'pendapatan-lain') rows.push(['Jenis Program', x.jenis], ['Kategori Media', x.eventBentuk || x.mediaTipe], ['Jenis Media', x.eventMediaJenis], ['Detail Media', x.eventMediaDetails || x.listingProducts], ['PPN', x.sewaPpnRate || x.eventPpnRate || x.promosiPpnRate || (x.sewaPpnAktif || x.eventPpnAktif || x.promosiPpnAktif ? 'Aktif' : 'Tidak dikenakan')], ['PPh', x.sewaPphRate || x.eventPphRate || x.promosiPphRate || (x.sewaPphAktif || x.eventPphAktif || x.promosiPphAktif ? 'Aktif' : 'Tidak dikenakan')]);
+  if (memo.jenisMemo === 'memo-program') rows.push(['Cara Pembayaran', p.caraPembayaran], ['Redaksi', p.redaksi], ['Tipe Program', Array.isArray(p.tipe) ? p.tipe.map(programType).join(', ') : programType(p.tipe)]);
+  if (memo.jenisMemo === 'pendapatan-lain') rows.push(['Jenis Program', programType(x.jenis)], ['Kategori Media', x.eventBentuk || x.mediaTipe], ['Jenis Media', x.eventMediaJenis], ['Detail Media', x.eventMediaDetails || x.listingProducts], ['PPN', x.sewaPpnRate || x.eventPpnRate || x.promosiPpnRate || (x.sewaPpnAktif || x.eventPpnAktif || x.promosiPpnAktif ? 'Aktif' : 'Tidak dikenakan')], ['PPh', x.sewaPphRate || x.eventPphRate || x.promosiPphRate || (x.sewaPphAktif || x.eventPphAktif || x.promosiPphAktif ? 'Aktif' : 'Tidak dikenakan')]);
   if (memo.jenisMemo === 'update-informasi') rows.push(['Jenis Update', d.updateInfo?.jenisUpdate], ['Detail Update', d.updateInfo]);
   for (const item of memo.detail || []) if (!rows.some(([k]) => k === item.label)) rows.push([item.label, item.value]);
   return rows.filter(([, v]) => v !== undefined && v !== null && v !== '');

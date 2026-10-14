@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-export const ALL_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK4', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3'];
+export const ALL_OUTLETS = ['MK1', 'MK2', 'MK3', 'MK4', 'MK5', 'MK6', 'MK7', 'MK8', 'MINI1', 'MINI2', 'MINI3', 'MINI4'];
 
 export const OUTLET_META: Record<string, { nama: string; tipe: 'Supermarket' | 'Mini Market'; kota: string }> = {
   MK1:   { nama: 'MK1 — Manna Kampus 1', tipe: 'Supermarket', kota: 'Babarsari'   },
@@ -14,6 +14,7 @@ export const OUTLET_META: Record<string, { nama: string; tipe: 'Supermarket' | '
   MINI1: { nama: 'MINI1 — Mini Market 1',      tipe: 'Mini Market', kota: 'Pelemsewu'   },
   MINI2: { nama: 'MINI2 — Mini Market 2',      tipe: 'Mini Market', kota: 'Diro'  },
   MINI3: { nama: 'MINI3 — Mini Market 3',      tipe: 'Mini Market', kota: 'Minomartani'           },
+  MINI4: { nama: 'MINI4 - Mini Market 4', tipe: 'Mini Market', kota: 'Yogyakarta' },
 };
 
 /* ── Role Types ── */
