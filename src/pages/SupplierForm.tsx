@@ -6530,6 +6530,8 @@ interface ListingProductRow {
   hargaPerPcs: number
 
   diskonReguler: number
+
+  statusPajak: "bkp" | "non-bkp"
 }
 
 const emptyListingProductRow = (): ListingProductRow => ({
@@ -6554,6 +6556,8 @@ const emptyListingProductRow = (): ListingProductRow => ({
   hargaPerPcs: 0,
 
   diskonReguler: 0,
+
+  statusPajak: "non-bkp",
 })
 
 interface ProductQtyRow {
@@ -7913,6 +7917,35 @@ function PendapatanStep({
                           className={inp}
                           placeholder="0"
                         />
+                      </div>
+                      <div>
+                        <Label req>Status Pajak Produk</Label>
+                        <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+                          {[
+                            { value: "bkp" as const, label: "BKP" },
+                            {
+                              value: "non-bkp" as const,
+                              label: "BTKP / Non-BKP",
+                            },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() =>
+                                updateListingRow(i, "statusPajak", option.value)
+                              }
+                              className={`flex-1 rounded-lg px-2 py-2 text-[10px] font-bold transition-all ${
+                                (row.statusPajak || "non-bkp") === option.value
+                                  ? option.value === "non-bkp"
+                                    ? "bg-slate-800 text-white shadow-sm"
+                                    : "bg-amber-500 text-white shadow-sm"
+                                  : "text-slate-500 hover:bg-white hover:text-slate-700"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -9918,6 +9951,14 @@ function ReviewStep({
                         label="Diskon Reguler"
                         value={r.diskonReguler ? `${r.diskonReguler}%` : ""}
                       />
+                      <Row
+                        label="Status Pajak Produk"
+                        value={
+                          (r.statusPajak || "non-bkp") === "non-bkp"
+                            ? "BTKP / Non-BKP"
+                            : "BKP"
+                        }
+                      />
                     </div>
                   ))}
                 </div>
@@ -10878,6 +10919,14 @@ function SuccessScreen({
                           <PrintInfoRow
                             label="Diskon Reguler"
                             value={`${row.diskonReguler}%`}
+                          />
+                          <PrintInfoRow
+                            label="Status Pajak Produk"
+                            value={
+                              (row.statusPajak || "non-bkp") === "non-bkp"
+                                ? "BTKP / Non-BKP"
+                                : "BKP"
+                            }
                           />
                           <PrintInfoRow
                             label="Harga PCS"

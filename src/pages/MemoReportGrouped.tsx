@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, FileSpreadsheet, FileText, Search } from "lucide-react"
+import {
+  ArrowLeft,
+  FileSpreadsheet,
+  FileText,
+  Search,
+  TriangleAlert,
+} from "lucide-react"
 import { useNavigate } from "react-router"
 import { renderToStaticMarkup } from "react-dom/server"
 import QRCode from "react-qr-code"
+import { FilterCard } from "../components/FilterCard"
 import "../styles/memo-report.css"
 import mannaKampusLogo from "../../logo.png"
 
@@ -16,6 +23,7 @@ export type Memo = {
   ringkasan: string
   detail: { label: string value: string }[]
   data?: Record<string, unknown>
+  statusPembayaran?: string
   periodeAwal?: string
   periodeAkhir?: string
 }
@@ -443,6 +451,19 @@ export const demoRows = [...fallback, ...extraFallback]
 const fmt = (v?: string) => (v ? v.split("-").reverse().join("/") : "-")
 const memoIncome = (memo: Memo) =>
   (memo.data?.pendapatan || {}) as Record<string, any>
+export const memoPaymentStatus = (memo: Memo) =>
+  String(
+    memo.statusPembayaran ||
+      (memo.data as any)?.statusPembayaran ||
+      memoIncome(memo).statusPembayaran ||
+      "",
+  )
+    .trim()
+    .toLowerCase()
+export const isUnpaidMemo = (memo: Memo) =>
+  ["belum-bayar", "belum dibayar", "unpaid", "belum bayar"].includes(
+    memoPaymentStatus(memo),
+  )
 const memoTotal = (memo: Memo) =>
   memo.detail.find((field) => field.label.toLowerCase() === "total")?.value ||
   "-"
@@ -831,18 +852,31 @@ function Buttons({ memo }: { memo: Memo }) {
     </div>
   )
 }
-export function Detail({ memo, back }: { memo: Memo back: () => void }) {
-  const fields = grouped([...memo.detail, ...flatten(memo.data || {})])
+export function Detail({
+  memo,
+  back,
+  embedded = false,
+}: {
+  memo: Memo
+  back: () => void
+  embedded?: boolean
+}) {
+  const meaningfulFields = flatten(memo.data || {}).filter(
+    (field) => !["false", "0"].includes(field.value.trim().toLowerCase()),
+  )
+  const fields = grouped([...memo.detail, ...meaningfulFields])
   return (
     <div className="space-y-5">
-      <button
+      {!embedded && (
+        <>
+          <button
         onClick={back}
         className="inline-flex items-center gap-2 text-sm font-bold text-amber-700"
       >
         <ArrowLeft className="h-4 w-4" />
         Kembali
-      </button>
-      <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+          </button>
+          <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
         <div className="bg-gradient-to-r from-slate-900 to-amber-900 px-6 py-6 text-white">
           <p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">
             DETAIL INPUT SUPPLIER
@@ -867,7 +901,19 @@ export function Detail({ memo, back }: { memo: Memo back: () => void }) {
             value={`${fmt(memo.periodeAwal)} s/d ${fmt(memo.periodeAkhir)}`}
           />
         </div>
-      </section>
+          </section>
+        </>
+      )}
+      {embedded && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Info label="Supplier" value={memo.supplierNama} />
+            <Info label="Jenis Memo" value={labels[memo.jenisMemo] || memo.jenisMemo} />
+            <Info label="Outlet" value={memo.outlets.join(", ")} />
+            <Info label="Periode" value={`${fmt(memo.periodeAwal)} s/d ${fmt(memo.periodeAkhir)}`} />
+          </div>
+        </section>
+      )}
       <div>
         <h2 className="text-lg font-black text-slate-900">
           Seluruh Data Input Supplier
@@ -914,6 +960,7 @@ function Info({ label, value }: { label: string value: string }) {
 export default function MemoReportGrouped() {
   const nav = useNavigate()
   const role = localStorage.getItem("bm-role")
+  const canViewPaymentMonitoring = role === "Akuntansi"
   const [rows, setRows] = useState<Memo[]>([])
   const [vendor, setVendor] = useState<string | null>(null)
   const [memo, setMemo] = useState<Memo | null>(null)
@@ -1011,6 +1058,12 @@ export default function MemoReportGrouped() {
   }, [vendorPage, vendorPageCount, memoPage, selectedMemoPageCount])
   const leaseRows = filtered.filter(isLease)
   const renewalRows = leaseRows.filter((item) => daysUntil(endDate(item)) <= 45)
+  const unpaidRenewalRows = leaseRows.filter(
+    (item) =>
+      isUnpaidMemo(item) &&
+      daysUntil(endDate(item)) >= 0 &&
+      daysUntil(endDate(item)) <= 60,
+  )
   const eventRows = filtered.filter(isEvent)
   const selectedEvent: string | null = null
   const selectedEventRows: Memo[] = []
@@ -1261,17 +1314,16 @@ export default function MemoReportGrouped() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">
-            Laporan Internal
+            Dashboard Internal
           </p>
-          <h1 className="mt-1 text-2xl font-black">Ringkasan Laporan Memo</h1>
+          <h1 className="mt-1 text-2xl font-black">Dashboard</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Laporan keseluruhan memo supplier untuk {role}.
+            Pantau persebaran memo, event, sewa, dan kebutuhan tindak lanjut untuk {role}.
           </p>
         </div>
       </header>
-      <section className="memo-global-filter rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid items-center gap-3 md:grid-cols-[minmax(260px,1fr)_220px_170px_170px_auto]">
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100">
+      <FilterCard variant="dashboard">
+          <div className="filter-card__search flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100">
             <Search className="h-4 w-4 text-slate-400" />
             <input
               value={search}
@@ -1283,7 +1335,7 @@ export default function MemoReportGrouped() {
           <select
             value={jenis}
             onChange={(e) => setJenis(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            className="filter-card__control filter-card__control--select rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
           >
             <option value="">Semua Jenis Memo</option>
             {memoTypeOptions.map((option) => (
@@ -1296,13 +1348,13 @@ export default function MemoReportGrouped() {
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            className="filter-card__control filter-card__control--date rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
           />
           <input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            className="filter-card__control filter-card__control--date rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
           />
           <button
             type="button"
@@ -1312,12 +1364,11 @@ export default function MemoReportGrouped() {
               setFrom("")
               setTo("")
             }}
-            className="h-full min-h-[42px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+            className="filter-card__control filter-card__reset rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
           >
             Reset filter
           </button>
-        </div>
-      </section>
+      </FilterCard>
       <section className="dashboard-reference rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -1341,7 +1392,7 @@ export default function MemoReportGrouped() {
             </p>
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <div className="dashboard-stat dashboard-stat-indigo">
             <span>Total memo</span>
             <strong>{filtered.length}</strong>
@@ -1367,7 +1418,119 @@ export default function MemoReportGrouped() {
             <strong>{renewalRows.length}</strong>
             <small>End period ≤ 45 hari</small>
           </div>
+          {canViewPaymentMonitoring && (
+            <button
+              type="button"
+              onClick={() => nav("/memo-report/unpaid-renewal")}
+              className="dashboard-stat dashboard-stat-amber text-left transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <span>Sewa belum dibayar</span>
+              <strong>{unpaidRenewalRows.length}</strong>
+              <small>Berakhir dalam 60 hari</small>
+            </button>
+          )}
         </div>
+        {canViewPaymentMonitoring && (
+          <section className="mt-5 rounded-2xl border border-red-100 bg-red-50/40 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-black text-slate-900">
+                <TriangleAlert className="h-4 w-4 text-red-500" />
+                Sewa Akan Berakhir &amp; Belum Dibayar
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Prioritas tindak lanjut pembayaran berdasarkan sisa periode sewa.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => nav("/memo-report/unpaid-renewal")}
+              className="rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-red-700 shadow-sm ring-1 ring-red-100 hover:bg-red-50"
+            >
+              Lihat semua
+            </button>
+          </div>
+          <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_1.35fr]">
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                {
+                  label: "Critical",
+                  note: "≤ 7 hari",
+                  count: unpaidRenewalRows.filter(
+                    (item) => daysUntil(endDate(item)) <= 7,
+                  ).length,
+                  color: "bg-red-500",
+                  track: "bg-red-100",
+                },
+                {
+                  label: "Warning",
+                  note: "8–30 hari",
+                  count: unpaidRenewalRows.filter((item) => {
+                    const days = daysUntil(endDate(item))
+                    return days >= 8 && days <= 30
+                  }).length,
+                  color: "bg-orange-500",
+                  track: "bg-orange-100",
+                },
+                {
+                  label: "Upcoming",
+                  note: "31–60 hari",
+                  count: unpaidRenewalRows.filter(
+                    (item) => daysUntil(endDate(item)) >= 31,
+                  ).length,
+                  color: "bg-amber-400",
+                  track: "bg-amber-100",
+                },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl bg-white p-3 ring-1 ring-slate-100">
+                  <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+                    {item.label}
+                  </p>
+                  <p className="mt-1 text-xl font-black text-slate-900">{item.count}</p>
+                  <div className={`mt-2 h-1.5 overflow-hidden rounded-full ${item.track}`}>
+                    <div
+                      className={`h-full rounded-full ${item.color}`}
+                      style={{
+                        width: `${unpaidRenewalRows.length ? Math.max((item.count / unpaidRenewalRows.length) * 100, item.count ? 8 : 0) : 0}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[10px] text-slate-400">{item.note}</p>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl bg-white p-3 ring-1 ring-slate-100">
+              {unpaidRenewalRows.length ? (
+                <div className="space-y-2">
+                  {unpaidRenewalRows.slice(0, 3).map((item) => {
+                    const days = daysUntil(endDate(item))
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => nav(`/memo-report/unpaid-renewal?memo=${encodeURIComponent(item.id)}`)}
+                        className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2 text-left hover:border-red-200 hover:bg-red-50/50"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-bold text-slate-800">{item.supplierNama}</span>
+                          <span className="mt-0.5 block truncate text-[10px] text-slate-500">{item.ringkasan} · {item.nomorMemo}</span>
+                        </span>
+                        <span className="shrink-0 text-[10px] font-black text-red-700">{days} hari</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="flex min-h-[92px] items-center justify-center text-center">
+                  <p className="text-xs text-slate-400">
+                    Belum ada memo dengan status pembayaran belum dibayar.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          </section>
+        )}
         <div className="mt-5 grid gap-4 xl:grid-cols-[1.45fr_.85fr]">
           <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
             <div className="mb-4 flex items-center justify-between">

@@ -12,6 +12,7 @@ import {
   normalizeMemoType,
   type Memo,
 } from "./MemoReportGrouped"
+import { FilterCard } from "../components/FilterCard"
 
 const API = "http://localhost:3001"
 const DEMO_MODE = true
@@ -159,9 +160,8 @@ export default function SupplierMemoList() {
         </div>
       </header>
 
-      <section className="memo-list-filter rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:px-6">
-        <div className="memo-list-filter-controls flex flex-wrap items-center gap-4">
-          <div className="flex min-w-[260px] flex-[1_1_320px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 focus-within:border-indigo-300 focus-within:bg-white">
+      <FilterCard variant="list">
+          <div className="filter-card__search flex min-w-[260px] flex-[1_1_320px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 focus-within:border-indigo-300 focus-within:bg-white">
             <Search className="h-4 w-4 text-slate-400" />
             <input
               value={search}
@@ -173,7 +173,7 @@ export default function SupplierMemoList() {
           <select
             value={jenis}
             onChange={(event) => setJenis(event.target.value)}
-            className="w-full min-w-[180px] flex-[1_1_190px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[190px] xl:flex-none"
+            className="filter-card__control filter-card__control--select filter-card__control--memo-type w-full min-w-[180px] flex-[1_1_190px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[190px] xl:flex-none"
           >
             <option value="">Semua Jenis Memo</option>
             {memoTypeOptions.map((option) => (
@@ -185,7 +185,7 @@ export default function SupplierMemoList() {
           <select
             value={program}
             onChange={(event) => setProgram(event.target.value)}
-            className="w-full min-w-[200px] flex-[1_1_220px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[220px] xl:flex-none"
+            className="filter-card__control filter-card__control--select filter-card__control--program-type w-full min-w-[200px] flex-[1_1_220px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[220px] xl:flex-none"
           >
             <option value="">Semua Jenis Program</option>
             {programOptions.map((option) => (
@@ -198,13 +198,13 @@ export default function SupplierMemoList() {
             type="date"
             value={from}
             onChange={(event) => setFrom(event.target.value)}
-            className="w-full min-w-[150px] flex-[1_1_160px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[160px] xl:flex-none"
+            className="filter-card__control filter-card__control--date w-full min-w-[150px] flex-[1_1_160px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[160px] xl:flex-none"
           />
           <input
             type="date"
             value={to}
             onChange={(event) => setTo(event.target.value)}
-            className="w-full min-w-[150px] flex-[1_1_160px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[160px] xl:flex-none"
+            className="filter-card__control filter-card__control--date w-full min-w-[150px] flex-[1_1_160px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[160px] xl:flex-none"
           />
           <button
             onClick={() => {
@@ -215,12 +215,11 @@ export default function SupplierMemoList() {
               setTo("")
               setPage(1)
             }}
-            className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
+            className="filter-card__control filter-card__reset shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
           >
             Reset
           </button>
-        </div>
-      </section>
+      </FilterCard>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">

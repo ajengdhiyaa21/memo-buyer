@@ -67,58 +67,6 @@
   box-shadow: 0 0 0 3px rgba(245, 158, 11, .12) !important;
 }
 
-/* Dashboard overview */
-.memo-report-page:not(.memo-dashboard-page) > section:first-of-type {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.memo-report-page:not(.memo-dashboard-page) > section:first-of-type > div {
-  position: relative;
-  overflow: hidden;
-  min-height: 126px;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
-}
-
-.memo-report-page:not(.memo-dashboard-page) > section:first-of-type > div::after {
-  position: absolute;
-  right: -24px;
-  bottom: -30px;
-  width: 92px;
-  height: 92px;
-  border-radius: 999px;
-  background: rgba(245, 158, 11, .11);
-  content: '';
-}
-
-.memo-report-page:not(.memo-dashboard-page) > section:first-of-type > div:nth-child(2)::after { background: rgba(59, 130, 246, .12); }
-.memo-report-page:not(.memo-dashboard-page) > section:first-of-type > div:nth-child(3)::after { background: rgba(139, 92, 246, .13); }
-.memo-report-page:not(.memo-dashboard-page) > section:first-of-type > div:nth-child(4)::after { background: rgba(16, 185, 129, .12); }
-
-/* Daftar Memo: card filter harus sejajar dengan card data di bawahnya. */
-.memo-report-page .memo-list-filter {
-  background: #fff !important;
-  border: 1px solid #e2e8f0 !important;
-  padding: 20px 24px !important;
-}
-
-.memo-report-page .memo-list-filter > .memo-list-filter-controls {
-  min-height: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.memo-report-page .memo-list-filter > .memo-list-filter-controls::after {
-  display: none !important;
-}
-
 /* Halaman detail event memakai card putih biasa, tanpa ornamen dashboard. */
 .memo-report-page.memo-event-detail-page > section:first-of-type {
   background: #fff !important;
@@ -158,28 +106,6 @@
 
 .memo-event-detail-page > section:nth-of-type(3) > div:first-child > svg {
   display: none !important;
-}
-
-.memo-list-filter-controls > * {
-  min-height: 42px;
-}
-
-@media (min-width: 1440px) {
-  .memo-list-filter-controls {
-    display: grid !important;
-    grid-template-columns: minmax(300px, 2fr) minmax(170px, 1.05fr) minmax(190px, 1.2fr) minmax(145px, .85fr) minmax(145px, .85fr) minmax(120px, .75fr) max-content;
-    gap: 16px !important;
-  }
-
-  .memo-list-filter-controls > * {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .memo-list-filter-controls > button {
-    width: auto !important;
-    white-space: nowrap;
-  }
 }
 
 .memo-report-page section:has(h2) {
@@ -227,22 +153,6 @@
   min-height: 0 !important;
   overflow: hidden;
   text-align: left;
-}
-
-.memo-report-page .memo-renewal-filter {
-  padding: 16px !important;
-  overflow: hidden;
-}
-
-.memo-report-page .renewal-filter-controls {
-  width: 100%;
-  min-width: 0;
-  margin: 0 !important;
-}
-
-.memo-report-page .renewal-filter-controls > div:first-child {
-  min-width: 0;
-  flex: 1 1 auto;
 }
 
 .memo-report-page .renewal-watchlist-card table {
@@ -317,6 +227,7 @@
 .memo-dashboard-page .dashboard-stat-blue { background: linear-gradient(135deg, #2563eb, #38bdf8); }
 .memo-dashboard-page .dashboard-stat-teal { background: linear-gradient(135deg, #0f766e, #14b8a6); }
 .memo-dashboard-page .dashboard-stat-rose { background: linear-gradient(135deg, #e11d48, #fb7185); }
+.memo-dashboard-page .dashboard-stat-amber { background: linear-gradient(135deg, #b45309, #f59e0b); }
 
 .memo-dashboard-page [data-chart-tooltip] {
   position: relative;
@@ -385,3 +296,4 @@
 @media (max-width: 640px) {
   .memo-report-page:not(.memo-dashboard-page) > section:first-of-type > div { min-height: 112px; }
 }
+

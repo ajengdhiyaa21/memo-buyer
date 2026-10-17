@@ -28,10 +28,12 @@ import {
   Store,
   Shield,
   TrendingUp,
+  TriangleAlert,
 } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import clsx from "clsx"
 import { OutletHeaderBadge } from "../components/OutletBar"
+import { CreatedByFooter } from "../components/CreatedByFooter"
 import { useApp } from "../context/AppContext"
 import { memos } from "../data/memoData"
 import { reports } from "../data/sellOutData"
@@ -39,6 +41,21 @@ import { demoRows, type Memo as SupplierMemo } from "../pages/MemoReportGrouped"
 import mannaKampusLogo from "../../logo.png"
 
 const pendingStatuses = ["Menunggu Buyer", "Menunggu Checker", "Setting Harga"]
+
+const memoPaymentStatus = (memo: SupplierMemo) =>
+  String(
+    (memo as any).statusPembayaran ||
+      (memo.data as any)?.statusPembayaran ||
+      ((memo.data as any)?.pendapatan as any)?.statusPembayaran ||
+      "",
+  )
+    .trim()
+    .toLowerCase()
+
+const isUnpaidMemo = (memo: SupplierMemo) =>
+  ["belum-bayar", "belum dibayar", "unpaid", "belum bayar"].includes(
+    memoPaymentStatus(memo),
+  )
 
 function MannaKampusLogo({ compact = false }: { compact?: boolean }) {
   return (
@@ -70,11 +87,13 @@ function buildNotifications(
       .map((memo) => {
         const end = new Date(`${memo.periodeAkhir}T00:00:00`)
         const days = Math.ceil((end.getTime() - Date.now()) / 86400000)
-        if (days > 30) return null
+        const unpaid = role === "Akuntansi" && isUnpaidMemo(memo)
+        if (unpaid ? days < 0 || days > 60 : days > 30) return null
         return {
           id: `renewal-${memo.id}`,
-          title:
-            days < 0
+          title: unpaid
+            ? "Sewa akan berakhir dan belum dibayar"
+            : days < 0
               ? "Memo sewa sudah berakhir"
               : "Memo sewa mendekati jatuh tempo",
           message: `${memo.supplierNama} - ${memo.ringkasan}`,
@@ -82,8 +101,10 @@ function buildNotifications(
             days < 0
               ? `Berakhir ${memo.periodeAkhir} · ${memo.outlets.join(", ")}`
               : `Berakhir dalam ${days} hari · ${memo.outlets.join(", ")}`,
-          tone: days < 0 ? "red" : "amber",
-          href: `/memo-report/renewal?memo=${encodeURIComponent(memo.id)}`,
+          tone: unpaid ? "red" : days < 0 ? "red" : "amber",
+          href: unpaid
+            ? `/memo-report/unpaid-renewal?memo=${encodeURIComponent(memo.id)}`
+            : `/memo-report/renewal?memo=${encodeURIComponent(memo.id)}`,
         }
       })
       .filter(Boolean)
@@ -711,12 +732,14 @@ function SidebarContent({
   isPenjualanActive: boolean
   internalOnly?: boolean
 }) {
+  const canViewPaymentMonitoring = localStorage.getItem("bm-role") === "Akuntansi"
+
   if (internalOnly)
     return (
       <>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           <NavLink
-            to="/memo-report"
+            to="/dashboard"
             onClick={onNavClick}
             className={({ isActive }) =>
               clsx(
@@ -728,7 +751,7 @@ function SidebarContent({
             }
           >
             <BarChart2 className="h-4 w-4 text-amber-600" />
-            Laporan Memo
+            Dashboard
           </NavLink>
           <NavLink
             to="/memo-list"
@@ -745,6 +768,40 @@ function SidebarContent({
             <FileText className="h-4 w-4 text-amber-600" />
             Daftar Memo
           </NavLink>
+          {canViewPaymentMonitoring && (
+            <NavLink
+              to="/memo-report/unpaid-renewal"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                clsx(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150",
+                  isActive
+                    ? "font-bold text-amber-700 bg-[#FEF3C7]"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium",
+                )
+              }
+            >
+              <TriangleAlert className="h-4 w-4 text-amber-600" />
+              Sewa Belum Dibayar
+            </NavLink>
+          )}
+          {localStorage.getItem("bm-role") === "Pembelian" && (
+            <NavLink
+              to="/memo-approval"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                clsx(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150",
+                  isActive
+                    ? "font-bold text-amber-700 bg-[#FEF3C7]"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium",
+                )
+              }
+            >
+              <ClipboardCheck className="h-4 w-4 text-amber-600" />
+              Approval Memo
+            </NavLink>
+          )}
         </nav>
         <div className="shrink-0 border-t border-slate-100 bg-white p-3">
           <button
@@ -1223,6 +1280,7 @@ export function Layout() {
         {/* PADDING INI YANG MENENTUKAN GAP (p-5 md:p-6) ATAU SEKITAR 20-24px DARI NAVBAR */}
         <main className="flex-1 overflow-y-auto p-5 md:p-6 bg-slate-50">
           <Outlet />
+          <CreatedByFooter />
         </main>
       </div>
 

@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Search } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import { demoRows, Detail, type Memo } from "./MemoReportGrouped"
+import { FilterCard } from "../components/FilterCard"
 
 const memoLabels: Record<string, string> = {
   "memo-program": "Memo Program",
@@ -148,9 +149,8 @@ export default function MemoEventDetail() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_170px_170px_150px_auto]">
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 focus-within:border-indigo-300 focus-within:bg-white">
+      <FilterCard variant="event">
+          <div className="filter-card__search flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 focus-within:border-indigo-300 focus-within:bg-white">
             <Search className="h-4 w-4 text-slate-400" />
             <input
               value={search}
@@ -163,20 +163,20 @@ export default function MemoEventDetail() {
             type="date"
             value={from}
             onChange={(event) => setFrom(event.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none"
+            className="filter-card__control filter-card__control--date rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none"
             aria-label="Periode mulai"
           />
           <input
             type="date"
             value={to}
             onChange={(event) => setTo(event.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none"
+            className="filter-card__control filter-card__control--date rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none"
             aria-label="Periode selesai"
           />
           <select
             value={pageSize}
             onChange={(event) => setPageSize(Number(event.target.value))}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none"
+            className="filter-card__control filter-card__control--select filter-card__control--page-size rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none"
             aria-label="Jumlah data per halaman"
           >
             <option value={10}>10 data</option>
@@ -192,12 +192,11 @@ export default function MemoEventDetail() {
               setTo("")
               setPage(1)
             }}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
+            className="filter-card__control filter-card__reset rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
           >
             Reset
           </button>
-        </div>
-      </section>
+      </FilterCard>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">

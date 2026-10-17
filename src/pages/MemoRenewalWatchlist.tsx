@@ -7,6 +7,7 @@ import {
   normalizeMemoType,
   type Memo,
 } from "./MemoReportGrouped"
+import { FilterCard } from "../components/FilterCard"
 import "../styles/memo-report.css"
 
 const endDate = (memo: Memo) => {
@@ -172,9 +173,8 @@ export default function MemoRenewalWatchlist() {
             </span>
           </div>
         </header>
-        <section className="memo-global-filter memo-renewal-filter renewal-watchlist-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="renewal-filter-controls flex flex-wrap items-center gap-3">
-            <div className="flex h-[44px] w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 md:w-[448px]">
+        <FilterCard variant="compact">
+            <div className="filter-card__search flex h-10 w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 md:w-[448px]">
               <Search className="h-4 w-4 text-slate-400" />
               <input
                 value={search}
@@ -186,7 +186,7 @@ export default function MemoRenewalWatchlist() {
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="h-[44px] w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100 md:w-[165px]"
+              className="filter-card__control filter-card__control--select h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100 md:w-[165px]"
             >
               <option value="">Semua Status</option>
               <option value="expired">Expired</option>
@@ -199,12 +199,11 @@ export default function MemoRenewalWatchlist() {
                 setSearch("")
                 setStatus("")
               }}
-              className="h-[44px] rounded-xl border border-slate-200 bg-slate-50 px-3 text-[11px] font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 md:w-[96px]"
+              className="filter-card__control filter-card__reset h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[11px] font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 md:w-[96px]"
             >
               Reset filter
             </button>
-          </div>
-        </section>
+        </FilterCard>
         <section className="renewal-watchlist-card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1050px] text-sm">

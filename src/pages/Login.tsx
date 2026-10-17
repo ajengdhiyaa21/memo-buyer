@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router"
 import { Eye, EyeOff, ArrowRight } from "lucide-react"
 import mannaKampusLogo from "../../logo.png"
+import { CreatedByFooter } from "../components/CreatedByFooter"
 
 export function Login() {
   const navigate = useNavigate()
@@ -23,7 +24,7 @@ export function Login() {
       const savedPassword = localStorage.getItem(`bm-password-${account.role}`)
       if ((savedPassword || account.password) !== password) { setError('Username atau password salah.'); return }
       localStorage.setItem('bm-role', account.role)
-      navigate('/memo-report')
+      navigate('/dashboard')
       return
     }
     // Akun internal memakai kredensial khusus di atas. Login lain dianggap
@@ -66,16 +67,18 @@ export function Login() {
         {/* Logo mark */}
         <div className="flex justify-center mb-10">
           <div className="flex flex-col items-center gap-3">
-            <img
-              src={mannaKampusLogo}
-              alt="Logo Manna Kampus"
-              className="h-16 w-auto max-w-[190px] object-contain"
-            />
+            <div className="flex h-28 w-[250px] items-center justify-center rounded-3xl border border-amber-100 bg-white px-5 shadow-[0_16px_42px_rgba(0,0,0,0.24)]">
+              <img
+                src={mannaKampusLogo}
+                alt="Logo Manna Kampus"
+                className="h-24 w-auto max-w-[235px] object-contain"
+              />
+            </div>
             <div className="text-center">
-              <p className="text-white font-bold text-[15px] tracking-wide">
+              <p className="text-[17px] font-extrabold tracking-tight text-white">
                 Buyer Memo System
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: "#475569" }}>
+              <p className="mt-1 text-[11px] text-slate-400">
                 Manajemen Memo Supplier Terpadu
               </p>
             </div>
@@ -211,7 +214,7 @@ export function Login() {
                 style={{ background: "rgba(255,255,255,0.07)" }}
               />
               <span className="text-[11px]" style={{ color: "#334155" }}>
-                v2.3.1 — Production
+                v1 - Production
               </span>
               <div
                 className="flex-1 h-px"
@@ -221,13 +224,7 @@ export function Login() {
           </div>
         </div>
 
-        <p
-          className="text-center mt-6 text-[11px]"
-          style={{ color: "#1E293B" }}
-        >
-          &copy; {new Date().getFullYear()} Buyer Memo System. All rights
-          reserved.
-        </p>
+        <CreatedByFooter dark />
       </div>
     </div>
   )

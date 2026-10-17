@@ -36,6 +36,10 @@ import MemoEventDetail from "./pages/MemoEventDetail"
 
 import MemoRenewalWatchlist from "./pages/MemoRenewalWatchlist"
 
+import MemoUnpaidRenewal from "./pages/MemoUnpaidRenewal"
+
+import MemoPurchaseApproval from "./pages/MemoPurchaseApproval"
+
 import Profile, { ChangePassword } from "./pages/Profile"
 
 // Import komponen Penjualan yang baru dibuat
@@ -47,6 +51,15 @@ import { LaporanPenjualanPage } from "./pages/LaporanPenjualanPage"
 import { DataPenjualanPage } from "./pages/DataPenjualanPage"
 
 import { CetakPenjualanPage } from "./pages/CetakPenjualanPage"
+
+function DashboardRoute() {
+  const role = localStorage.getItem("bm-role")
+  return role === "Akuntansi" || role === "Pembelian" ? (
+    <MemoReport />
+  ) : (
+    <Dashboard />
+  )
+}
 
 const router = createBrowserRouter([
   {
@@ -75,11 +88,15 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
 
-      { path: "dashboard", Component: Dashboard },
+      { path: "dashboard", Component: DashboardRoute },
 
       { path: "memo-report", Component: MemoReport },
 
       { path: "memo-report/renewal", Component: MemoRenewalWatchlist },
+
+      { path: "memo-report/unpaid-renewal", Component: MemoUnpaidRenewal },
+
+      { path: "memo-approval", Component: MemoPurchaseApproval },
 
       { path: "memo-report/event/:eventName", Component: MemoEventDetail },
 
