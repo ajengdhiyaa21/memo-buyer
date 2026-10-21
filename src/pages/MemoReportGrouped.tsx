@@ -1573,7 +1573,7 @@ export default function MemoReportGrouped() {
           </div>
           </section>
         )}
-        <div className={`mt-5 grid gap-4 ${role === "Akuntansi" ? "xl:grid-cols-1" : "xl:grid-cols-[1.45fr_.85fr]"}`}>
+        <div className="mt-5 grid gap-4">
           <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -1626,7 +1626,7 @@ export default function MemoReportGrouped() {
               )}
             </div>
           </div>
-          <div className={`${role === "Akuntansi" ? "hidden " : ""}rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-4`}>
+          <div className={`${role === "Akuntansi" || role === "Pembelian" ? "hidden " : ""}rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-4`}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-black text-slate-900">
@@ -1679,6 +1679,13 @@ export default function MemoReportGrouped() {
               </p>
             )}
           </div>
+          {role === "Pembelian" && (
+            <div className="order-first grid gap-3 md:grid-cols-3">
+              <button type="button" onClick={() => nav("/memo-approval")} className="flex items-center justify-between rounded-xl border border-slate-200 border-l-4 border-l-amber-400 bg-white px-4 py-3 text-left shadow-sm transition hover:border-amber-300"><div><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Menunggu Approval</p><p className="mt-1 text-[11px] text-slate-400">Memo perlu ditinjau</p></div><strong className="text-2xl font-black text-amber-600">{approvalSummary.pending}</strong></button>
+              <button type="button" onClick={() => nav("/memo-approval")} className="flex items-center justify-between rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 bg-white px-4 py-3 text-left shadow-sm transition hover:border-emerald-300"><div><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Approved</p><p className="mt-1 text-[11px] text-slate-400">Memo sudah disetujui</p></div><strong className="text-2xl font-black text-emerald-600">{approvalSummary.approved}</strong></button>
+              <button type="button" onClick={() => nav("/memo-approval")} className="flex items-center justify-between rounded-xl border border-slate-200 border-l-4 border-l-red-500 bg-white px-4 py-3 text-left shadow-sm transition hover:border-red-300"><div><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Ditolak</p><p className="mt-1 text-[11px] text-slate-400">Memo perlu diperbaiki</p></div><strong className="text-2xl font-black text-red-600">{approvalSummary.rejected}</strong></button>
+            </div>
+          )}
         </div>
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
           <div className="border-b border-slate-100 bg-white px-4 py-3">
