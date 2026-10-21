@@ -57,6 +57,12 @@ const isUnpaidMemo = (memo: SupplierMemo) =>
     memoPaymentStatus(memo),
   )
 
+const accountingDummyMemos: SupplierMemo[] = [
+  { id: "DUMMY-SEWA-001", nomorMemo: "MEM-SEWA-001", tanggalSubmit: "2026-10-01", supplierNama: "PT. Nestle Indonesia", outlets: ["MK1", "MK2", "MK8"], jenisMemo: "memo-lain-lain", ringkasan: "Sewa Gondola Promo Akhir Tahun", detail: [], statusPembayaran: "belum-bayar", periodeAkhir: "2026-10-25" },
+  { id: "DUMMY-SEWA-002", nomorMemo: "MEM-SEWA-002", tanggalSubmit: "2026-10-03", supplierNama: "PT. Unilever Indonesia Tbk", outlets: ["MK5", "MK6", "MINI1"], jenisMemo: "memo-lain-lain", ringkasan: "Sewa Area Display Produk", detail: [], statusPembayaran: "belum-bayar", periodeAkhir: "2026-11-05" },
+  { id: "DUMMY-SEWA-003", nomorMemo: "MEM-SEWA-003", tanggalSubmit: "2026-10-05", supplierNama: "PT. Wings Surya", outlets: ["MK3", "MK8", "MINI4"], jenisMemo: "memo-lain-lain", ringkasan: "Sewa Space Promosi Desember", detail: [], statusPembayaran: "belum-bayar", periodeAkhir: "2026-12-15" },
+]
+
 function MannaKampusLogo({ compact = false }: { compact?: boolean }) {
   return (
     <img
@@ -76,11 +82,22 @@ function buildNotifications(
   role: string,
   supplierMemos: SupplierMemo[] = [],
 ) {
-  const isInternalReportRole = role === "Akuntansi" || role === "Pembelian"
+  const isInternalReportRole = role === "Akuntansi"
+  if (role === "Pembelian") {
+    return supplierMemos.slice(0, 8).map((memo) => ({
+      id: `approval-${memo.id}`,
+      title: "Memo baru menunggu approval",
+      message: `${memo.supplierNama} - ${memo.ringkasan}`,
+      meta: memo.outlets.join(", "),
+      tone: "amber",
+      href: "/memo-approval",
+    }))
+  }
   if (isInternalReportRole) {
+    const sourceMemos = [...accountingDummyMemos, ...supplierMemos]
     const filteredSupplierMemos = selectedOutlet
-      ? supplierMemos.filter((memo) => memo.outlets.includes(selectedOutlet))
-      : supplierMemos
+      ? sourceMemos.filter((memo) => memo.outlets.includes(selectedOutlet))
+      : sourceMemos
 
     return filteredSupplierMemos
       .filter((memo) => Boolean(memo.periodeAkhir))
@@ -88,11 +105,13 @@ function buildNotifications(
         const end = new Date(`${memo.periodeAkhir}T00:00:00`)
         const days = Math.ceil((end.getTime() - Date.now()) / 86400000)
         const unpaid = role === "Akuntansi" && isUnpaidMemo(memo)
-        if (unpaid ? days < 0 || days > 60 : days > 30) return null
+        if (unpaid ? days < -60 || days > 60 : days > 30) return null
         return {
           id: `renewal-${memo.id}`,
           title: unpaid
-            ? "Sewa akan berakhir dan belum dibayar"
+            ? days < 0
+              ? "Sewa melewati periode dan belum dibayar"
+              : "Sewa akan berakhir dan belum dibayar"
             : days < 0
               ? "Memo sewa sudah berakhir"
               : "Memo sewa mendekati jatuh tempo",
@@ -753,6 +772,7 @@ function SidebarContent({
             <BarChart2 className="h-4 w-4 text-amber-600" />
             Dashboard
           </NavLink>
+          {localStorage.getItem("bm-role") !== "Akuntansi" && (
           <NavLink
             to="/memo-list"
             onClick={onNavClick}
@@ -768,6 +788,7 @@ function SidebarContent({
             <FileText className="h-4 w-4 text-amber-600" />
             Daftar Memo
           </NavLink>
+          )}
           {canViewPaymentMonitoring && (
             <NavLink
               to="/memo-report/unpaid-renewal"
@@ -782,7 +803,7 @@ function SidebarContent({
               }
             >
               <TriangleAlert className="h-4 w-4 text-amber-600" />
-              Sewa Belum Dibayar
+              Laporan Pembayaran Sewa
             </NavLink>
           )}
           {localStorage.getItem("bm-role") === "Pembelian" && (

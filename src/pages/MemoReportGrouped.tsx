@@ -30,6 +30,11 @@ export type Memo = {
 type Vendor = { name: string memos: Memo[] }
 const API = "http://localhost:3001"
 const DEMO_MODE = true
+const accountingUnpaidDummy: Memo[] = [
+  { id: "DUMMY-SEWA-001", nomorMemo: "MEM-SEWA-001", tanggalSubmit: "2026-10-01", supplierNama: "PT. Nestle Indonesia", outlets: ["MK1", "MK2", "MK8"], jenisMemo: "memo-lain-lain", ringkasan: "Sewa Gondola Promo Akhir Tahun", detail: [], statusPembayaran: "belum-bayar", periodeAwal: "2026-10-01", periodeAkhir: "2026-10-25", data: { pendapatan: { jenis: "sewa", statusPembayaran: "belum-bayar" } } },
+  { id: "DUMMY-SEWA-002", nomorMemo: "MEM-SEWA-002", tanggalSubmit: "2026-10-03", supplierNama: "PT. Unilever Indonesia Tbk", outlets: ["MK5", "MK6", "MINI1"], jenisMemo: "memo-lain-lain", ringkasan: "Sewa Area Display Produk", detail: [], statusPembayaran: "belum-bayar", periodeAwal: "2026-10-10", periodeAkhir: "2026-11-05", data: { pendapatan: { jenis: "sewa", statusPembayaran: "belum-bayar" } } },
+  { id: "DUMMY-SEWA-003", nomorMemo: "MEM-SEWA-003", tanggalSubmit: "2026-10-05", supplierNama: "PT. Wings Surya", outlets: ["MK3", "MK8", "MINI4"], jenisMemo: "memo-lain-lain", ringkasan: "Sewa Space Promosi Desember", detail: [], statusPembayaran: "belum-bayar", periodeAwal: "2026-11-15", periodeAkhir: "2026-12-15", data: { pendapatan: { jenis: "sewa", statusPembayaran: "belum-bayar" } } },
+]
 const labels: Record<string, string> = {
   "memo-lain-lain": "Memo Lain-lain",
   "memo-program": "Memo Program",
@@ -754,7 +759,7 @@ function openLocalMemoPrintHtml(memo: Memo) {
   printWindow.document.write(html)
   printWindow.document.close()
 }
-function openMemoPrintHtml(memo: Memo) {
+export function openMemoPrintHtml(memo: Memo) {
   if (DEMO_MODE) {
     openLocalMemoPrintHtml(memo)
     return
@@ -972,6 +977,19 @@ export default function MemoReportGrouped() {
   const [vendorPage, setVendorPage] = useState(1)
   const [memoPageSize, setMemoPageSize] = useState(10)
   const [memoPage, setMemoPage] = useState(1)
+  const approvalSummary = useMemo(() => {
+    try {
+      const records = JSON.parse(localStorage.getItem("memo-purchase-approval") || "{}") as Record<string, { status?: string }>
+      const values = Object.values(records)
+      return {
+        pending: rows.filter((item) => !records[item.id]?.status).length,
+        approved: values.filter((item) => item.status === "approved").length,
+        rejected: values.filter((item) => item.status === "rejected").length,
+      }
+    } catch {
+      return { pending: rows.length, approved: 0, rejected: 0 }
+    }
+  }, [rows])
   const readSubmittedMemos = () => {
     try {
       const saved = JSON.parse(
@@ -985,7 +1003,7 @@ export default function MemoReportGrouped() {
   const load = () => {
     const saved = readSubmittedMemos()
     if (DEMO_MODE) {
-      setRows([...saved, ...demoRows])
+      setRows([...saved, ...(role === "Akuntansi" ? accountingUnpaidDummy : []), ...demoRows])
       return
     }
     fetch(`${API}/api/memo`)
@@ -993,11 +1011,11 @@ export default function MemoReportGrouped() {
       .then((data) =>
         setRows(
           Array.isArray(data) && data.length
-            ? [...saved, ...data]
-            : [...saved, ...demoRows],
+            ? [...saved, ...(role === "Akuntansi" ? accountingUnpaidDummy : []), ...data]
+            : [...saved, ...(role === "Akuntansi" ? accountingUnpaidDummy : []), ...demoRows],
         ),
       )
-      .catch(() => setRows([...saved, ...demoRows]))
+      .catch(() => setRows([...saved, ...(role === "Akuntansi" ? accountingUnpaidDummy : []), ...demoRows]))
   }
   useEffect(() => {
     if (!["Akuntansi", "Pembelian"].includes(role || "")) nav("/login")
@@ -1057,11 +1075,17 @@ export default function MemoReportGrouped() {
     if (memoPage > selectedMemoPageCount) setMemoPage(selectedMemoPageCount)
   }, [vendorPage, vendorPageCount, memoPage, selectedMemoPageCount])
   const leaseRows = filtered.filter(isLease)
-  const renewalRows = leaseRows.filter((item) => daysUntil(endDate(item)) <= 45)
+  const renewalRows = role === "Akuntansi" || role === "Pembelian" ? [] : leaseRows.filter((item) => daysUntil(endDate(item)) <= 45)
   const unpaidRenewalRows = leaseRows.filter(
     (item) =>
       isUnpaidMemo(item) &&
-      daysUntil(endDate(item)) >= 0 &&
+      daysUntil(endDate(item)) >= -60 &&
+      daysUntil(endDate(item)) <= 60,
+  )
+  const paidRenewalRows = leaseRows.filter(
+    (item) =>
+      !isUnpaidMemo(item) &&
+      daysUntil(endDate(item)) >= -60 &&
       daysUntil(endDate(item)) <= 60,
   )
   const eventRows = filtered.filter(isEvent)
@@ -1392,7 +1416,7 @@ export default function MemoReportGrouped() {
             </p>
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className={`grid gap-3 sm:grid-cols-2 ${role === "Pembelian" ? "xl:grid-cols-4" : "xl:grid-cols-5"}`}>
           <div className="dashboard-stat dashboard-stat-indigo">
             <span>Total memo</span>
             <strong>{filtered.length}</strong>
@@ -1413,11 +1437,11 @@ export default function MemoReportGrouped() {
             <strong>{eventRows.length}</strong>
             <small>Memo kegiatan dan sewa</small>
           </div>
-          <div className="dashboard-stat dashboard-stat-rose">
+          {role !== "Akuntansi" && role !== "Pembelian" && <div className="dashboard-stat dashboard-stat-rose">
             <span>Butuh tindakan</span>
             <strong>{renewalRows.length}</strong>
             <small>End period ≤ 45 hari</small>
-          </div>
+          </div>}
           {canViewPaymentMonitoring && (
             <button
               type="button"
@@ -1429,6 +1453,24 @@ export default function MemoReportGrouped() {
               <small>Berakhir dalam 60 hari</small>
             </button>
           )}
+          {canViewPaymentMonitoring && (
+            <button
+              type="button"
+              onClick={() => nav("/memo-report/unpaid-renewal")}
+              className="dashboard-stat dashboard-stat-teal text-left transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <span>Sewa sudah dibayar</span>
+              <strong>{paidRenewalRows.length}</strong>
+              <small>Berakhir dalam 60 hari</small>
+            </button>
+          )}
+          {role === "Pembelian" && (
+            <button type="button" onClick={() => nav("/memo-approval")} className="dashboard-stat dashboard-stat-rose text-left transition hover:-translate-y-0.5 hover:shadow-md">
+              <span>Approval memo</span>
+              <strong>{approvalSummary.pending}</strong>
+              <small>{approvalSummary.approved} approved · {approvalSummary.rejected} ditolak</small>
+            </button>
+          )}
         </div>
         {canViewPaymentMonitoring && (
           <section className="mt-5 rounded-2xl border border-red-100 bg-red-50/40 p-4">
@@ -1436,7 +1478,7 @@ export default function MemoReportGrouped() {
             <div>
               <p className="flex items-center gap-2 text-sm font-black text-slate-900">
                 <TriangleAlert className="h-4 w-4 text-red-500" />
-                Sewa Akan Berakhir &amp; Belum Dibayar
+                Laporan Pembayaran Sewa
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Prioritas tindak lanjut pembayaran berdasarkan sisa periode sewa.
@@ -1531,7 +1573,7 @@ export default function MemoReportGrouped() {
           </div>
           </section>
         )}
-        <div className="mt-5 grid gap-4 xl:grid-cols-[1.45fr_.85fr]">
+        <div className={`mt-5 grid gap-4 ${role === "Akuntansi" ? "xl:grid-cols-1" : "xl:grid-cols-[1.45fr_.85fr]"}`}>
           <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -1584,7 +1626,7 @@ export default function MemoReportGrouped() {
               )}
             </div>
           </div>
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-4">
+          <div className={`${role === "Akuntansi" ? "hidden " : ""}rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-4`}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-black text-slate-900">

@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Clock3,
   Eye,
+  FileText,
   Search,
   XCircle,
 } from "lucide-react"
@@ -13,6 +14,7 @@ import {
   demoRows,
   Detail,
   normalizeMemoType,
+  openMemoPrintHtml,
   type Memo,
 } from "./MemoReportGrouped"
 import { FilterCard } from "../components/FilterCard"
@@ -68,6 +70,9 @@ export default function MemoPurchaseApproval() {
   const [approvals, setApprovals] = useState<Record<string, ApprovalRecord>>({})
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState<"" | ApprovalStatus>("")
+  const [selectedOutlets, setSelectedOutlets] = useState<string[]>([])
+  const [from, setFrom] = useState("")
+  const [to, setTo] = useState("")
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [selected, setSelected] = useState<Memo | null>(null)
@@ -91,10 +96,18 @@ export default function MemoPurchaseApproval() {
       const haystack = `${memo.nomorMemo} ${memo.supplierNama} ${memo.ringkasan} ${memo.outlets.join(" ")}`.toLowerCase()
       return (
         (!query || haystack.includes(query)) &&
-        (!status || statusOf(memo) === status)
+        (!status || statusOf(memo) === status) &&
+        (!selectedOutlets.length || selectedOutlets.some((item) => memo.outlets.includes(item))) &&
+        (!from || (memo.periodeAkhir || "") >= from) &&
+        (!to || (memo.periodeAwal || "") <= to)
       )
     })
-  }, [rows, search, status, approvals])
+  }, [rows, search, status, selectedOutlets, from, to, approvals])
+
+  const outlets = useMemo(
+    () => Array.from(new Set(rows.flatMap((memo) => memo.outlets))).sort(),
+    [rows],
+  )
 
   const pending = rows.filter((memo) => statusOf(memo) === "pending").length
   const approved = rows.filter((memo) => statusOf(memo) === "approved").length
@@ -102,7 +115,7 @@ export default function MemoPurchaseApproval() {
   const pageCount = pageSize === 0 ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize))
   const visible = pageSize === 0 ? filtered : filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  useEffect(() => setPage(1), [search, status, pageSize])
+  useEffect(() => setPage(1), [search, status, pageSize, selectedOutlets, from, to])
   useEffect(() => {
     if (page > pageCount) setPage(pageCount)
   }, [page, pageCount])
@@ -120,7 +133,7 @@ export default function MemoPurchaseApproval() {
     localStorage.setItem(APPROVAL_KEY, JSON.stringify(next))
     setApprovals(next)
     setNote("")
-    setSelected(null)
+    setSelected(decision === "approved" ? memo : null)
   }
 
   if (selected) {
@@ -188,12 +201,23 @@ export default function MemoPurchaseApproval() {
       <FilterCard variant="compact">
           <div className="filter-card__search flex h-10 min-w-[260px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-indigo-300 focus-within:bg-white"><Search className="h-4 w-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nomor memo, supplier, program..." className="w-full bg-transparent text-sm outline-none" /></div>
           <select value={status} onChange={(event) => setStatus(event.target.value as "" | ApprovalStatus)} className="filter-card__control filter-card__control--select h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none"><option value="">Semua Status</option><option value="pending">Menunggu Approval</option><option value="approved">Approved</option><option value="rejected">Ditolak</option></select>
-          <button type="button" onClick={() => { setSearch(""); setStatus("") }} className="filter-card__control filter-card__reset h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700">Reset filter</button>
+          <details className="filter-card__control filter-card__control--select group relative h-10 min-w-[180px] rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none">
+            <summary className="flex h-full cursor-pointer list-none items-center justify-between gap-3 px-3 [&::-webkit-details-marker]:hidden"><span className="truncate">{selectedOutlets.length ? `${selectedOutlets.length} outlet dipilih` : "Semua Outlet"}</span><span className="h-2 w-2 shrink-0 -translate-y-0.5 rotate-45 border-b-2 border-r-2 border-slate-700 transition-transform group-open:rotate-[225deg]" /></summary>
+            <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5"><span className="text-xs font-bold text-slate-700">Pilih outlet</span>{selectedOutlets.length > 0 && <button type="button" onClick={() => setSelectedOutlets([])} className="text-[10px] font-bold text-amber-700 hover:text-amber-900">Hapus pilihan</button>}</div>
+              <div className="max-h-56 overflow-y-auto p-2">
+              {outlets.map((item) => <label key={item} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs text-slate-700 hover:bg-slate-50"><input type="checkbox" checked={selectedOutlets.includes(item)} onChange={(event) => setSelectedOutlets((current) => event.target.checked ? [...current, item] : current.filter((value) => value !== item))} className="h-3.5 w-3.5 accent-amber-600" />{item}</label>)}
+              </div>
+            </div>
+          </details>
+          <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} aria-label="Periode mulai" className="filter-card__control filter-card__control--date h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none" />
+          <input type="date" value={to} onChange={(event) => setTo(event.target.value)} aria-label="Periode selesai" className="filter-card__control filter-card__control--date h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none" />
+          <button type="button" onClick={() => { setSearch(""); setStatus(""); setSelectedOutlets([]); setFrom(""); setTo("") }} className="filter-card__control filter-card__reset h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700">Reset filter</button>
       </FilterCard>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-5 py-4"><h2 className="text-sm font-black text-slate-900">Seluruh Memo Masuk</h2><p className="mt-1 text-xs text-slate-500">{filtered.length} memo ditemukan</p></div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-sm"><thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wide text-slate-500"><tr>{["No Memo", "Supplier", "Jenis Memo", "Program / Ringkasan", "Periode", "Status Approval", "Aksi"].map((title) => <th key={title} className="px-5 py-3">{title}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{visible.map((memo) => { const current = statusOf(memo); return <tr key={memo.id} className="hover:bg-amber-50/30"><td className="px-5 py-4 font-mono text-xs font-bold text-indigo-700">{memo.nomorMemo}</td><td className="px-5 py-4 font-semibold text-slate-800">{memo.supplierNama}</td><td className="px-5 py-4 text-xs text-slate-600">{memoLabel(memo.jenisMemo)}</td><td className="max-w-[260px] truncate px-5 py-4 text-slate-700">{memo.ringkasan}</td><td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">{dateLabel(memo.periodeAwal)} s/d {dateLabel(memo.periodeAkhir)}</td><td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${current === "pending" ? "bg-amber-50 text-amber-700" : current === "approved" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{current === "pending" ? <Clock3 className="h-3 w-3" /> : current === "approved" ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}{current === "pending" ? "Menunggu Approval" : current === "approved" ? "Approved" : "Ditolak"}</span></td><td className="px-5 py-4"><button type="button" onClick={() => setSelected(memo)} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700"><Eye className="h-3.5 w-3.5" /> Detail</button></td></tr> })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-sm"><thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wide text-slate-500"><tr>{["No Memo", "Supplier", "Jenis Memo", "Program / Ringkasan", "Periode", "Status Approval", "Aksi"].map((title) => <th key={title} className="px-5 py-3">{title}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{visible.map((memo) => { const current = statusOf(memo); return <tr key={memo.id} className="hover:bg-amber-50/30"><td className="px-5 py-4 font-mono text-xs font-bold text-indigo-700">{memo.nomorMemo}</td><td className="px-5 py-4 font-semibold text-slate-800">{memo.supplierNama}</td><td className="px-5 py-4 text-xs text-slate-600">{memoLabel(memo.jenisMemo)}</td><td className="max-w-[260px] truncate px-5 py-4 text-slate-700">{memo.ringkasan}</td><td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">{dateLabel(memo.periodeAwal)} s/d {dateLabel(memo.periodeAkhir)}</td><td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${current === "pending" ? "bg-amber-50 text-amber-700" : current === "approved" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{current === "pending" ? <Clock3 className="h-3 w-3" /> : current === "approved" ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}{current === "pending" ? "Menunggu Approval" : current === "approved" ? "Approved" : "Ditolak"}</span></td><td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => setSelected(memo)} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700"><Eye className="h-3.5 w-3.5" /> Detail</button>{current === "approved" && <button type="button" onClick={() => openMemoPrintHtml(memo)} className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100"><FileText className="h-3.5 w-3.5" /> Cetak Dokumen</button>}</div></td></tr> })}</tbody></table></div>
         {!filtered.length && <p className="border-t border-slate-100 py-14 text-center text-sm text-slate-500">Tidak ada memo sesuai filter.</p>}
         {!!filtered.length && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 text-xs text-slate-500"><span>Menampilkan {visible.length} dari {filtered.length} memo</span><div className="flex items-center gap-2"><label className="flex items-center gap-2">Tampilkan<select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5"><option value={10}>10</option><option value={20}>20</option><option value={30}>30</option><option value={0}>Semua</option></select>data</label>{pageSize > 0 && <><button type="button" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 font-semibold disabled:opacity-40"><ChevronLeft className="h-3.5 w-3.5" /> Sebelumnya</button><span className="min-w-12 text-center font-semibold text-slate-700">{page} / {pageCount}</span><button type="button" disabled={page === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 font-semibold disabled:opacity-40">Berikutnya <ChevronRight className="h-3.5 w-3.5" /></button></>}</div></div>}
       </section>

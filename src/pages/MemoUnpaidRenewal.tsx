@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, Search, TriangleAlert } from "lucide-react"
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Eye, Search, TriangleAlert } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate } from "react-router"
 import {
@@ -37,6 +37,62 @@ const daysUntil = (date: string) =>
 const dateLabel = (date: string) =>
   date ? date.split("-").reverse().join("/") : "-"
 
+const unpaidRenewalDummy: Memo[] = [
+  {
+    id: "DUMMY-SEWA-001",
+    nomorMemo: "MEM-SEWA-001",
+    tanggalSubmit: "2026-10-01",
+    supplierNama: "PT. Nestle Indonesia",
+    outlets: ["MK1", "MK2", "MK8"],
+    jenisMemo: "memo-lain-lain",
+    ringkasan: "Sewa Gondola Promo Akhir Tahun",
+    detail: [{ label: "Jenis Media", value: "End Gondola" }, { label: "Total", value: "Rp 12.500.000" }],
+    statusPembayaran: "belum-bayar",
+    periodeAwal: "2026-10-01",
+    periodeAkhir: "2026-10-25",
+    data: { pendapatan: { jenis: "sewa", statusPembayaran: "belum-bayar" } },
+  },
+  {
+    id: "DUMMY-SEWA-002",
+    nomorMemo: "MEM-SEWA-002",
+    tanggalSubmit: "2026-10-03",
+    supplierNama: "PT. Unilever Indonesia Tbk",
+    outlets: ["MK5", "MK6", "MINI1"],
+    jenisMemo: "memo-lain-lain",
+    ringkasan: "Sewa Area Display Produk",
+    detail: [{ label: "Jenis Media", value: "Fasilitas Display" }, { label: "Total", value: "Rp 8.750.000" }],
+    statusPembayaran: "belum-bayar",
+    periodeAwal: "2026-10-10",
+    periodeAkhir: "2026-11-05",
+    data: { pendapatan: { jenis: "sewa", statusPembayaran: "belum-bayar" } },
+  },
+  {
+    id: "DUMMY-SEWA-003",
+    nomorMemo: "MEM-SEWA-003",
+    tanggalSubmit: "2026-10-05",
+    supplierNama: "PT. Wings Surya",
+    outlets: ["MK3", "MK8", "MINI4"],
+    jenisMemo: "memo-lain-lain",
+    ringkasan: "Sewa Space Promosi Desember",
+    detail: [{ label: "Jenis Media", value: "Shopping Trolley" }, { label: "Total", value: "Rp 6.000.000" }],
+    statusPembayaran: "belum-bayar",
+    periodeAwal: "2026-11-15",
+    periodeAkhir: "2026-12-15",
+    data: { pendapatan: { jenis: "sewa", statusPembayaran: "belum-bayar" } },
+  },
+]
+
+const OUTLET_GROUPS: Record<string, string[]> = {
+  "PT Mirota Nayan": ["MK1", "MK2", "MK3", "MK8", "MINI4"],
+  "PT Mirota Godean": ["MK5", "MK6", "MK7", "MINI1", "MINI2"],
+}
+
+const matchesOutlet = (memo: Memo, selectedOutlet: string) => {
+  if (!selectedOutlet) return true
+  const group = OUTLET_GROUPS[selectedOutlet]
+  return group ? memo.outlets.some((item) => group.includes(item)) : memo.outlets.includes(selectedOutlet)
+}
+
 export default function MemoUnpaidRenewal() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -44,6 +100,11 @@ export default function MemoUnpaidRenewal() {
   const [rows, setRows] = useState<Memo[]>([])
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("")
+  const [outlet, setOutlet] = useState("")
+  const [from, setFrom] = useState("")
+  const [to, setTo] = useState("")
+  const [report, setReport] = useState<"unpaid" | "paid">("unpaid")
+  const [showDetails, setShowDetails] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [selected, setSelected] = useState<Memo | null>(null)
@@ -60,11 +121,12 @@ export default function MemoUnpaidRenewal() {
       const savedRows: Memo[] = Array.isArray(stored) ? stored : []
       const savedIds = new Set(savedRows.map((memo) => memo.id))
       setRows([
+        ...unpaidRenewalDummy,
         ...savedRows,
-        ...demoRows.filter((memo) => !savedIds.has(memo.id)),
+        ...demoRows.filter((memo) => !savedIds.has(memo.id) && !unpaidRenewalDummy.some((dummy) => dummy.id === memo.id)),
       ])
     } catch {
-      setRows(demoRows)
+      setRows([...unpaidRenewalDummy, ...demoRows])
     }
   }, [navigate, role])
 
@@ -73,10 +135,10 @@ export default function MemoUnpaidRenewal() {
       rows
         .filter(isLeaseMemo)
         .map((memo) => ({ memo, end: endDate(memo) }))
-        .filter(({ memo, end }) => {
-          if (!end || !isUnpaidMemo(memo)) return false
+        .filter(({ end }) => {
+          if (!end) return false
           const days = daysUntil(end)
-          return days >= 0 && days <= 60
+          return days >= -60 && days <= 60
         }),
     [rows],
   )
@@ -88,13 +150,26 @@ export default function MemoUnpaidRenewal() {
       const currentStatus = days <= 7 ? "critical" : days <= 30 ? "warning" : "upcoming"
       const haystack = `${memo.nomorMemo} ${memo.supplierNama} ${memo.ringkasan} ${memo.outlets.join(" ")}`.toLowerCase()
       return (
+        (report === "unpaid" ? isUnpaidMemo(memo) : !isUnpaidMemo(memo)) &&
         (!query || haystack.includes(query)) &&
-        (!status || status === currentStatus)
+        (!status || status === currentStatus) &&
+        matchesOutlet(memo, outlet) &&
+        (!from || end >= from) &&
+        (!to || end <= to)
       )
     })
-  }, [candidates, search, status])
+  }, [candidates, search, status, report, outlet, from, to])
 
-  const criticalCount = candidates.filter(({ end }) => daysUntil(end) <= 7).length
+  const summaryCandidates = candidates.filter(({ memo, end }) =>
+    matchesOutlet(memo, outlet) &&
+    (!from || end >= from) &&
+    (!to || end <= to),
+  )
+  const unpaidCandidates = summaryCandidates.filter(({ memo }) => isUnpaidMemo(memo))
+  const paidCandidates = summaryCandidates.filter(({ memo }) => !isUnpaidMemo(memo))
+  const outlets = Array.from(new Set(candidates.flatMap(({ memo }) => memo.outlets))).sort()
+  const outletOptions = [...Object.keys(OUTLET_GROUPS), ...outlets]
+  const criticalCount = unpaidCandidates.filter(({ end }) => daysUntil(end) <= 7).length
   const warningCount = candidates.filter(({ end }) => {
     const days = daysUntil(end)
     return days >= 8 && days <= 30
@@ -102,7 +177,7 @@ export default function MemoUnpaidRenewal() {
   const pageCount = pageSize === 0 ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize))
   const visible = pageSize === 0 ? filtered : filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  useEffect(() => setPage(1), [search, status, pageSize])
+  useEffect(() => setPage(1), [search, status, pageSize, report, outlet, from, to])
   useEffect(() => {
     if (page > pageCount) setPage(pageCount)
   }, [page, pageCount])
@@ -133,10 +208,17 @@ export default function MemoUnpaidRenewal() {
     <main className="memo-report-page min-h-full space-y-5 bg-[#f6f8fb] p-5">
       <button
         type="button"
-        onClick={() => navigate("/memo-report")}
+        onClick={() => {
+          setSelected(null)
+          if (showDetails) {
+            setShowDetails(false)
+            return
+          }
+          navigate("/dashboard")
+        }}
         className="inline-flex items-center gap-2 text-sm font-bold text-amber-700"
       >
-        <ArrowLeft className="h-4 w-4" /> Kembali ke dashboard
+        <ArrowLeft className="h-4 w-4" /> {showDetails ? "Kembali" : "Kembali ke dashboard"}
       </button>
 
       <header className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
@@ -146,22 +228,22 @@ export default function MemoUnpaidRenewal() {
               Monitoring Pembayaran Sewa
             </p>
             <h1 className="mt-1 text-2xl font-black text-slate-900">
-              Sewa Akan Berakhir &amp; Belum Dibayar
+              Laporan Pembayaran Sewa
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Daftar memo sewa dengan status pembayaran belum dibayar dan periode berakhir maksimal 60 hari.
+              Rekap sewa yang akan berakhir dalam maksimal 60 hari berdasarkan status pembayaran.
             </p>
           </div>
           <span className="rounded-xl bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
-            {candidates.length} memo perlu ditindaklanjuti
+            {unpaidCandidates.length} sewa belum dibayar
           </span>
         </div>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
-          <p className="text-[10px] font-black uppercase tracking-wide text-red-600">Total belum dibayar</p>
-          <p className="mt-1 text-2xl font-black text-red-800">{candidates.length}</p>
+          <p className="text-[10px] font-black uppercase tracking-wide text-red-600">Sewa belum dibayar</p>
+          <p className="mt-1 text-2xl font-black text-red-800">{unpaidCandidates.length}</p>
           <p className="mt-1 text-xs text-red-700">Perlu monitoring Akuntansi</p>
         </div>
         <div className="rounded-2xl border border-rose-100 bg-white p-4">
@@ -196,11 +278,20 @@ export default function MemoUnpaidRenewal() {
             <option value="warning">Warning (8–30 hari)</option>
             <option value="upcoming">Upcoming (31–60 hari)</option>
           </select>
+          <select value={outlet} onChange={(event) => setOutlet(event.target.value)} className="filter-card__control filter-card__control--select h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none">
+            <option value="">Semua Outlet</option>
+            {outletOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} aria-label="Periode mulai" className="filter-card__control filter-card__control--date h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none" />
+          <input type="date" value={to} onChange={(event) => setTo(event.target.value)} aria-label="Periode sampai" className="filter-card__control filter-card__control--date h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none" />
           <button
             type="button"
             onClick={() => {
               setSearch("")
               setStatus("")
+              setOutlet("")
+              setFrom("")
+              setTo("")
             }}
             className="filter-card__control filter-card__reset h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
           >
@@ -208,10 +299,28 @@ export default function MemoUnpaidRenewal() {
           </button>
       </FilterCard>
 
+      {!showDetails && (
+        <section className="grid gap-4 md:grid-cols-2">
+          <article className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-black uppercase tracking-wide text-red-600">Sewa Belum Dibayar</p>
+            <p className="mt-2 text-3xl font-black text-red-800">{unpaidCandidates.length}</p>
+            <p className="mt-1 text-sm text-slate-500">{criticalCount} critical · {warningCount} warning</p>
+            <button type="button" onClick={() => { setReport("unpaid"); setShowDetails(true) }} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700"><TriangleAlert className="h-4 w-4" /> Lihat detail</button>
+          </article>
+          <article className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-black uppercase tracking-wide text-emerald-600">Sewa Sudah Dibayar</p>
+            <p className="mt-2 text-3xl font-black text-emerald-800">{paidCandidates.length}</p>
+            <p className="mt-1 text-sm text-slate-500">Sewa dengan pembayaran tercatat</p>
+            <button type="button" onClick={() => { setReport("paid"); setShowDetails(true) }} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"><CalendarDays className="h-4 w-4" /> Lihat detail</button>
+          </article>
+        </section>
+      )}
+
+      {showDetails && (
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>
-            <h2 className="text-sm font-black text-slate-900">Daftar Sewa Belum Dibayar</h2>
+            <h2 className="text-sm font-black text-slate-900">Daftar Sewa {report === "unpaid" ? "Belum Dibayar" : "Sudah Dibayar"}</h2>
             <p className="mt-1 text-xs text-slate-500">{filtered.length} memo ditemukan</p>
           </div>
           <TriangleAlert className="h-5 w-5 text-red-500" />
@@ -235,6 +344,7 @@ export default function MemoUnpaidRenewal() {
             <tbody className="divide-y divide-slate-100">
               {visible.map(({ memo, end }) => {
                 const days = daysUntil(end)
+                const unpaid = isUnpaidMemo(memo)
                 return (
                   <tr key={memo.id} className="hover:bg-red-50/30">
                     <td className="px-5 py-4 font-bold text-slate-800">{memo.supplierNama}</td>
@@ -242,8 +352,8 @@ export default function MemoUnpaidRenewal() {
                     <td className="max-w-[240px] px-5 py-4 font-semibold text-slate-800">{memo.ringkasan || "-"}</td>
                     <td className="px-5 py-4 text-xs text-slate-600">{memo.outlets.join(", ") || "-"}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-600">{dateLabel(memo.periodeAwal || "")} s/d {dateLabel(end)}</td>
-                    <td className="px-5 py-4 text-xs font-bold text-red-700">{days} hari lagi</td>
-                    <td className="px-5 py-4"><span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-700">Belum Dibayar</span></td>
+                    <td className={`px-5 py-4 text-xs font-bold ${unpaid ? "text-red-700" : "text-slate-600"}`}>{days < 0 ? `${Math.abs(days)} hari lewat` : `${days} hari lagi`}</td>
+                    <td className="px-5 py-4">{unpaid ? <span className="group relative inline-flex cursor-help items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-700"><TriangleAlert className="h-3 w-3" /> Belum Dibayar<span className="pointer-events-none absolute bottom-full left-0 z-10 mb-2 hidden w-52 rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-medium leading-relaxed text-white shadow-lg group-hover:block">Sewa ini akan berakhir dalam {days} hari dan belum dibayar.</span></span> : <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">Sudah Dibayar</span>}</td>
                     <td className="px-5 py-4"><button type="button" onClick={() => setSelected(memo)} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700"><Eye className="h-3.5 w-3.5" /> Detail</button></td>
                   </tr>
                 )
@@ -253,7 +363,7 @@ export default function MemoUnpaidRenewal() {
         </div>
         {filtered.length === 0 && (
           <div className="border-t border-slate-100 px-5 py-14 text-center">
-            <p className="text-sm font-semibold text-slate-600">Belum ada data sewa yang berstatus belum dibayar.</p>
+            <p className="text-sm font-semibold text-slate-600">Belum ada data sewa pada filter yang dipilih.</p>
             <p className="mt-1 text-xs text-slate-400">Data akan tampil setelah status pembayaran dicatat pada memo.</p>
           </div>
         )}
@@ -271,6 +381,7 @@ export default function MemoUnpaidRenewal() {
           </div>
         )}
       </section>
+      )}
     </main>
   )
 }
