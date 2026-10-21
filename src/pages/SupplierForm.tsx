@@ -135,7 +135,7 @@ const PRODUCT_CATALOG: Product[] = [
     konversi: "1 Dus = 40 pcs",
     jatuhTempo: "30 hari",
     barcodeBarang: [
-      { barcode: "8998866200012", konversi: "DUS" },
+      { barcode: "8998866200012", konversi: "CTN" },
       { barcode: "8998866200013", konversi: "BOX" },
       { barcode: "8998866200014", konversi: "PCS" },
     ],
@@ -152,7 +152,7 @@ const PRODUCT_CATALOG: Product[] = [
     konversi: "1 Dus = 40 pcs",
     jatuhTempo: "30 hari",
     barcodeBarang: [
-      { barcode: "8998866200029", konversi: "DUS" },
+      { barcode: "8998866200029", konversi: "CTN" },
       { barcode: "8998866200030", konversi: "PCS" },
     ],
   },
@@ -168,7 +168,7 @@ const PRODUCT_CATALOG: Product[] = [
     konversi: "1 Dus = 24 pcs",
     jatuhTempo: "30 hari",
     barcodeBarang: [
-      { barcode: "8998866200036", konversi: "DUS" },
+      { barcode: "8998866200036", konversi: "CTN" },
       { barcode: "8998866200037", konversi: "PCS" },
     ],
   },
@@ -402,7 +402,7 @@ const KONVERSI_UNIT_OPTIONS = [
   "PC",
   "PCS",
   "CR",
-  "DUS",
+  "CTN",
   "BOX",
   "KARTON",
   "LUSIN",
@@ -414,8 +414,6 @@ const KONVERSI_UNIT_OPTIONS = [
 
 const PRODUK_UPDATE_FIELDS = [
   { key: "barcodeBarang", label: "Barcode Barang" },
-
-  { key: "barcodePlu", label: "Barcode PLU" },
 
   { key: "nama", label: "Nama Produk" },
 
@@ -719,6 +717,9 @@ function formatBarcodeBarang(value?: string) {
     .map((row) => `${row.barcode}${row.konversi ? ` (${row.konversi})` : ""}`)
     .join(" | ")
 }
+
+const displayKonversi = (value?: string) =>
+  String(value || "").toUpperCase() === "DUS" ? "CTN" : value
 
 function getVendorOldValue(identity: IdCardData | null, field: string): string {
   if (!identity) return ""
@@ -2735,7 +2736,7 @@ function BarcodeBarangField({
                   {previous.barcode || "-"}
                 </p>
                 <p className="mt-0.5 text-[10px] text-slate-400">
-                  Konversi: {previous.konversi || "-"}
+                  Konversi: {displayKonversi(previous.konversi) || "-"}
                 </p>
               </div>
               <ArrowRight className="mx-auto hidden h-4 w-4 text-slate-400 sm:block" />
@@ -2751,7 +2752,7 @@ function BarcodeBarangField({
                 />
                 <input
                   type="text"
-                  value={row.konversi}
+                  value={displayKonversi(row.konversi)}
                   onChange={(e) =>
                     updateRow(index, { konversi: e.target.value })
                   }
@@ -6531,7 +6532,7 @@ interface ListingProductRow {
 
   diskonReguler: number
 
-  statusPajak: "bkp" | "non-bkp"
+  statusPajak: "" | "bkp" | "non-bkp"
 }
 
 const emptyListingProductRow = (): ListingProductRow => ({
@@ -6557,7 +6558,7 @@ const emptyListingProductRow = (): ListingProductRow => ({
 
   diskonReguler: 0,
 
-  statusPajak: "non-bkp",
+  statusPajak: "",
 })
 
 interface ProductQtyRow {
@@ -7920,32 +7921,23 @@ function PendapatanStep({
                       </div>
                       <div>
                         <Label req>Status Pajak Produk</Label>
-                        <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1">
-                          {[
-                            { value: "bkp" as const, label: "BKP" },
-                            {
-                              value: "non-bkp" as const,
-                              label: "BTKP / Non-BKP",
-                            },
-                          ].map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() =>
-                                updateListingRow(i, "statusPajak", option.value)
-                              }
-                              className={`flex-1 rounded-lg px-2 py-2 text-[10px] font-bold transition-all ${
-                                (row.statusPajak || "non-bkp") === option.value
-                                  ? option.value === "non-bkp"
-                                    ? "bg-slate-800 text-white shadow-sm"
-                                    : "bg-amber-500 text-white shadow-sm"
-                                  : "text-slate-500 hover:bg-white hover:text-slate-700"
-                              }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
+                        <select
+                          value={row.statusPajak || ""}
+                          onChange={(event) =>
+                            updateListingRow(
+                              i,
+                              "statusPajak",
+                              event.target.value as "bkp" | "non-bkp",
+                            )
+                          }
+                          className={inp}
+                        >
+                          <option value="" disabled>
+                            Pilih status pajak produk
+                          </option>
+                          <option value="bkp">BKP</option>
+                          <option value="non-bkp">BTKP</option>
+                        </select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
