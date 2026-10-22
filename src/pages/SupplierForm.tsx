@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { Fragment, useState, useRef, useEffect } from "react"
 
 import {
   Plus,
@@ -5248,6 +5248,8 @@ interface ProgramInfoState {
 
   pphRate: string
 
+  kwitansiAtasNama: string
+
   redaksi: string
 
   caraPembayaran: string
@@ -5473,24 +5475,31 @@ function ProgramInfoStep({
         />
       </div>
 
-      <div className={locked ? "pointer-events-none opacity-65" : ""}>
-        <Label req>Redaksi</Label>
-        <textarea
-          rows={4}
-          value={state.redaksi}
-          onChange={(e) => setField("redaksi", e.target.value)}
-          className={`${errors.redaksi ? inpErr : inp} min-h-28 resize-y`}
-          placeholder={
-            "Atas Nama PT ...\nTuliskan kalimat redaksi program di sini..."
-          }
-        />
-        <p className="mt-1.5 text-[11px] text-slate-400">
-          Guidance: tulis Atas Nama PT terlebih dahulu, lalu lanjutkan dengan
-          kalimat redaksi program.
-        </p>
-        <FieldError message={errors.redaksi} />
+      <div className={`space-y-4 ${locked ? "pointer-events-none opacity-65" : ""}`}>
+        <div>
+          <Label req>Kwitansi Atas Nama</Label>
+          <input
+            readOnly={locked}
+            type="text"
+            value={state.kwitansiAtasNama}
+            onChange={(e) => setField("kwitansiAtasNama", e.target.value)}
+            className={errors.kwitansiAtasNama ? inpErr : inp}
+            placeholder="Contoh: Nama perusahaan, pabrik, atau CV"
+          />
+          <FieldError message={errors.kwitansiAtasNama} />
+        </div>
+        <div>
+          <Label req>Redaksi</Label>
+          <textarea
+            rows={4}
+            value={state.redaksi}
+            onChange={(e) => setField("redaksi", e.target.value)}
+            className={`${errors.redaksi ? inpErr : inp} min-h-28 resize-y`}
+            placeholder="Contoh: Program promosi produk periode Januari 2027"
+          />
+          <FieldError message={errors.redaksi} />
+        </div>
       </div>
-
       <div>
         <Label req>Periode Program</Label>
         <PeriodeRange
@@ -5520,6 +5529,8 @@ interface OnFakturProductRow {
 
   diskonValue: number
 
+  diskonTiers: DiscountTier[]
+
   bandedAktif: boolean
 
   banded: string
@@ -5529,6 +5540,10 @@ interface OnFakturProductRow {
   strataSatuan: string
 
   alokasiQty: number
+
+  freeProdukAktif: boolean
+
+  freeProdukKeterangan: string
 
   budgetAktif: boolean
 
@@ -5541,11 +5556,14 @@ const emptyOnFakturProductRow = (): OnFakturProductRow => ({
   diskonMode: "persen",
   diskonBasis: "",
   diskonValue: 0,
+  diskonTiers: emptyDiscountTiers(),
   bandedAktif: false,
   banded: "",
   strataMinQty: 0,
   strataSatuan: "PCS",
   alokasiQty: 0,
+  freeProdukAktif: false,
+  freeProdukKeterangan: "",
   budgetAktif: false,
   budgetNominal: 0,
   keterangan: "",
@@ -5557,6 +5575,8 @@ interface OffFakturProductRow {
   diskonBasis: string
 
   diskonValue: number
+
+  diskonTiers: DiscountTier[]
 
   kuponVoucherAktif: boolean
 
@@ -5579,6 +5599,7 @@ const emptyOffFakturProductRow = (): OffFakturProductRow => ({
   diskonMode: "persen",
   diskonBasis: "",
   diskonValue: 0,
+  diskonTiers: emptyDiscountTiers(),
   kuponVoucherAktif: false,
   kuponVoucher: "",
   freeProdukAktif: false,
@@ -5606,6 +5627,8 @@ interface OnFakturGroup {
 
   diskonValue: number
 
+  diskonTiers: DiscountTier[]
+
   products: Product[]
 
   rows: Record<string, OnFakturProductRow>
@@ -5622,10 +5645,21 @@ interface OffFakturGroup {
 
   diskonValue: number
 
+  diskonTiers: DiscountTier[]
+
   products: Product[]
 
   rows: Record<string, OffFakturProductRow>
 }
+
+interface DiscountTier {
+  mode: DiskonMode
+  basis: string
+  value: number
+}
+
+const emptyDiscountTiers = (): DiscountTier[] =>
+  Array.from({ length: 5 }, () => ({ mode: "rp", basis: "", value: 0 }))
 
 const emptyOnFakturGroup = (): OnFakturGroup => ({
   id: `on-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -5637,6 +5671,8 @@ const emptyOnFakturGroup = (): OnFakturGroup => ({
   diskonBasis: "",
 
   diskonValue: 0,
+
+  diskonTiers: emptyDiscountTiers(),
 
   products: [],
 
@@ -5653,6 +5689,8 @@ const emptyOffFakturGroup = (): OffFakturGroup => ({
   diskonBasis: "",
 
   diskonValue: 0,
+
+  diskonTiers: emptyDiscountTiers(),
 
   products: [],
 
@@ -5781,6 +5819,31 @@ function OnFakturProductCard({
             placeholder="0"
           />
         </div>
+      </div>
+
+      <div>
+        <Label>Free Produk</Label>
+        <YesNoToggle
+          value={row.freeProdukAktif}
+          onChange={(v) => {
+            setField("freeProdukAktif", v)
+            if (!v) setField("freeProdukKeterangan", "")
+          }}
+        />
+        {row.freeProdukAktif && (
+          <div className="mt-3">
+            <textarea
+              rows={3}
+              value={row.freeProdukKeterangan}
+              onChange={(e) => setField("freeProdukKeterangan", e.target.value)}
+              className={`${inp} min-h-24 resize-y`}
+              placeholder="Keterangan produk gratis..."
+            />
+            <p className="mt-1.5 text-[11px] text-slate-400">
+              Nilai produk otomatis tercatat sebagai Rp 0.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3">
@@ -6121,6 +6184,27 @@ function OnFakturProductDetailCard({
           />
         </div>
       </div>
+      <div>
+        <Label>Free Produk</Label>
+        <YesNoToggle
+          value={row.freeProdukAktif}
+          onChange={(v) => {
+            setField("freeProdukAktif", v)
+            if (!v) setField("freeProdukKeterangan", "")
+          }}
+        />
+        {row.freeProdukAktif && (
+          <div className="mt-3">
+            <textarea
+              rows={3}
+              value={row.freeProdukKeterangan}
+              onChange={(e) => setField("freeProdukKeterangan", e.target.value)}
+              className={`${inp} min-h-24 resize-y`}
+              placeholder="Keterangan produk gratis..."
+            />
+          </div>
+        )}
+      </div>
       <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -6361,51 +6445,80 @@ function ProgramDetailStep({
   const hasOff = tipe.includes("off-faktur")
 
   const renderDiscountFields = (
-    mode: DiskonMode,
+    tiers: DiscountTier[],
 
-    basis: string,
-
-    value: number,
-
-    onMode: (v: DiskonMode) => void,
-
-    onBasis: (v: string) => void,
-
-    onValue: (v: number) => void,
+    onTiers: (v: DiscountTier[]) => void,
 
     showBasis: boolean,
   ) => (
-    <div>
-      <Label req>Nilai Potongan Kelompok</Label>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <DiskonModeToggle
-          value={mode}
-          onChange={(v) => {
-            onMode(v)
-            if (v !== "persen") onBasis("")
-          }}
-        />
-        <input
-          type="number"
-          min={0}
-          value={value || ""}
-          onChange={(e) => onValue(parseFloat(e.target.value) || 0)}
-          placeholder={
-            mode === "persen"
-              ? "Persentase potongan..."
-              : "Nominal potongan per satuan..."
-          }
-          className={inp}
-        />
+    <div className="space-y-2">
+      <Label>Nilai Potongan Kelompok</Label>
+      <p className="text-[10px] text-slate-400">
+        Isi tingkat yang diperlukan. Setiap tingkat dapat menggunakan % atau Rp.
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <div className="grid min-w-[760px] grid-cols-5 divide-x divide-slate-200">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="bg-slate-50 px-2 py-1.5 text-center text-[10px] font-bold text-slate-600">
+              Diskon {index + 1}
+            </div>
+          ))}
+        </div>
+        <div className="grid min-w-[760px] grid-cols-5 divide-x divide-slate-200">
+          {Array.from({ length: 5 }, (_, index) => {
+            const tier = tiers[index] || { mode: "rp" as DiskonMode, basis: "", value: 0 }
+            return (
+              <div key={index} className="space-y-1.5 p-2">
+                <div className="flex justify-center">
+                  <DiskonModeToggle
+                    value={tier.mode}
+                    onChange={(mode) => {
+                      const next = [...tiers]
+                      next[index] = { ...tier, mode, basis: mode === "persen" ? tier.basis : "" }
+                      onTiers(next)
+                    }}
+                  />
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={tier.value || ""}
+                  onChange={(e) => {
+                    const next = [...tiers]
+                    next[index] = { ...tier, value: parseFloat(e.target.value) || 0 }
+                    onTiers(next)
+                  }}
+                  placeholder={tier.mode === "persen" ? "%" : "Rp"}
+                  className={`${inp} !py-2 !rounded-lg text-center`}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
-      {showBasis && mode === "persen" && (
-        <div className="mt-3">
-          <Label req>Basis Persentase</Label>
-          <SingleChoiceChips
-            options={DISKON_BASIS_OPTIONS}
-            value={basis}
-            onChange={onBasis}
-          />
+      {showBasis && tiers.some((tier) => tier.mode === "persen") && (
+        <div className="flex items-center gap-3 rounded-lg border border-indigo-100 bg-indigo-50/50 px-3 py-2">
+          <Label>Basis Persentase</Label>
+          <select
+            value={tiers.find((tier) => tier.mode === "persen")?.basis || ""}
+            onChange={(e) =>
+              onTiers(
+                tiers.map((tier) =>
+                  tier.mode === "persen"
+                    ? { ...tier, basis: e.target.value }
+                    : tier,
+                ),
+              )
+            }
+            className={`${inp} !py-2 !rounded-lg max-w-xs`}
+          >
+            <option value="">Pilih basis persentase</option>
+            {DISKON_BASIS_OPTIONS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </div>
@@ -6474,17 +6587,14 @@ function ProgramDetailStep({
                   />
                 </div>
                 {renderDiscountFields(
-                  group.diskonMode,
-
-                  group.diskonBasis,
-
-                  group.diskonValue,
-
-                  (v) => updateOnGroup(index, "diskonMode", v),
-
-                  (v) => updateOnGroup(index, "diskonBasis", v),
-
-                  (v) => updateOnGroup(index, "diskonValue", v),
+                  group.diskonTiers,
+                  (tiers) => {
+                    updateOnGroup(index, "diskonTiers", tiers)
+                    const first = tiers.find((tier) => tier.value > 0) || tiers[0]
+                    updateOnGroup(index, "diskonMode", first.mode)
+                    updateOnGroup(index, "diskonBasis", first.basis)
+                    updateOnGroup(index, "diskonValue", first.value)
+                  },
 
                   false,
                 )}
@@ -6576,17 +6686,14 @@ function ProgramDetailStep({
                   />
                 </div>
                 {renderDiscountFields(
-                  group.diskonMode,
-
-                  group.diskonBasis,
-
-                  group.diskonValue,
-
-                  (v) => updateOffGroup(index, "diskonMode", v),
-
-                  (v) => updateOffGroup(index, "diskonBasis", v),
-
-                  (v) => updateOffGroup(index, "diskonValue", v),
+                  group.diskonTiers,
+                  (tiers) => {
+                    updateOffGroup(index, "diskonTiers", tiers)
+                    const first = tiers.find((tier) => tier.value > 0) || tiers[0]
+                    updateOffGroup(index, "diskonMode", first.mode)
+                    updateOffGroup(index, "diskonBasis", first.basis)
+                    updateOffGroup(index, "diskonValue", first.value)
+                  },
 
                   true,
                 )}
@@ -9368,6 +9475,115 @@ function OnFakturDetailTable({
   )
 }
 
+function CombinedProductDetailTable({
+  products,
+  onRows,
+  offRows,
+}: {
+  products: Product[]
+  onRows: Record<string, OnFakturProductRow>
+  offRows: Record<string, OffFakturProductRow>
+}) {
+  const formatTiers = (row: OnFakturProductRow | OffFakturProductRow) => {
+    const tiers = row.diskonTiers?.filter((tier) => tier.value > 0) || []
+    if (tiers.length === 0 && row.diskonValue > 0) {
+      return [
+        row.diskonMode === "persen"
+          ? `${row.diskonValue}%`
+          : `Rp ${row.diskonValue.toLocaleString("id-ID")}`,
+      ]
+    }
+    return tiers.length
+      ? tiers.map((tier) =>
+            tier.mode === "persen"
+              ? `${tier.value}%`
+              : `Rp ${tier.value.toLocaleString("id-ID")}`,
+          )
+      : ["-"]
+  }
+
+  const productByPlu = new Map<string, Product>()
+  products.forEach((product) => productByPlu.set(product.plu, product))
+  Object.keys(onRows).forEach((plu) => {
+    if (!productByPlu.has(plu)) productByPlu.set(plu, { plu, nama: plu } as Product)
+  })
+  Object.keys(offRows).forEach((plu) => {
+    if (!productByPlu.has(plu)) productByPlu.set(plu, { plu, nama: plu } as Product)
+  })
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200">
+      <table className="w-full table-fixed border-collapse text-[10px]">
+        <colgroup>
+          <col className="w-[9%]" />
+          <col className="w-[18%]" />
+          <col className="w-[16%]" />
+          <col className="w-[28.5%]" />
+          <col className="w-[28.5%]" />
+        </colgroup>
+        <thead>
+          <tr className="bg-slate-50">
+            <th className="border border-slate-300 px-1.5 py-2 text-left">PLU</th>
+            <th className="border border-slate-300 px-1.5 py-2 text-left">Produk</th>
+            <th className="border border-slate-300 px-1.5 py-2 text-left"></th>
+            <th className="border border-slate-300 bg-amber-50 px-1.5 py-2 text-left text-amber-800">On Faktur</th>
+            <th className="border border-slate-300 bg-indigo-50 px-1.5 py-2 text-left text-indigo-800">Off Faktur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...productByPlu.values()].map((product) => {
+            const on = onRows[product.plu]
+            const off = offRows[product.plu]
+            const rows = [
+              "Potongan",
+              "Benefit/Syarat",
+              "Alokasi",
+              "Budget",
+              "Free Produk",
+              "Keterangan",
+            ]
+            return (
+              <Fragment key={product.plu}>
+                {rows.map((label, index) => (
+                  <tr key={`${product.plu}-${label}`}>
+                    {index === 0 && (
+                      <>
+                        <td rowSpan={rows.length} className="break-all border border-slate-200 px-1.5 py-2 align-middle font-mono">{product.plu}</td>
+                        <td rowSpan={rows.length} className="break-words border border-slate-200 px-1.5 py-2 align-middle font-semibold">{product.nama}</td>
+                      </>
+                    )}
+                    <td className="border border-slate-200 bg-slate-50 px-1.5 py-2 font-semibold">{label}</td>
+                    <td className="break-words border border-slate-200 px-1.5 py-2">
+                      {on ? [
+                        formatTiers(on).map((value, tierIndex) => `Diskon ${tierIndex + 1}: ${value}`).join(" | "),
+                        on.bandedAktif ? on.banded || "-" : on.strataMinQty ? `${on.strataMinQty} ${on.strataSatuan}` : "-",
+                        on.alokasiQty ? `${on.alokasiQty} PCS` : "-",
+                        on.budgetAktif ? `Rp ${on.budgetNominal.toLocaleString("id-ID")}` : "-",
+                        on.freeProdukAktif ? on.freeProdukKeterangan || "-" : "-",
+                        on.keterangan || "-",
+                      ][index] : ""}
+                    </td>
+                    <td className="break-words border border-slate-200 px-1.5 py-2">
+                      {off ? [
+                        formatTiers(off).map((value, tierIndex) => `Diskon ${tierIndex + 1}: ${value}`).join(" | "),
+                        off.freeProdukAktif ? `Free: ${off.freeProdukKeterangan || "-"}` : off.kuponVoucherAktif ? `Kupon: ${off.kuponVoucher || "-"}` : "-",
+                        off.offAlokasiQty ? `${off.offAlokasiQty} PCS` : "-",
+                        off.budgetAktif ? `Rp ${off.budgetNominal.toLocaleString("id-ID")}` : "-",
+                        "-",
+                        off.keterangan || "-",
+                      ][index] : ""}
+                    </td>
+                  </tr>
+                ))}
+              </Fragment>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function OffFakturDetailTable({
   products,
   rows,
@@ -9684,15 +9900,16 @@ function ReviewStep({
               />
             </div>
 
-            {hasOn && onProducts.length > 0 && (
+            {(onProducts.length > 0 || offProducts.length > 0) && (
               <div className="mt-3">
-                <OnFakturDetailTable products={onProducts} rows={onRows} />
-              </div>
-            )}
-
-            {hasOff && offProducts.length > 0 && (
-              <div className="mt-3">
-                <OffFakturDetailTable products={offProducts} rows={offRows} />
+                <CombinedProductDetailTable
+                  products={[...onProducts, ...offProducts].filter(
+                    (product, index, list) =>
+                      list.findIndex((item) => item.plu === product.plu) === index,
+                  )}
+                  onRows={onRows}
+                  offRows={offRows}
+                />
               </div>
             )}
 
@@ -11183,6 +11400,7 @@ const INITIAL_PROGRAM_INFO: ProgramInfoState = {
   ppnRate: "",
   pphAktif: false,
   pphRate: "",
+  kwitansiAtasNama: "",
   redaksi: "",
   caraPembayaran: "",
   periodeAwal: "",
@@ -11363,6 +11581,17 @@ export default function SupplierMemoWizard() {
   ) => setPendapatan((p) => ({ ...p, [f]: v }))
 
   useEffect(() => {
+    const canRenewSewa =
+      jenisMemo === "memo-program" ||
+      (jenisMemo === "pendapatan-lain" && pendapatan.jenis === "event-blbms")
+
+    if (!canRenewSewa && sewaMode === "perpanjang") {
+      setSewaMode("baru")
+      setSelectedSewaId("")
+    }
+  }, [jenisMemo, pendapatan.jenis, sewaMode])
+
+  useEffect(() => {
     if (sewaMode !== "perpanjang" || !selectedSewaId) return
 
     const lease = [...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES].find(
@@ -11401,6 +11630,11 @@ export default function SupplierMemoWizard() {
 
         diskonValue: 5,
 
+        diskonTiers: [
+          { mode, basis, value: 5 },
+          ...emptyDiscountTiers().slice(1),
+        ],
+
         products,
 
         rows: Object.fromEntries(
@@ -11418,6 +11652,11 @@ export default function SupplierMemoWizard() {
         diskonBasis: "cbp",
 
         diskonValue: 5,
+
+        diskonTiers: [
+          { mode: "persen", basis: "cbp", value: 5 },
+          ...emptyDiscountTiers().slice(1),
+        ],
 
         products,
 
@@ -11512,6 +11751,8 @@ export default function SupplierMemoWizard() {
           diskonBasis: group.diskonBasis,
 
           diskonValue: group.diskonValue,
+
+          diskonTiers: group.diskonTiers,
         }
       })
 
@@ -11533,6 +11774,8 @@ export default function SupplierMemoWizard() {
           diskonBasis: group.diskonBasis,
 
           diskonValue: group.diskonValue,
+
+          diskonTiers: group.diskonTiers,
         }
       })
 
@@ -11842,6 +12085,9 @@ export default function SupplierMemoWizard() {
       if (programInfo.pphAktif && !programInfo.pphRate)
         e.pphRate = "Pilih tarif PPh."
 
+      if (!programInfo.kwitansiAtasNama.trim())
+        e.kwitansiAtasNama = "Kwitansi atas nama wajib diisi."
+
       if (!programInfo.redaksi.trim()) e.redaksi = "Redaksi wajib diisi."
 
       if (!programInfo.periodeAwal) e.periodeAwal = "Periode dari wajib diisi."
@@ -11883,6 +12129,14 @@ export default function SupplierMemoWizard() {
           ),
         )
 
+        const freeProdukInvalid = onGroups.some((group) =>
+          group.products.some(
+            (p) =>
+              group.rows[p.plu]?.freeProdukAktif &&
+              !group.rows[p.plu]?.freeProdukKeterangan.trim(),
+          ),
+        )
+
         if (emptyGroup)
           e.onProduk =
             "Pilih minimal satu produk untuk setiap kelompok potongan On Faktur."
@@ -11900,6 +12154,11 @@ export default function SupplierMemoWizard() {
           e.onProduk =
             e.onProduk ||
             "Isi nominal budget untuk produk On Faktur yang memakai budget."
+
+        if (freeProdukInvalid)
+          e.onProduk =
+            e.onProduk ||
+            "Isi keterangan free produk untuk produk On Faktur yang memilih Ya."
       }
 
       if (hasOff) {
