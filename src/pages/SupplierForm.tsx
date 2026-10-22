@@ -47,7 +47,6 @@ const ALL_OUTLETS = [
   "MK8",
   "MINI1",
   "MINI2",
-  "MINI3",
   "MINI4",
 ]
 
@@ -65,7 +64,6 @@ const ALL_MK_OUTLETS = [
   "MK8",
   "MINI1",
   "MINI2",
-  "MINI3",
   "MINI4",
 ]
 
@@ -2688,9 +2686,15 @@ function BarcodeBarangField({
   newValue: string
   onChange: (v: string) => void
 }) {
-  const oldKey = JSON.stringify(oldEntries)
+  const editableEntries = oldEntries.slice(0, 2).map((entry, index) => ({
+    ...entry,
+    konversi: index === 0 ? "CTN" : "BOX",
+  }))
+  const oldKey = JSON.stringify(editableEntries)
 
-  const rows = newValue ? parseBarcodeBarang(newValue) : oldEntries
+  const rows = newValue
+    ? parseBarcodeBarang(newValue).slice(0, 2)
+    : editableEntries
 
   useEffect(() => {
     if (!newValue && oldEntries.length > 0) onChange(oldKey)
@@ -2711,13 +2715,6 @@ function BarcodeBarangField({
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <Label req>Barcode Barang</Label>
-        <button
-          type="button"
-          onClick={() => updateRows([...rows, { barcode: "", konversi: "" }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-        >
-          <Plus className="h-3.5 w-3.5" /> Tambah Barcode
-        </button>
       </div>
       <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
         {rows.map((row, index) => {
@@ -2752,34 +2749,20 @@ function BarcodeBarangField({
                 />
                 <input
                   type="text"
-                  value={displayKonversi(row.konversi)}
-                  onChange={(e) =>
-                    updateRow(index, { konversi: e.target.value })
-                  }
+                  value={row.konversi}
+                  onChange={(e) => updateRow(index, { konversi: e.target.value })}
                   className={inp}
-                  placeholder="KARTON / BOX / PCS"
+                  placeholder="Contoh: CTN / BOX"
                 />
               </div>
-              <button
-                type="button"
-                aria-label="Hapus barcode"
-                onClick={() =>
-                  updateRows(
-                    rows.length > 1
-                      ? rows.filter((_, rowIndex) => rowIndex !== index)
-                      : [{ barcode: "", konversi: "" }],
-                  )
-                }
-                className="inline-flex items-center justify-center rounded-xl border border-red-200 px-3 py-2 text-red-500 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <span className="hidden sm:block" aria-hidden="true" />
             </div>
           )
         })}
-        <p className="text-[10px] text-slate-500">
-          Setiap baris membandingkan barcode lama dengan barcode baru pada
-          konversi yang sama. Tambahkan baris jika ada kemasan lain.
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold leading-relaxed text-amber-800">
+          Barcode terkecil tidak diubah di bagian ini. Jika ingin mengubah
+          barcode terkecil, gunakan menu Listing Produk Baru. Konversi pada
+          dua baris di atas dapat disesuaikan sesuai kebutuhan.
         </p>
       </div>
     </div>
@@ -3270,7 +3253,7 @@ function OutletStep({
               PT Mirota Nayan
             </p>
             <p className="text-[11px] text-slate-500 mt-1">
-              Berlaku untuk MK1, MK2, MK3, MK8
+              Berlaku untuk MK1, MK2, MK3, MK8, MINI4
             </p>
           </button>
           <button
@@ -3286,7 +3269,7 @@ function OutletStep({
               PT Mirota Godean
             </p>
             <p className="text-[11px] text-slate-500 mt-1">
-              Berlaku untuk MK5, MK6, MK7
+              Berlaku untuk MK5, MK6, MK7, MINI1, MINI2
             </p>
           </button>
           <button
