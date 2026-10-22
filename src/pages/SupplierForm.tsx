@@ -2190,6 +2190,63 @@ function SewaModeStep({
   programJenis?: string
 }) {
   const isMemoProgram = memoJenis === "memo-program"
+  const renewalOptions = [...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES].filter(
+    (x) =>
+      (!memoJenis ||
+        (x.memoJenis ||
+          (x.kind === "memo-program" ? "memo-program" : "pendapatan-lain")) ===
+          memoJenis) &&
+      ((!supplierIds.length && !supplierNames.length) ||
+        supplierIds.includes(x.supplierId) ||
+        supplierNames.includes(x.supplier)) &&
+      (!programJenis || memoJenis === "memo-program" || x.kind === programJenis),
+  )
+  const selectedLease = renewalOptions.find((x) => x.id === selectedId)
+  const [renewalSearch, setRenewalSearch] = useState("")
+  const [renewalDropdownOpen, setRenewalDropdownOpen] = useState(false)
+  const renewalDisplay = (lease: any) => {
+    const isEvent = lease.kind === "event-blbms" || lease.eventJenis
+    const mediaName =
+      lease.eventMediaDetails?.map((detail: any) => detail.nama || detail.mediaJenis).join(", ") ||
+      lease.mediaTipe ||
+      lease.eventMediaJenis?.join(", ") ||
+      "-"
+    const outlet =
+      lease.outlet ||
+      (Array.isArray(lease.outlets) ? lease.outlets.join(", ") : "") ||
+      lease.label
+        .split(/—|â€”|\s-\s/)
+        .map((part: string) => part.trim())
+        .filter(Boolean)
+        .pop() ||
+      "-"
+
+    if (isEvent) {
+      const eventType = lease.eventJenis || "Event"
+      return `${eventType} - ${mediaName} - ${outlet} - ${lease.end} - ${lease.total}`
+    }
+
+    const tipe =
+      lease.tipe
+        ?.map((value: string) =>
+          value === "on-faktur"
+            ? "On Faktur"
+            : value === "off-faktur"
+              ? "Off Faktur"
+              : value,
+        )
+        .join("/") || "-"
+
+    return `${tipe} - ${lease.program || lease.label} - ${outlet} - ${lease.total}`
+  }
+
+  useEffect(() => {
+    setRenewalSearch(
+      selectedLease
+        ? renewalDisplay(selectedLease)
+        : "",
+    )
+  }, [selectedId, selectedLease?.label, selectedLease?.end, selectedLease?.total])
 
   return (
     <Card
@@ -2242,17 +2299,78 @@ function SewaModeStep({
               ? "Pilih memo yang akan diperpanjang"
               : "Pilih sewa yang akan diperpanjang"}
           </Label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setRenewalDropdownOpen((open) => {
+                  if (!open) setRenewalSearch("")
+                  return !open
+                })
+              }}
+              className={`${error ? inpErr : inp} flex items-center justify-between gap-3 text-left`}
+            >
+              <span className={selectedLease ? "text-slate-700" : "text-slate-400"}>
+                {selectedLease
+                  ? renewalDisplay(selectedLease)
+                  : isMemoProgram
+                    ? "Pilih data memo..."
+                    : "Pilih data sewa..."}
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+            </button>
+            {renewalDropdownOpen && (
+              <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                <div className="border-b border-slate-100 p-2">
+                  <input
+                    type="search"
+                    autoFocus
+                    value={renewalSearch}
+                    onChange={(e) => setRenewalSearch(e.target.value)}
+                    className={inp}
+                    placeholder="Cari data..."
+                  />
+                </div>
+                <div className="max-h-64 overflow-y-auto p-1">
+                  {renewalOptions
+                    .filter((x) =>
+                      renewalDisplay(x)
+                        .toLowerCase()
+                        .includes(renewalSearch.toLowerCase()),
+                    )
+                    .map((x) => (
+                      <button
+                        type="button"
+                        key={x.id}
+                        onClick={() => {
+                          setSelectedId(x.id)
+                          setRenewalSearch("")
+                          setRenewalDropdownOpen(false)
+                        }}
+                        className="block w-full rounded-lg px-3 py-2 text-left text-xs text-slate-700 hover:bg-amber-50"
+                      >
+                        {renewalDisplay(x)}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className={`${error ? inpErr : inp} cursor-pointer`}
+            className="hidden"
           >
             <option value="">
               {isMemoProgram ? "Pilih data memo..." : "Pilih data sewa..."}
             </option>
-            {[...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES]
+            {renewalOptions
               .filter(
                 (x) =>
+                  (!renewalSearch ||
+                    renewalDisplay(x)
+                      .toLowerCase()
+                      .includes(renewalSearch.toLowerCase())) &&
                   (!memoJenis ||
                     (x.memoJenis ||
                       (x.kind === "memo-program"
@@ -2267,7 +2385,7 @@ function SewaModeStep({
               )
               .map((x) => (
                 <option value={x.id} key={x.id}>
-                  {x.label} · Berakhir {x.end} · {x.total}
+                  {renewalDisplay(x)}
                 </option>
               ))}
           </select>
@@ -2283,6 +2401,31 @@ function SewaModeStep({
               </b>
               . Data {isMemoProgram ? "memo" : "sewa"} lama akan tampil otomatis
               pada langkah berikutnya.
+              {selectedLease?.eventMediaJenis?.length > 0 && (
+                <div className="mt-3 border-t border-amber-200 pt-3">
+                  <p className="font-bold text-amber-900">
+                    Nama Detail Jenis Media
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {(selectedLease.eventMediaDetails?.length
+                      ? selectedLease.eventMediaDetails
+                      : selectedLease.eventMediaJenis.map((media: string) => ({
+                          id: media,
+                          nama: media,
+                          area: "",
+                        }))
+                    ).map((detail: any) => (
+                      <span
+                        key={detail.id}
+                        className="block rounded-lg border border-amber-200 bg-white px-2.5 py-2 font-semibold text-amber-800"
+                      >
+                        {detail.nama || detail.mediaJenis}
+                        {detail.area ? ` · ${detail.area}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
