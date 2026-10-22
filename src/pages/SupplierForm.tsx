@@ -487,8 +487,15 @@ const PENDAPATAN_OPTIONS = [
   {
     key: "event-blbms",
     label: "Event",
-    desc: "Sewa area/kegiatan untuk event outlet",
+    desc: "Sewa media, fasilitas, dan area untuk event outlet",
     icon: Calendar,
+  },
+
+  {
+    key: "sewa",
+    label: "Sewa",
+    desc: "Sewa media, fasilitas, dan area outlet",
+    icon: Store,
   },
 
   {
@@ -784,7 +791,7 @@ function getSteps(
   if (jenisMemo === "pendapatan-lain") {
     steps.push({ key: "pendapatan-jenis", label: "Jenis Program" })
 
-    if (["sewa-visibility", "promosi", "event-blbms"].includes(pendapatanJenis))
+    if (["sewa-visibility", "promosi", "event-blbms", "sewa"].includes(pendapatanJenis))
       steps.push({ key: "sewa-mode", label: "Sewa" })
 
     steps.push({ key: "pendapatan", label: "Detail Program" })
@@ -2166,6 +2173,105 @@ const SIMULATED_LEASES: Array<any> = [
       },
     ],
   },
+  {
+    id: "SEWA-005",
+    memoJenis: "pendapatan-lain",
+    supplierId: "PRI-001",
+    kind: "sewa",
+    label: "Sewa End Gondola Produk Indofood - MK1, MK3",
+    supplier: "PT. Indofood CBP Sukses Makmur",
+    end: "2027-01-15",
+    total: "Rp 7.500.000",
+    program: "Promo End Gondola Awal Tahun",
+    tipe: [],
+    redaksi: "Sewa media dan area outlet.",
+    pembayaran: "Transfer",
+    mediaTipe: "End Gondola",
+    eventJenis: "",
+    eventBentuk: "Media Display Produk",
+    eventMediaJenis: ["End Gondola"],
+    eventMediaDetails: [
+      {
+        id: "old-sewa-5",
+        mediaJenis: "End Gondola",
+        nama: "End Gondola Produk Indofood",
+        area: "MK1, MK3",
+        pos: "",
+        nominal: 7500000,
+        hargaPajak: "exclude",
+        caraPembayaran: "Transfer",
+        tanggalMulai: "2026-12-15",
+        tanggalSelesai: "2027-01-15",
+        durasiBulan: 1,
+      },
+    ],
+  },
+  {
+    id: "SEWA-006",
+    memoJenis: "pendapatan-lain",
+    supplierId: "PRI-002",
+    kind: "sewa",
+    label: "Sewa Wing Gondola Produk Unilever - MK5, MK6",
+    supplier: "PT. Unilever Indonesia Tbk",
+    end: "2027-02-20",
+    total: "Rp 9.250.000",
+    program: "Promo Wing Gondola Februari",
+    tipe: [],
+    redaksi: "Sewa media dan area outlet.",
+    pembayaran: "Potong Tagihan",
+    mediaTipe: "Wing Gondola",
+    eventJenis: "",
+    eventBentuk: "Media Display Produk",
+    eventMediaJenis: ["Wing Gondola"],
+    eventMediaDetails: [
+      {
+        id: "old-sewa-6",
+        mediaJenis: "Wing Gondola",
+        nama: "Wing Gondola Produk Unilever",
+        area: "MK5, MK6",
+        pos: "",
+        nominal: 9250000,
+        hargaPajak: "exclude",
+        caraPembayaran: "Potong Tagihan",
+        tanggalMulai: "2027-01-20",
+        tanggalSelesai: "2027-02-20",
+        durasiBulan: 1,
+      },
+    ],
+  },
+  {
+    id: "SEWA-007",
+    memoJenis: "pendapatan-lain",
+    supplierId: "SUP-004",
+    kind: "sewa",
+    label: "Sewa Shelving Produk Wings - MK2, MK8",
+    supplier: "PT. Wings Surya",
+    end: "2027-03-10",
+    total: "Rp 6.800.000",
+    program: "Promo Shelving Maret",
+    tipe: [],
+    redaksi: "Sewa media dan area outlet.",
+    pembayaran: "Transfer",
+    mediaTipe: "Shelving",
+    eventJenis: "",
+    eventBentuk: "Media Display Produk",
+    eventMediaJenis: ["Shelving"],
+    eventMediaDetails: [
+      {
+        id: "old-sewa-7",
+        mediaJenis: "Shelving",
+        nama: "Shelving Produk Wings",
+        area: "MK2, MK8",
+        pos: "",
+        nominal: 6800000,
+        hargaPajak: "exclude",
+        caraPembayaran: "Transfer",
+        tanggalMulai: "2027-02-10",
+        tanggalSelesai: "2027-03-10",
+        durasiBulan: 1,
+      },
+    ],
+  },
 ]
 
 function SewaModeStep({
@@ -2199,13 +2305,18 @@ function SewaModeStep({
       ((!supplierIds.length && !supplierNames.length) ||
         supplierIds.includes(x.supplierId) ||
         supplierNames.includes(x.supplier)) &&
-      (!programJenis || memoJenis === "memo-program" || x.kind === programJenis),
+      (!programJenis ||
+        memoJenis === "memo-program" ||
+        (programJenis === "sewa"
+          ? ["sewa-visibility", "sewa"].includes(x.kind)
+          : x.kind === programJenis)),
   )
   const selectedLease = renewalOptions.find((x) => x.id === selectedId)
   const [renewalSearch, setRenewalSearch] = useState("")
   const [renewalDropdownOpen, setRenewalDropdownOpen] = useState(false)
   const renewalDisplay = (lease: any) => {
     const isEvent = lease.kind === "event-blbms" || lease.eventJenis
+    const isSewa = programJenis === "sewa"
     const mediaName =
       lease.eventMediaDetails?.map((detail: any) => detail.nama || detail.mediaJenis).join(", ") ||
       lease.mediaTipe ||
@@ -2220,6 +2331,10 @@ function SewaModeStep({
         .filter(Boolean)
         .pop() ||
       "-"
+
+    if (isSewa) {
+      return `${lease.program || lease.label} - ${mediaName} - ${outlet} - ${lease.end} - ${lease.total}`
+    }
 
     if (isEvent) {
       const eventType = lease.eventJenis || "Event"
@@ -8336,9 +8451,9 @@ function PendapatanStep({
             </div>
           )}
 
-          {state.jenis === "event-blbms" && (
+          {(state.jenis === "event-blbms" || state.jenis === "sewa") && (
             <div className="border-t border-slate-100 pt-5 space-y-4">
-              <div>
+              {state.jenis === "event-blbms" && <div>
                 <div className="flex items-center justify-between gap-3">
                   <Label req>Nama Event</Label>
                   {state.eventJenis && (
@@ -8360,7 +8475,7 @@ function PendapatanStep({
                   onChange={(v) => setField("eventJenis", v)}
                 />
                 <FieldError message={errors.eventJenis} />
-              </div>
+              </div>}
               <div>
                 <Label req>Kategori Media</Label>
                 <SingleChoiceChips
@@ -8921,11 +9036,15 @@ function PendapatanStep({
                     ppnRate: errors.eventPpnRate,
                     pphRate: errors.eventPphRate,
                   }}
-                  pphOptions={[
-                    "PPh Pasal 23 - 15%",
-                    "PPh Pasal 23 - 2%",
-                    "PPh Final - 10%",
-                  ]}
+                  pphOptions={
+                    state.jenis === "sewa"
+                      ? ["PPh Pasal 23 - 2%", "PPh Final - 10%"]
+                      : [
+                          "PPh Pasal 23 - 15%",
+                          "PPh Pasal 23 - 2%",
+                          "PPh Final - 10%",
+                        ]
+                  }
                 />
               </div>
             </div>
@@ -9934,8 +10053,8 @@ function ReviewStep({
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
               {pendapatan.jenis === "sewa-visibility"
                 ? "Detail Sewa / Visibility"
-                : pendapatan.jenis === "event-blbms"
-                  ? "Detail Event / BLBMS"
+                : pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa"
+                  ? pendapatan.jenis === "sewa" ? "Detail Sewa" : "Detail Event / BLBMS"
                   : "Detail Lain-lain"}
             </p>
             <div className="rounded-xl border border-slate-200 p-4 divide-y divide-slate-100">
@@ -10142,9 +10261,11 @@ function ReviewStep({
                   />
                 </>
               )}
-              {pendapatan.jenis === "event-blbms" && (
+              {(pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa") && (
                 <>
-                  <Row label="Nama Event" value={pendapatan.eventJenis} />
+                  {pendapatan.jenis === "event-blbms" && (
+                    <Row label="Nama Event" value={pendapatan.eventJenis} />
+                  )}
                   <Row label="Kategori Media" value={pendapatan.eventBentuk} />
                   <Row
                     label="Jenis Media"
@@ -10221,7 +10342,7 @@ function ReviewStep({
                 </>
               )}
             </div>
-            {pendapatan.jenis === "event-blbms" &&
+            {(pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa") &&
               pendapatan.eventBentuk === "Media Display Produk" &&
               pendapatan.eventMediaJenis.length > 0 && (
                 <div className="mt-3">
@@ -10772,8 +10893,8 @@ function SuccessScreen({
         ? "Detail Program"
         : pendapatan.jenis === "sewa-visibility"
           ? "Detail Sewa / Visibility"
-          : pendapatan.jenis === "event-blbms"
-            ? "Detail Event"
+          : pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa"
+            ? pendapatan.jenis === "sewa" ? "Detail Sewa" : "Detail Event"
             : "Detail Lain-lain"
 
   return (
@@ -10997,7 +11118,7 @@ function SuccessScreen({
                           : "Nama Program"
                       }
                       value={
-                        pendapatan.jenis === "event-blbms"
+                          pendapatan.jenis === "event-blbms"
                           ? pendapatan.eventJenis
                           : pendapatan.namaProgram
                       }
@@ -11143,7 +11264,7 @@ function SuccessScreen({
                         />
                       </div>
                     )}
-                    {pendapatan.jenis === "event-blbms" && (
+                    {(pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa") && (
                       <div className="memo-detail-card rounded border border-slate-200 p-3">
                         <PrintInfoRow
                           label="Kategori Media"
@@ -11583,7 +11704,8 @@ export default function SupplierMemoWizard() {
   useEffect(() => {
     const canRenewSewa =
       jenisMemo === "memo-program" ||
-      (jenisMemo === "pendapatan-lain" && pendapatan.jenis === "event-blbms")
+      (jenisMemo === "pendapatan-lain" &&
+        ["event-blbms", "sewa"].includes(pendapatan.jenis))
 
     if (!canRenewSewa && sewaMode === "perpanjang") {
       setSewaMode("baru")
@@ -12246,7 +12368,10 @@ export default function SupplierMemoWizard() {
 
       // the period and duration are changed in this step.
 
-      if (renewingPendapatan && pendapatan.jenis === "event-blbms") {
+      if (
+        renewingPendapatan &&
+        (pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa")
+      ) {
         if (pendapatan.eventBentuk === "Media Display Produk") {
           const hasPeriodAndDuration =
             pendapatan.eventMediaDetails.length > 0 &&
@@ -12269,7 +12394,11 @@ export default function SupplierMemoWizard() {
         return e
       }
 
-      if (pendapatan.jenis !== "event-blbms" && !pendapatan.namaProgram.trim())
+      if (
+        pendapatan.jenis !== "event-blbms" &&
+        pendapatan.jenis !== "sewa" &&
+        !pendapatan.namaProgram.trim()
+      )
         e.namaProgram = "Nama program wajib diisi."
 
       if (!pendapatan.jenis) e.jenis = "Pilih jenis program pendapatan."
@@ -12397,8 +12526,9 @@ export default function SupplierMemoWizard() {
           e.listingPphRate = "Pilih tarif PPh."
       }
 
-      if (pendapatan.jenis === "event-blbms") {
-        if (!pendapatan.eventJenis) e.eventJenis = "Pilih nama event."
+      if (pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa") {
+        if (pendapatan.jenis === "event-blbms" && !pendapatan.eventJenis)
+          e.eventJenis = "Pilih nama event."
 
         if (!pendapatan.eventBentuk) e.eventBentuk = "Pilih kategori media."
 
