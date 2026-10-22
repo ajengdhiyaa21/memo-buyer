@@ -531,7 +531,6 @@ const SEWA_VISIBILITY_JENIS = [
   "COC",
   "Dancing Up",
   "Floor",
-  "Dumbin",
   "Backwall Kosmetik",
   "Clip Strip",
   "Dumbin/Mini Wings",
@@ -619,7 +618,7 @@ const EVENT_MEDIA_AREA_OPTIONS = [
   "Area Body Care",
   "Area Home Care",
   "Area Alat Rumah Tangga",
-  "Area Depthstore",
+  "Area Dept Store",
 ]
 
 const SATUAN_OPTIONS = [
@@ -8376,38 +8375,14 @@ function PendapatanStep({
                         <p className="text-[13px] font-bold text-slate-800">
                           {media}
                         </p>
-                        {!requiresEventArea(media) && (
-                          <button
-                            type="button"
-                            onClick={() => addEventMediaDetail(media)}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            Tambah Detail
-                          </button>
-                        )}
                       </div>
                       {requiresEventArea(media) && (
-                        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                          <Label req>Area Penempatan</Label>
-                          <MultiChoiceChips
-                            options={EVENT_MEDIA_AREA_OPTIONS.map((area) => ({
-                              key: area,
-                              label: area,
-                            }))}
-                            value={eventSelectedAreas(media)}
-                            onChange={(areas) =>
-                              setEventMediaAreas(media, areas)
-                            }
-                          />
-                          <p className="mt-2 text-[11px] text-amber-700">
-                            Pilih area dulu, lalu isi detail media di dalam
-                            kelompok area tersebut.
-                          </p>
-                        </div>
+                        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+                          Klik “Tambah Detail” untuk menambahkan data media.
+                        </p>
                       )}
                       {(requiresEventArea(media)
-                        ? eventSelectedAreas(media)
+                        ? ["", ...eventSelectedAreas(media)]
                         : [""]
                       ).map((area) => {
                         const rows = state.eventMediaDetails.filter(
@@ -8421,38 +8396,22 @@ function PendapatanStep({
                         return (
                           <div
                             key={`${media}-${area || "detail"}`}
-                            className={
-                              requiresEventArea(media)
-                                ? "rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3"
-                                : "space-y-3"
-                            }
+                            className="space-y-3"
                           >
-                            {requiresEventArea(media) && (
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-[12px] font-black uppercase tracking-wider text-slate-600">
-                                  {area}
-                                </p>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    addEventMediaDetail(media, area)
-                                  }
-                                  className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white"
-                                >
-                                  <Plus className="h-3.5 w-3.5" />
-                                  Tambah Detail
-                                </button>
-                              </div>
-                            )}
-                            {rows.map((row) => (
+                            {rows.map((row) => {
+                              const detailNumber =
+                                state.eventMediaDetails.filter(
+                                  (detail) => detail.mediaJenis === media,
+                                ).findIndex((detail) => detail.id === row.id) + 1
+
+                              return (
                               <div
                                 key={row.id}
                                 className="rounded-xl border border-slate-200 bg-white p-3 space-y-3"
                               >
                                 <div className="flex justify-between gap-3">
                                   <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                                    Detail {media}
-                                    {area ? ` - ${area}` : ""}
+                                    Detail {media} {detailNumber}
                                   </p>
                                   <button
                                     type="button"
@@ -8464,6 +8423,27 @@ function PendapatanStep({
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
+                                {requiresEventArea(media) && (
+                                  <div>
+                                    <Label>Area Penempatan</Label>
+                                    <select
+                                      value={row.area || ""}
+                                      onChange={(e) =>
+                                        updateEventMediaDetail(row.id, {
+                                          area: e.target.value,
+                                        })
+                                      }
+                                      className={inp}
+                                    >
+                                      <option value="">Pilih area penempatan</option>
+                                      {EVENT_MEDIA_AREA_OPTIONS.map((option) => (
+                                        <option key={option} value={option}>
+                                          {option}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
                                 <div>
                                   <Label req>Nama Detail Media</Label>
                                   <input
@@ -8651,19 +8631,19 @@ function PendapatanStep({
                                   </p>
                                 </div>
                               </div>
-                            ))}
-                            {rows.length === 0 && !requiresEventArea(media) && (
-                              <button
-                                type="button"
-                                onClick={() => addEventMediaDetail(media)}
-                                className="w-full rounded-xl border border-dashed border-amber-300 bg-amber-50 py-3 text-[12px] font-bold text-amber-700"
-                              >
-                                Tambah detail {media}
-                              </button>
-                            )}
+                              )
+                            })}
                           </div>
                         )
                       })}
+                      <button
+                        type="button"
+                        onClick={() => addEventMediaDetail(media)}
+                        className="w-full rounded-xl border border-dashed border-amber-300 bg-amber-50 py-3 text-[12px] font-bold text-amber-700 hover:bg-amber-100"
+                      >
+                        <Plus className="mr-1 inline h-3.5 w-3.5" />
+                        Tambah Detail {media}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -8691,6 +8671,11 @@ function PendapatanStep({
                     ppnRate: errors.eventPpnRate,
                     pphRate: errors.eventPphRate,
                   }}
+                  pphOptions={[
+                    "PPh Pasal 23 - 15%",
+                    "PPh Pasal 23 - 2%",
+                    "PPh Final - 10%",
+                  ]}
                 />
               </div>
             </div>
