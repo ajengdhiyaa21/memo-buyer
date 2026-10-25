@@ -1,342 +1,71 @@
 import { useEffect, useMemo, useState } from "react"
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Search,
-} from "lucide-react"
+import { Check, Edit3, History, KeyRound, Search, X } from "lucide-react"
 import { useNavigate } from "react-router"
-import {
-  demoRows,
-  Detail,
-  normalizeMemoType,
-  type Memo,
-} from "./MemoReportGrouped"
-import { FilterCard } from "../components/FilterCard"
+import { createEditedMemo, fieldValue, getCurrentRole, readMemos, seedDemoMemos, updateMemo, type EditedField, type WorkflowMemo } from "../lib/memoStore"
 
-const API = "http://localhost:3001"
-const DEMO_MODE = true
-const memoLabels: Record<string, string> = {
-  "memo-lain-lain": "Memo Lain-lain",
-  "memo-program": "Memo Program",
-  "pendapatan-lain": "Memo Lain-lain",
-  "pendapatan-lain-lain": "Memo Lain-lain",
-  "Pendapatan Lain-lain": "Memo Lain-lain",
-  "Pendapatan Lain Lain": "Memo Lain-lain",
-  "pendapatan lain-lain": "Memo Lain-lain",
-  "pendapatan lain lain": "Memo Lain-lain",
-  "update-informasi": "Update Informasi",
+const kindLabel: Record<string, string> = { "memo-program": "Memo Program", "pendapatan-lain": "Memo Lain-lain", "update-informasi": "Update Informasi", "memo-lain-lain": "Memo Lain-lain" }
+const editable = [{ key: "outlets", label: "Outlet" }, { key: "periodeAwal", label: "Periode mulai" }, { key: "periodeAkhir", label: "Periode akhir" }, { key: "ringkasan", label: "Ringkasan" }]
+const statusStyle: Record<string, string> = { Draft: "bg-amber-50 text-amber-700 border-amber-200", Approved: "bg-emerald-50 text-emerald-700 border-emerald-200", Rejected: "bg-red-50 text-red-700 border-red-200" }
+const date = (v?: string) => v ? v.split("-").reverse().join("/") : "-"
+
+function Status({ value }: { value: string }) { return <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusStyle[value] || statusStyle.Draft}`}>{value}</span> }
+function identities(memo: WorkflowMemo) { return [{ label: "ID Supplier", value: memo.supplierId || "-" }, { label: "Nama Supplier", value: memo.supplierNama }, { label: "PIC", value: memo.picName || "-" }, { label: "Telepon PIC", value: memo.picPhone || "-" }] }
+
+const sectionLabels: Record<string, string> = { identity: "Identitas Supplier", updateInfo: "Update Informasi", programInfo: "Informasi Program", onProducts: "Produk On Faktur", onRows: "Detail On Faktur", offProducts: "Produk Off Faktur", offRows: "Detail Off Faktur", budgetLink: "Budget Program", pendapatan: "Program / Pendapatan", catatan: "Catatan Supplier", signature: "Tanda Tangan" }
+const prettyKey = (key: string) => key.replace(/([A-Z])/g, " $1").replace(/[_.-]/g, " ").replace(/^./, (v) => v.toUpperCase())
+const flattenSnapshot = (value: unknown, path = ""): Array<{ key: string; label: string; value: string }> => { if (value == null || value === "" || value === false) return []; if (Array.isArray(value)) return value.flatMap((item, index) => flattenSnapshot(item, `${path}[${index + 1}]`)); if (typeof value === "object") return Object.entries(value as Record<string, unknown>).flatMap(([key, item]) => flattenSnapshot(item, path ? `${path}.${key}` : key)); return [{ key: path, label: prettyKey(path.split(".").at(-1)?.replace(/\[\d+\]/, "") || path), value: String(value) }] }
+function MemoSnapshot({ memo }: { memo: WorkflowMemo }) { const data = (memo.data || {}) as Record<string, unknown>; const sections = Object.entries(data).filter(([key, value]) => key !== "outlets" && key !== "jenisMemo" && value != null && value !== "").map(([key, value]) => [key, flattenSnapshot(value, key)] as const).filter(([, fields]) => fields.length); return <section className="space-y-4"><div><h2 className="text-lg font-black text-slate-900">Seluruh Data Input Supplier</h2><p className="mt-1 text-sm text-muted-foreground">Snapshot asli dari form supplier. Data identitas tetap terkunci; field lain dapat diolah sebelum approval.</p></div>{sections.map(([key, fields]) => <article className="overflow-hidden rounded-xl border border-border bg-card shadow-sm" key={key}><div className="border-b bg-slate-50 px-5 py-3"><h3 className="text-sm font-black text-slate-800">{sectionLabels[key] || prettyKey(key)}</h3></div><div className="grid gap-x-8 sm:grid-cols-2">{fields.map((field, index) => <div className="border-b border-slate-100 px-5 py-3" key={`${field.key}-${index}`}><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{field.label}</p><p className="mt-1 whitespace-pre-wrap break-words text-sm font-medium text-slate-800">{field.value || "-"}</p></div>)}</div></article>)}</section> }
+function setNestedValue(source: Record<string, any>, path: string, value: unknown) { const next = structuredClone(source); const parts = path.replace(/\[(\d+)\]/g, ".$1").split("."); let cursor = next; parts.forEach((part, index) => { if (index === parts.length - 1) cursor[part] = value; else { if (cursor[part] == null) cursor[part] = /^\d+$/.test(parts[index + 1]) ? [] : {}; cursor = cursor[part] } }); return next }
+function FriendlyDataEditor({ data, onChange, disabled }: { data: Record<string, any>; onChange: (data: Record<string, any>) => void; disabled: boolean }) {
+  const sections = Object.entries(data).filter(([key]) => key !== "identity" && key !== "outlets" && key !== "jenisMemo").map(([key, value]) => [key, flattenSnapshot(value, key)] as const).filter(([, fields]) => fields.length)
+  const [active, setActive] = useState(sections[0]?.[0] || "")
+  return <div className="mt-5 rounded-xl border border-border bg-slate-50 p-3"><div className="mb-3 px-2"><h3 className="text-sm font-black text-slate-800">Data transaksi supplier</h3><p className="mt-1 text-xs text-muted-foreground">Pilih bagian yang ingin diperiksa atau diubah.</p></div><div className="grid gap-3 lg:grid-cols-[220px_1fr]"><nav className="space-y-1">{sections.map(([section, fields]) => <button type="button" key={section} onClick={() => setActive(section)} className={`w-full rounded-xl px-3 py-3 text-left text-xs font-bold transition ${active === section ? "bg-card text-amber-700 shadow-sm ring-1 ring-amber-200" : "text-muted-foreground hover:bg-card"}`}>{sectionLabels[section] || prettyKey(section)}<span className="mt-1 block text-[10px] font-normal text-slate-400">{fields.length} field</span></button>)}</nav><div className="rounded-xl border border-border bg-card p-4">{sections.filter(([section]) => section === active).map(([section, fields]) => <div key={section}><div className="mb-4 border-b border-slate-100 pb-3"><h4 className="font-black text-slate-800">{sectionLabels[section] || prettyKey(section)}</h4><p className="mt-1 text-xs text-slate-400">Data yang berasal dari pengajuan supplier.</p></div><div className="grid gap-4 sm:grid-cols-2">{fields.map((field) => { const raw = field.value; const isBoolean = raw === "true" || raw === "false"; const isNumber = /^-?\d+(\.\d+)?$/.test(raw) && /nominal|harga|qty|jumlah|durasi|diskon|value|alokasi|target/i.test(field.label); return <label className="text-xs font-bold text-slate-600" key={field.key}>{field.label}{isBoolean ? <span className="mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 font-normal"><input type="checkbox" checked={raw === "true"} disabled={disabled} onChange={(event) => onChange(setNestedValue(data, field.key, event.target.checked))}/>{raw === "true" ? "Aktif" : "Tidak aktif"}</span> : <input type={isNumber ? "number" : "text"} disabled={disabled} value={raw} onChange={(event) => onChange(setNestedValue(data, field.key, isNumber ? Number(event.target.value) : event.target.value))} className="mt-1 w-full rounded-lg border border-border px-3 py-2 font-normal outline-none focus:border-amber-400 disabled:bg-slate-50" />}</label> })}</div></div>)}</div></div></div>
 }
-const memoTypeOptions = [
-  { key: "memo-program", label: "Memo Program" },
-  { key: "memo-lain-lain", label: "Memo Lain-lain" },
-  { key: "update-informasi", label: "Update Informasi" },
-]
-const programLabels: Record<string, string> = {
-  "event-blbms": "Event",
-  "reward-insentif": "Reward/Insentif",
-  listing: "Listing",
-  "sewa-visibility": "Sewa / Visibility",
-  promosi: "Promosi",
-  "on-faktur": "On Faktur",
-  "off-faktur": "Off Faktur",
-}
-const programOptions = [
-  { key: "on-faktur", label: "On Faktur" },
-  { key: "off-faktur", label: "Off Faktur" },
-  { key: "event", label: "Event" },
-  { key: "reward-insentif", label: "Reward/Insentif" },
-  { key: "listing", label: "Listing" },
-]
-
-const dateText = (value?: string) =>
-  value ? value.split("-").reverse().join("/") : "-"
-
-function readSavedMemos(): Memo[] {
-  try {
-    const saved = JSON.parse(
-      localStorage.getItem("supplier-memo-history") || "[]",
-    )
-    return Array.isArray(saved) ? saved as Memo[] : []
-  } catch {
-    return []
-  }
-}
-
-function programType(memo: Memo) {
+function FinanceEditor({ data, onChange, disabled }: { data: Record<string, any>; onChange: (data: Record<string, any>) => void; disabled: boolean }) { const fields = flattenSnapshot(data).filter((field) => /nominal|harga|ppn|pph|pajak|pembayaran|tempo|target|diskon/i.test(field.key) && !field.key.startsWith("identity")); return <section className="mt-5 rounded-xl border border-amber-200 bg-amber-50/40 p-4"><div><h3 className="text-sm font-black text-slate-800">Nilai, Pajak & Pembayaran</h3><p className="mt-1 text-xs text-slate-500">Periksa dan ubah nilai transaksi sebelum menyimpan versi memo.</p></div><div className="mt-4 grid gap-4 sm:grid-cols-2">{fields.map((field) => { const isBoolean = field.value === "true" || field.value === "false"; const isNumber = /^-?\d+(\.\d+)?$/.test(field.value) && !/rate|pajak/i.test(field.key); return <label className="text-xs font-bold text-slate-600" key={field.key}>{field.label}{isBoolean ? <span className="mt-1 flex items-center gap-2 rounded-lg border bg-white px-3 py-2 font-normal"><input type="checkbox" checked={field.value === "true"} disabled={disabled} onChange={(event) => onChange(setNestedValue(data, field.key, event.target.checked))}/>{field.value === "true" ? "Aktif" : "Tidak aktif"}</span> : <input type={isNumber ? "number" : "text"} disabled={disabled} value={field.value} onChange={(event) => onChange(setNestedValue(data, field.key, isNumber ? Number(event.target.value) : event.target.value))} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-normal outline-none focus:border-amber-500"/>}</label> })}</div></section> }
+function FinanceSummary({ memo }: { memo: WorkflowMemo }) {
   const data = (memo.data || {}) as Record<string, any>
-  const income = data.pendapatan || {}
   const program = data.programInfo || {}
-  const values = memo.jenisMemo === "memo-program" ? program.tipe : income.jenis
-  if (Array.isArray(values)) {
-    return (
-      values.map((value) => programLabels[value] || value).join(", ") || "-"
-    )
-  }
-  return programLabels[values] || values || "-"
+  const income = data.pendapatan || {}
+  const values: number[] = []
+  const collect = (value: any, key = "") => { if (value && typeof value === "object") Object.entries(value).forEach(([child, item]) => collect(item, child)); else if (typeof value === "number" && /nominal|budget/i.test(key) && value > 0) values.push(value) }
+  collect(data)
+  const dasar = values.reduce((sum, value) => sum + value, 0)
+  const ppnRate = Number(String(program.ppnRate || income.sewaPpnRate || income.rewardPpnRate || income.promosiPpnRate || income.eventPpnRate || "").replace(/[^0-9.]/g, "")) || 0
+  const pphRate = Number(String(program.pphRate || income.sewaPphRate || income.rewardPphRate || income.promosiPphRate || income.eventPphRate || "").replace(/[^0-9.]/g, "")) || 0
+  const ppn = program.ppnAktif || income.sewaPpnAktif || income.rewardPpnAktif || income.promosiPpnAktif || income.eventPpnAktif ? dasar * ppnRate / 100 : 0
+  const pph = program.pphAktif || income.sewaPphAktif || income.rewardPphAktif || income.promosiPphAktif || income.eventPphAktif ? dasar * pphRate / 100 : 0
+  const total = dasar + ppn - pph
+  const fmt = (value: number) => `Rp ${value.toLocaleString("id-ID")}`
+  return <section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="font-black">Ringkasan Nilai & Pajak</h2><div className="mt-4 grid gap-3 sm:grid-cols-4"><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase text-slate-400">Nilai Dasar</p><p className="mt-1 font-bold">{fmt(dasar)}</p></div><div className="rounded-xl bg-violet-50 p-3"><p className="text-[10px] font-bold uppercase text-violet-500">PPN {ppnRate ? `${ppnRate}%` : "Tidak aktif"}</p><p className="mt-1 font-bold text-violet-700">+ {fmt(ppn)}</p></div><div className="rounded-xl bg-blue-50 p-3"><p className="text-[10px] font-bold uppercase text-blue-500">PPh {pphRate ? `${pphRate}%` : "Tidak aktif"}</p><p className="mt-1 font-bold text-blue-700">- {fmt(pph)}</p></div><div className="rounded-xl bg-emerald-50 p-3"><p className="text-[10px] font-bold uppercase text-emerald-500">Total Setelah Pajak</p><p className="mt-1 font-black text-emerald-700">{fmt(total)}</p></div></div><p className="mt-3 text-[11px] text-slate-400">Perhitungan berdasarkan nominal/budget yang tersimpan pada data memo supplier.</p></section>
+}
+function LegacyDetail({ memo, onBack, onSaved }: { memo: WorkflowMemo; onBack: () => void; onSaved: () => void }) {
+  const role = getCurrentRole() || "Pembelian"; const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(editable.map((f) => [f.key, fieldValue(memo, f.key)]))); const [dataDraft, setDataDraft] = useState<Record<string, any>>(() => structuredClone((memo.data || {}) as Record<string, any>)); const [dataError, setDataError] = useState(""); const [note, setNote] = useState(""); const [rejectOpen, setRejectOpen] = useState(false); const [reason, setReason] = useState(""); const [tab, setTab] = useState<"change" | "history">("change"); const [message, setMessage] = useState(""); const canEdit = memo.status === "Draft"
+  const changes: EditedField[] = editable.flatMap((f) => values[f.key] !== fieldValue(memo, f.key) ? [{ key: f.key, label: f.label, before: fieldValue(memo, f.key), after: values[f.key] }] : [])
+  const save = () => { let parsed: Record<string, unknown> = dataDraft; try { if (JSON.stringify(parsed.identity || null) !== JSON.stringify((memo.data as any)?.identity || null)) { setDataError("Identitas supplier tidak boleh diubah."); return } } catch { setDataError("Data belum valid. Periksa kembali nilai yang diisi."); return } setDataError(""); const dataChanged = JSON.stringify(parsed) !== JSON.stringify(memo.data || {}); const allChanges = dataChanged ? [...changes, { key: "data", label: "Data detail supplier", before: "Snapshot asli SupplierForm", after: "Snapshot hasil olahan Pembelian" }] : changes; if (!allChanges.length) { setMessage("Tidak ada perubahan untuk disimpan."); return } createEditedMemo(memo, { ...values, data: parsed, outlets: values.outlets.split(",").map((v) => v.trim()).filter(Boolean) }, { at: new Date().toISOString(), by: role === "Pembelian" ? "Buyer Pembelian" : role, role, note, fields: allChanges }); setMessage("Perubahan berhasil disimpan sebagai versi baru."); onSaved() }
+  const approve = () => { if (changes.length) { save(); return } updateMemo(memo.id, (current) => ({ ...current, status: "Approved", approvedAt: new Date().toISOString(), approvedBy: role })); onSaved() }
+  const reject = () => { if (!reason.trim()) return; updateMemo(memo.id, (current) => ({ ...current, status: "Rejected", rejectedAt: new Date().toISOString(), rejectedBy: role, rejectReason: reason.trim() })); setRejectOpen(false); onSaved() }
+  return <div className="space-y-5"><button onClick={onBack} className="text-sm font-bold text-amber-700">← Kembali ke Daftar Memo</button><header className="rounded-xl bg-gradient-to-r from-slate-900 to-amber-900 p-6 text-white"><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Detail Memo</p><div className="mt-1 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-black">{memo.nomorMemo}</h1><p className="text-sm text-slate-300">{memo.supplierNama} · {kindLabel[memo.jenisMemo] || memo.jenisMemo}</p></div><Status value={memo.status}/></div></header><section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="mb-3 font-black">Identitas Supplier <KeyRound className="ml-1 inline h-4 w-4 text-slate-400"/></h2><div className="grid gap-3 sm:grid-cols-4">{identities(memo).map((item) => <div className="rounded-xl bg-slate-50 p-3" key={item.label}><p className="text-[10px] font-bold uppercase text-slate-400">{item.label}</p><p className="mt-1 text-sm font-semibold text-slate-700">{item.value}</p></div>)}</div></section><section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="mb-4 font-black">Data Memo {canEdit && <span className="text-xs font-normal text-slate-400">(field identitas terkunci)</span>}</h2><div className="grid gap-4 sm:grid-cols-2">{editable.map((f) => <label key={f.key} className={`text-sm font-semibold ${changes.some((c) => c.key === f.key) ? "rounded-xl bg-amber-50 p-2" : ""}`}>{f.label}<input disabled={!canEdit} value={values[f.key]} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} className="mt-1 w-full rounded-xl border border-border px-3 py-2.5 font-normal outline-none focus:border-amber-400" /></label>)}</div>{canEdit && <FriendlyDataEditor data={dataDraft} onChange={setDataDraft} disabled={!canEdit} />}{dataError && <p className="mt-2 text-sm text-red-600">{dataError}</p>}{canEdit && <label className="mt-4 block text-sm font-semibold">Catatan edit (opsional)<textarea value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 min-h-20 w-full rounded-xl border border-border p-3 font-normal" /></label>}{message && <p className="mt-3 text-sm text-emerald-700">{message}</p>}</section><section className="rounded-xl border border-border bg-card shadow-sm"><div className="flex border-b"><button onClick={() => setTab("change")} className={`px-5 py-3 text-sm font-bold ${tab === "change" ? "border-b-2 border-amber-500 text-amber-700" : "text-muted-foreground"}`}>Yang diedit ({memo.editedFields.length})</button><button onClick={() => setTab("history")} className={`px-5 py-3 text-sm font-bold ${tab === "history" ? "border-b-2 border-amber-500 text-amber-700" : "text-muted-foreground"}`}>Riwayat Edit</button></div><div className="p-5">{tab === "change" ? <div className="space-y-2">{memo.editedFields.length ? memo.editedFields.map((f) => <div className="rounded-xl bg-amber-50 p-3 text-sm" key={f.key}><b>{f.label}</b><p className="mt-1 text-slate-600">{f.before || "-"} → <strong>{f.after || "-"}</strong></p></div>) : <p className="text-sm text-muted-foreground">Belum ada perubahan.</p>}</div> : <div className="space-y-4">{memo.editHistory.length ? memo.editHistory.map((h, i) => <div className="relative border-l-2 border-amber-200 pl-4" key={`${h.at}-${i}`}><p className="text-xs font-bold text-slate-700">{h.by} · {h.role}</p><p className="text-xs text-slate-400">{new Date(h.at).toLocaleString("id-ID")}</p><p className="mt-1 text-sm text-slate-600">{h.fields.length} field diubah{h.note ? ` · ${h.note}` : ""}</p></div>) : <p className="text-sm text-muted-foreground">Belum ada riwayat edit.</p>}</div>}</div></section><MemoSnapshot memo={memo}/><FinanceSummary memo={memo}/>{canEdit && <div className="flex flex-wrap justify-end gap-2"><button onClick={save} className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold text-slate-700">Simpan Perubahan</button><button onClick={approve} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white"><Check size={16}/> Approve</button><button onClick={() => setRejectOpen(true)} className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white">Reject</button></div>}{rejectOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"><div className="w-full max-w-md rounded-xl bg-card p-5 shadow-xl"><div className="flex items-center justify-between"><h2 className="font-black">Alasan Penolakan</h2><button onClick={() => setRejectOpen(false)}><X size={18}/></button></div><textarea autoFocus value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Wajib diisi" className="mt-4 min-h-28 w-full rounded-xl border p-3"/><div className="mt-4 flex justify-end gap-2"><button onClick={() => setRejectOpen(false)} className="rounded-xl border px-4 py-2 text-sm font-bold">Batal</button><button onClick={reject} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white">Tolak Memo</button></div></div></div>}</div>
 }
 
-export default function SupplierMemoList() {
-  const navigate = useNavigate()
-  const role = localStorage.getItem("bm-role") || "Akuntansi"
-  const [rows, setRows] = useState<Memo[]>([])
-  const [search, setSearch] = useState("")
-  const [jenis, setJenis] = useState("")
-  const [program, setProgram] = useState("")
-  const [from, setFrom] = useState("")
-  const [to, setTo] = useState("")
-  const [pageSize, setPageSize] = useState(30)
-  const [page, setPage] = useState(1)
-  const [selected, setSelected] = useState<Memo | null>(null)
-
-  const load = () => {
-    const saved = readSavedMemos()
-    if (DEMO_MODE) {
-      setRows([...saved, ...demoRows])
-      return
-    }
-    fetch(`${API}/api/memo`)
-      .then((response) => response.json())
-      .then((data) => setRows([...saved, ...(Array.isArray(data) ? data : [])]))
-      .catch(() => setRows([...saved, ...demoRows]))
-  }
-
-  useEffect(() => {
-    if (!["Akuntansi", "Pembelian"].includes(role)) {
-      navigate("/login")
-      return
-    }
-    load()
-  }, [role])
-
-  const filtered = useMemo(
-    () =>
-      rows.filter((memo) => {
-        const haystack =
-          `${memo.nomorMemo} ${memo.supplierNama} ${memo.ringkasan}`.toLowerCase()
-        const start = memo.periodeAwal || ""
-        return (
-          (!search || haystack.includes(search.toLowerCase())) &&
-          (!jenis || normalizeMemoType(memo.jenisMemo) === jenis) &&
-          (!program || programType(memo) === program) &&
-          (!from || start >= from) &&
-          (!to || start <= to)
-        )
-      }),
-    [rows, search, jenis, program, from, to],
-  )
-  const pageCount =
-    pageSize === 0 ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize))
-  const visibleRows =
-    pageSize === 0
-      ? filtered
-      : filtered.slice((page - 1) * pageSize, page * pageSize)
-
-  useEffect(() => {
-    setPage(1)
-  }, [search, jenis, program, from, to, pageSize])
-
-  useEffect(() => {
-    if (page > pageCount) setPage(pageCount)
-  }, [page, pageCount])
-
-  if (selected) {
-    return <Detail memo={selected} back={() => setSelected(null)} />
-  }
-
-  return (
-    <main className="memo-report-page min-h-full space-y-5 bg-[#f6f8fb] p-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">
-            Data Supplier
-          </p>
-          <h1 className="mt-1 text-2xl font-black text-slate-900">
-            Daftar Memo Supplier
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Seluruh memo yang telah diinput oleh supplier untuk {role}.
-          </p>
-        </div>
-      </header>
-
-      <FilterCard variant="list">
-          <div className="filter-card__search flex min-w-[260px] flex-[1_1_320px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 focus-within:border-indigo-300 focus-within:bg-white">
-            <Search className="h-4 w-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari nomor memo, supplier..."
-              className="w-full bg-transparent text-sm outline-none"
-            />
-          </div>
-          <select
-            value={jenis}
-            onChange={(event) => setJenis(event.target.value)}
-            className="filter-card__control filter-card__control--select filter-card__control--memo-type w-full min-w-[180px] flex-[1_1_190px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[190px] xl:flex-none"
-          >
-            <option value="">Semua Jenis Memo</option>
-            {memoTypeOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={program}
-            onChange={(event) => setProgram(event.target.value)}
-            className="filter-card__control filter-card__control--select filter-card__control--program-type w-full min-w-[200px] flex-[1_1_220px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[220px] xl:flex-none"
-          >
-            <option value="">Semua Jenis Program</option>
-            {programOptions.map((option) => (
-              <option key={option.key} value={option.label}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            value={from}
-            onChange={(event) => setFrom(event.target.value)}
-            className="filter-card__control filter-card__control--date w-full min-w-[150px] flex-[1_1_160px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[160px] xl:flex-none"
-          />
-          <input
-            type="date"
-            value={to}
-            onChange={(event) => setTo(event.target.value)}
-            className="filter-card__control filter-card__control--date w-full min-w-[150px] flex-[1_1_160px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none xl:w-[160px] xl:flex-none"
-          />
-          <button
-            onClick={() => {
-              setSearch("")
-              setJenis("")
-              setProgram("")
-              setFrom("")
-              setTo("")
-              setPage(1)
-            }}
-            className="filter-card__control filter-card__reset shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
-          >
-            Reset
-          </button>
-      </FilterCard>
-
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <div>
-            <h2 className="text-sm font-black text-slate-900">
-              Semua Memo Supplier
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              {filtered.length} memo ditemukan
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-              Tampilkan
-              <select
-                value={pageSize}
-                onChange={(event) => setPageSize(Number(event.target.value))}
-                className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-300"
-                aria-label="Jumlah data per halaman"
-              >
-                <option value={30}>30 data</option>
-                <option value={50}>50 data</option>
-                <option value={100}>100 data</option>
-                <option value={0}>Semua data</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px] text-sm">
-            <thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-5 py-3">No Memo</th>
-                <th className="px-5 py-3">Supplier</th>
-                <th className="px-5 py-3">Jenis Memo</th>
-                <th className="px-5 py-3">Jenis Program</th>
-                <th className="px-5 py-3">Periode</th>
-                <th className="px-5 py-3">Outlet</th>
-                <th className="px-5 py-3 text-center">Detail</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {visibleRows.map((memo) => (
-                <tr key={memo.id} className="align-top hover:bg-indigo-50/30">
-                  <td className="px-5 py-4 font-mono text-xs font-bold text-indigo-700">
-                    {memo.nomorMemo}
-                  </td>
-                  <td className="px-5 py-4 font-semibold text-slate-800">
-                    {memo.supplierNama}
-                  </td>
-                  <td className="px-5 py-4 text-slate-600">
-                    {memoLabels[memo.jenisMemo] || memo.jenisMemo}
-                  </td>
-                  <td className="px-5 py-4 text-slate-600">
-                    {programType(memo)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">
-                    {dateText(memo.periodeAwal)} s/d{" "}
-                    {dateText(memo.periodeAkhir)}
-                  </td>
-                  <td className="px-5 py-4 text-xs text-slate-600">
-                    {memo.outlets.join(", ") || "-"}
-                  </td>
-                  <td className="px-5 py-4 text-center">
-                    <button
-                      onClick={() => setSelected(memo)}
-                      title="Lihat detail memo"
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700"
-                    >
-                      <Eye className="h-3.5 w-3.5" /> Detail
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {!filtered.length && (
-          <p className="py-14 text-center text-sm text-slate-500">
-            Tidak ada memo sesuai filter.
-          </p>
-        )}
-        {!!filtered.length && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4">
-            <p className="text-xs text-slate-500">
-              Menampilkan {pageSize === 0 ? 1 : (page - 1) * pageSize + 1}–
-              {pageSize === 0
-                ? filtered.length
-                : Math.min(page * pageSize, filtered.length)}{" "}
-              dari {filtered.length} memo
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={page === 1 || pageSize === 0}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" /> Sebelumnya
-              </button>
-              <span className="min-w-20 text-center text-xs font-bold text-slate-600">
-                Halaman {page} / {pageCount}
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  setPage((current) => Math.min(pageCount, current + 1))
-                }
-                disabled={page >= pageCount || pageSize === 0}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Berikutnya <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-    </main>
-  )
+function Detail({ memo, onBack, onSaved }: { memo: WorkflowMemo; onBack: () => void; onSaved: () => void }) {
+  const role = getCurrentRole() || "Pembelian"; const canEdit = memo.status === "Draft"; const [tab, setTab] = useState<"ringkasan" | "data" | "riwayat">("ringkasan"); const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(editable.map((field) => [field.key, fieldValue(memo, field.key)]))); const [dataDraft, setDataDraft] = useState<Record<string, any>>(() => structuredClone((memo.data || {}) as Record<string, any>)); const [note, setNote] = useState(""); const [rejectReason, setRejectReason] = useState(""); const [rejectOpen, setRejectOpen] = useState(false); const [error, setError] = useState("");
+  const changes: EditedField[] = editable.flatMap((field) => values[field.key] !== fieldValue(memo, field.key) ? [{ key: field.key, label: field.label, before: fieldValue(memo, field.key), after: values[field.key] }] : []); const dataChanged = JSON.stringify(dataDraft) !== JSON.stringify(memo.data || {});
+  const save = () => { if (JSON.stringify(dataDraft.identity || null) !== JSON.stringify((memo.data as any)?.identity || null)) { setError("Identitas supplier tidak boleh diubah."); return } const fields = dataChanged ? [...changes, { key: "data", label: "Data transaksi supplier", before: "Data asli supplier", after: "Data hasil olahan Pembelian" }] : changes; if (!fields.length) { setError("Belum ada perubahan yang disimpan."); return } createEditedMemo(memo, { ...values, data: dataDraft, outlets: values.outlets.split(",").map((value) => value.trim()).filter(Boolean) }, { at: new Date().toISOString(), by: "Buyer Pembelian", role, note, fields }); onSaved() };
+  const approve = () => { if (changes.length || dataChanged) { save(); return } updateMemo(memo.id, (current) => ({ ...current, status: "Approved", approvedAt: new Date().toISOString(), approvedBy: "Buyer Pembelian" })); onSaved() }; const reject = () => { if (!rejectReason.trim()) return; updateMemo(memo.id, (current) => ({ ...current, status: "Rejected", rejectedAt: new Date().toISOString(), rejectedBy: "Buyer Pembelian", rejectReason: rejectReason.trim() })); onSaved() };
+  return <div className="mx-auto max-w-6xl space-y-5"><button onClick={onBack} className="text-sm font-bold text-amber-700">← Kembali ke Daftar Memo</button><header className="rounded-xl bg-gradient-to-r from-slate-900 to-amber-900 p-6 text-white"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Detail Memo Pembelian</p><h1 className="mt-1 text-2xl font-black">{memo.nomorMemo}</h1><p className="text-sm text-slate-300">{memo.supplierNama} · {kindLabel[memo.jenisMemo] || memo.jenisMemo}</p></div><Status value={memo.status}/></div></header><div className="grid gap-3 sm:grid-cols-4">{[["Supplier", memo.supplierNama], ["Jenis Memo", kindLabel[memo.jenisMemo] || memo.jenisMemo], ["Outlet", memo.outlets.join(", ") || "-"], ["Periode", `${date(memo.periodeAwal)} – ${date(memo.periodeAkhir)}`]].map(([label, value]) => <div className="rounded-xl border border-border bg-card p-4 shadow-sm" key={label}><p className="text-[10px] font-bold uppercase text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-800">{value}</p></div>)}</div><div className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1 shadow-sm">{([["ringkasan", "Ringkasan"], ["data", "Data Supplier"], ["riwayat", "Perubahan & Riwayat"]] as const).map(([key, label]) => <button key={key} onClick={() => setTab(key)} className={`rounded-lg px-4 py-2.5 text-sm font-bold ${tab === key ? "bg-amber-100 text-amber-800" : "text-muted-foreground hover:bg-slate-50"}`}>{label}</button>)}</div>{tab === "ringkasan" && <div className="space-y-5"><section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="font-black">Identitas Supplier <KeyRound className="ml-1 inline h-4 w-4 text-slate-400"/></h2><div className="mt-4 grid gap-3 sm:grid-cols-4">{identities(memo).map((item) => <div className="rounded-xl bg-slate-50 p-3" key={item.label}><p className="text-[10px] font-bold uppercase text-slate-400">{item.label}</p><p className="mt-1 text-sm font-semibold">{item.value}</p></div>)}</div></section><FinanceSummary memo={memo}/><MemoSnapshot memo={memo}/></div>}{tab === "data" && <section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="font-black">Edit Data Memo</h2><div className="mt-4 grid gap-4 sm:grid-cols-2">{editable.map((field) => <label className="text-sm font-bold" key={field.key}>{field.label}<input disabled={!canEdit} value={values[field.key]} onChange={(event) => setValues({ ...values, [field.key]: event.target.value })} className="mt-1 w-full rounded-xl border border-border px-3 py-2.5 font-normal focus:border-amber-400" /></label>)}</div><FriendlyDataEditor data={dataDraft} onChange={setDataDraft} disabled={!canEdit}/><FinanceEditor data={dataDraft} onChange={setDataDraft} disabled={!canEdit}/>{canEdit && <label className="mt-5 block text-sm font-bold">Catatan perubahan<textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 min-h-20 w-full rounded-xl border p-3 font-normal" /></label>}</section>}{tab === "riwayat" && <section className="space-y-5"><section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="font-black">Yang Diedit ({memo.editedFields.length})</h2>{memo.editedFields.length ? <div className="mt-3 space-y-2">{memo.editedFields.map((field) => <div className="rounded-xl bg-amber-50 p-3 text-sm" key={field.key}><b>{field.label}</b><p className="mt-1 text-slate-600">{field.before || "-"} → <strong>{field.after || "-"}</strong></p></div>)}</div> : <p className="mt-3 text-sm text-muted-foreground">Belum ada perubahan.</p>}</section><section className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="font-black">Timeline Riwayat Edit</h2><div className="mt-4 space-y-4">{memo.editHistory.length ? memo.editHistory.map((item, index) => <div className="border-l-2 border-amber-300 pl-4" key={`${item.at}-${index}`}><p className="text-sm font-bold">{item.by} · {item.role}</p><p className="text-xs text-slate-400">{new Date(item.at).toLocaleString("id-ID")}</p><p className="mt-1 text-sm text-slate-600">{item.fields.length} field diubah{item.note ? ` · ${item.note}` : ""}</p></div>) : <p className="text-sm text-muted-foreground">Belum ada riwayat edit.</p>}</div></section></section>}{error && <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}{canEdit && <div className="flex flex-wrap justify-end gap-2"><button onClick={save} className="rounded-xl border bg-card px-4 py-2.5 text-sm font-bold">Simpan Perubahan</button><button onClick={approve} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white">✓ Approve</button><button onClick={() => setRejectOpen(true)} className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white">Reject</button></div>}{rejectOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"><div className="w-full max-w-md rounded-xl bg-card p-5"><h2 className="font-black">Alasan Penolakan</h2><textarea value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} className="mt-4 min-h-28 w-full rounded-xl border p-3" placeholder="Wajib diisi"/><div className="mt-4 flex justify-end gap-2"><button onClick={() => setRejectOpen(false)} className="rounded-xl border px-4 py-2">Batal</button><button onClick={reject} className="rounded-xl bg-red-600 px-4 py-2 font-bold text-white">Tolak Memo</button></div></div></div>}</div>
 }
+export default function SupplierMemoList() { const navigate = useNavigate(); const [rows, setRows] = useState<WorkflowMemo[]>([]); const [search, setSearch] = useState(""); const [status, setStatus] = useState(""); const [selected, setSelected] = useState<WorkflowMemo | null>(null); const [loading, setLoading] = useState(true); const load = () => { setLoading(true); setTimeout(() => { setRows(readMemos().sort((a, b) => b.tanggalSubmit.localeCompare(a.tanggalSubmit))); setLoading(false) }, 0) }; useEffect(() => { if (getCurrentRole() !== "Pembelian") { navigate("/login"); return } load() }, [navigate]); const filtered = useMemo(() => rows.filter((m) => (!status || m.status === status) && (!search || `${m.nomorMemo} ${m.supplierNama} ${m.ringkasan}`.toLowerCase().includes(search.toLowerCase()))), [rows, status, search]); const count = (value: string) => rows.filter((memo) => memo.status === value).length; if (selected) return <Detail memo={selected} onBack={() => { setSelected(null); load() }} onSaved={() => { setSelected(null); load() }} />; return <div className="space-y-5"><header className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Pembelian</p><h1 className="mt-1 text-2xl font-black">Daftar Memo</h1><p className="mt-1 text-sm text-muted-foreground">Tinjau, edit, dan putuskan memo dari supplier.</p></div><button onClick={() => { seedDemoMemos(); load() }} className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-700">Muat Data Dummy Simulasi</button></header><div className="grid gap-3 sm:grid-cols-3"><button onClick={() => setStatus("")} className={`rounded-xl border bg-card p-4 text-left shadow-sm transition ${!status ? "border-amber-300 ring-2 ring-amber-100" : "border-border"}`}><p className="text-xs font-bold text-muted-foreground">Semua Memo</p><p className="mt-1 text-2xl font-black text-slate-900">{rows.length}</p><p className="mt-1 text-xs text-slate-400">Total pengajuan supplier</p></button><button onClick={() => setStatus("Draft")} className={`rounded-xl border bg-card p-4 text-left shadow-sm transition ${status === "Draft" ? "border-amber-300 ring-2 ring-amber-100" : "border-border"}`}><p className="text-xs font-bold text-amber-600">Perlu Ditinjau</p><p className="mt-1 text-2xl font-black text-slate-900">{count("Draft")}</p><p className="mt-1 text-xs text-slate-400">Menunggu keputusan Pembelian</p></button><button onClick={() => setStatus("Approved")} className={`rounded-xl border bg-card p-4 text-left shadow-sm transition ${status === "Approved" ? "border-emerald-300 ring-2 ring-emerald-100" : "border-border"}`}><p className="text-xs font-bold text-emerald-600">Approved</p><p className="mt-1 text-2xl font-black text-slate-900">{count("Approved")}</p><p className="mt-1 text-xs text-slate-400">Sudah masuk Realisasi Memo</p></button></div><div className="flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4 shadow-sm"><div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border px-3 py-2"><Search size={16} className="text-slate-400"/><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nomor memo, supplier, atau ringkasan..." className="w-full outline-none"/></div><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border px-3 py-2 text-sm"><option value="">Semua Status</option><option>Draft</option><option>Approved</option><option>Rejected</option></select></div><section className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm"><table className="w-full min-w-[950px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-muted-foreground"><tr><th className="px-4 py-3">No. Memo</th><th className="px-4 py-3">Supplier</th><th className="px-4 py-3">Jenis</th><th className="px-4 py-3">Outlet</th><th className="px-4 py-3">Periode</th><th className="px-4 py-3">Pengajuan</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Aksi</th></tr></thead><tbody>{!loading && filtered.map((m) => <tr key={m.id} className="border-t hover:bg-amber-50/30"><td className="px-4 py-4 font-bold">{m.nomorMemo}<p className="text-xs font-normal text-slate-400">v{m.version} {m.editedFields.length ? "· diedit" : ""}</p></td><td className="px-4 py-4">{m.supplierNama}</td><td className="px-4 py-4">{kindLabel[m.jenisMemo] || m.jenisMemo}</td><td className="px-4 py-4">{m.outlets.join(", ") || "-"}</td><td className="px-4 py-4">{date(m.periodeAwal)} – {date(m.periodeAkhir)}</td><td className="px-4 py-4">{date(m.tanggalSubmit)}</td><td className="px-4 py-4"><Status value={m.status}/></td><td className="px-4 py-4"><button onClick={() => setSelected(m)} className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><Edit3 size={14}/>{m.status === "Draft" ? "Lihat / Edit" : "Lihat"}</button></td></tr>)}</tbody></table>{loading ? <div className="py-14 text-center text-sm text-muted-foreground">Memuat memo...</div> : filtered.length === 0 && <div className="py-14 text-center text-sm text-muted-foreground">Tidak ada memo sesuai filter.</div>}</section></div> }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -493,8 +493,8 @@ const PENDAPATAN_OPTIONS = [
 
   {
     key: "sewa",
-    label: "Sewa",
-    desc: "Sewa media, fasilitas, dan area outlet",
+    label: "Sewa & Jasa",
+    desc: "Pengajuan sewa media, fasilitas, area, dan jasa untuk kebutuhan outlet",
     icon: Store,
   },
 
@@ -3772,6 +3772,30 @@ function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
             : "Batas pembayar maksimal akan tampil setelah Periode Sampai diisi."}
         </p>
       </div>
+    </div>
+  )
+}
+
+function MemoDueDateField({
+  value,
+  onChange,
+  error,
+}: {
+  value: string
+  onChange: (value: string) => void
+  error?: string
+}) {
+  return (
+    <div>
+      <Label req>Tanggal Jatuh Tempo</Label>
+      <input
+        type="date"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={error ? inpErr : inp}
+      />
+      <FieldError message={error} />
+      <PaymentDueWarning dueDate={addMonthsDateLabel(value, 2)} />
     </div>
   )
 }
@@ -7213,6 +7237,7 @@ interface PendapatanState {
 
   sewaPeriodeAwal: string
   sewaPeriodeAkhir: string
+  sewaTanggalJatuhTempo: string
 
   sewaKeterangan: string
 
@@ -7323,6 +7348,7 @@ interface PendapatanState {
 
   eventPeriodeAwal: string
   eventPeriodeAkhir: string
+  eventTanggalJatuhTempo: string
 
   eventKeterangan: string
 
@@ -8655,9 +8681,6 @@ function PendapatanStep({
                       ) || "Pilih tanggal mulai dan tanggal selesai."}
                     </p>
                   </div>
-                  <PaymentDueWarning
-                    dueDate={addMonthsDateLabel(state.eventPeriodeAkhir, 2)}
-                  />
                   <div className="max-w-[180px]">
                     <Label req>Durasi</Label>
                     <div
@@ -8974,12 +8997,6 @@ function PendapatanStep({
                                     </span>
                                   </div>
                                 </div>
-                                <PaymentDueWarning
-                                  dueDate={addMonthsDateLabel(
-                                    row.tanggalSelesai,
-                                    2,
-                                  )}
-                                />
                                 <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                                   <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
                                     Total
@@ -9013,6 +9030,26 @@ function PendapatanStep({
                   ))}
                 </div>
               )}
+              <MemoDueDateField
+                value={
+                  state.jenis === "sewa"
+                    ? state.sewaTanggalJatuhTempo
+                    : state.eventTanggalJatuhTempo
+                }
+                onChange={(value) =>
+                  setField(
+                    state.jenis === "sewa"
+                      ? "sewaTanggalJatuhTempo"
+                      : "eventTanggalJatuhTempo",
+                    value,
+                  )
+                }
+                error={
+                  state.jenis === "sewa"
+                    ? errors.sewaTanggalJatuhTempo
+                    : errors.eventTanggalJatuhTempo
+                }
+              />
               <div className="border-t border-slate-100 pt-5">
                 <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
                   <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">
@@ -11543,6 +11580,7 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   sewaDurasiBulan: 0,
   sewaPeriodeAwal: "",
   sewaPeriodeAkhir: "",
+  sewaTanggalJatuhTempo: "",
   sewaKeterangan: "",
 
   sewaPpnAktif: true,
@@ -11611,6 +11649,7 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   eventDurasiBulan: 0,
   eventPeriodeAwal: "",
   eventPeriodeAkhir: "",
+  eventTanggalJatuhTempo: "",
   eventKeterangan: "",
 
   // Event merupakan memo sewa, jadi PPN dan PPh aktif secara default.
@@ -12361,6 +12400,19 @@ export default function SupplierMemoWizard() {
     if (key === "pendapatan") {
       const renewingPendapatan =
         sewaMode === "perpanjang" && Boolean(selectedSewaId)
+
+      if (pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa") {
+        const dueDateField =
+          pendapatan.jenis === "sewa"
+            ? "sewaTanggalJatuhTempo"
+            : "eventTanggalJatuhTempo"
+        const dueDate =
+          pendapatan.jenis === "sewa"
+            ? pendapatan.sewaTanggalJatuhTempo
+            : pendapatan.eventTanggalJatuhTempo
+
+        if (!dueDate) e[dueDateField] = "Tanggal jatuh tempo wajib diisi."
+      }
 
       // Existing event media data is already carried over from the selected lease.
 
