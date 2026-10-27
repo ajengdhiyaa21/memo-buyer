@@ -3790,6 +3790,30 @@ function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
   )
 }
 
+function MemoDueDateField({
+  value,
+  onChange,
+  error,
+}: {
+  value: string
+  onChange: (value: string) => void
+  error?: string
+}) {
+  return (
+    <div>
+      <Label req>Tanggal Jatuh Tempo</Label>
+      <input
+        type="date"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={error ? inpErr : inp}
+      />
+      <FieldError message={error} />
+      <PaymentDueWarning dueDate={addMonthsDateLabel(value, 2)} />
+    </div>
+  )
+}
+
 function DateRangeLikePicker({
   start,
   end,
@@ -7243,6 +7267,7 @@ interface PendapatanState {
 
   sewaPeriodeAwal: string
   sewaPeriodeAkhir: string
+  sewaTanggalJatuhTempo: string
 
   sewaKeterangan: string
 
@@ -9087,6 +9112,26 @@ function PendapatanStep({
                   ))}
                 </div>
               )}
+              <MemoDueDateField
+                value={
+                  state.jenis === "sewa"
+                    ? state.sewaTanggalJatuhTempo
+                    : state.eventTanggalJatuhTempo
+                }
+                onChange={(value) =>
+                  setField(
+                    state.jenis === "sewa"
+                      ? "sewaTanggalJatuhTempo"
+                      : "eventTanggalJatuhTempo",
+                    value,
+                  )
+                }
+                error={
+                  state.jenis === "sewa"
+                    ? errors.sewaTanggalJatuhTempo
+                    : errors.eventTanggalJatuhTempo
+                }
+              />
               <div className="border-t border-slate-100 pt-5">
                 <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
                   <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">
@@ -11621,6 +11666,7 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   sewaDurasiBulan: 0,
   sewaPeriodeAwal: "",
   sewaPeriodeAkhir: "",
+  sewaTanggalJatuhTempo: "",
   sewaKeterangan: "",
 
   sewaPpnAktif: true,
@@ -12440,6 +12486,19 @@ export default function SupplierMemoWizard() {
     if (key === "pendapatan") {
       const renewingPendapatan =
         sewaMode === "perpanjang" && Boolean(selectedSewaId)
+
+      if (pendapatan.jenis === "event-blbms" || pendapatan.jenis === "sewa") {
+        const dueDateField =
+          pendapatan.jenis === "sewa"
+            ? "sewaTanggalJatuhTempo"
+            : "eventTanggalJatuhTempo"
+        const dueDate =
+          pendapatan.jenis === "sewa"
+            ? pendapatan.sewaTanggalJatuhTempo
+            : pendapatan.eventTanggalJatuhTempo
+
+        if (!dueDate) e[dueDateField] = "Tanggal jatuh tempo wajib diisi."
+      }
 
       // Existing event media data is already carried over from the selected lease.
 

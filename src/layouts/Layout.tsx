@@ -823,6 +823,12 @@ function SidebarContent({
               Approval Memo
             </NavLink>
           )}
+          {localStorage.getItem("bm-role") === "Pembelian" && (
+            <NavLink to="/memo-realisasi" onClick={onNavClick} className={({ isActive }) => clsx("flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150", isActive ? "font-bold text-amber-700 bg-[#FEF3C7]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium")}>
+              <FileText className="h-4 w-4 text-emerald-600" />
+              Realisasi Memo
+            </NavLink>
+          )}
         </nav>
         <div className="shrink-0 border-t border-slate-100 bg-white p-3">
           <button
@@ -1299,7 +1305,7 @@ export function Layout() {
 
         {/* ── Content ── */}
         {/* PADDING INI YANG MENENTUKAN GAP (p-5 md:p-6) ATAU SEKITAR 20-24px DARI NAVBAR */}
-        <main className="flex-1 overflow-y-auto p-5 md:p-6 bg-slate-50">
+        <main className="app-shell flex-1 overflow-y-auto p-5 md:p-6 bg-slate-50">
           <Outlet />
           <CreatedByFooter />
         </main>
@@ -1319,3 +1325,6 @@ export function Layout() {
     </div>
   )
 }
+
+
+

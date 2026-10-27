@@ -40,6 +40,8 @@ import MemoUnpaidRenewal from "./pages/MemoUnpaidRenewal"
 
 import MemoPurchaseApproval from "./pages/MemoPurchaseApproval"
 
+import MemoRealisasi from "./pages/MemoRealisasi"
+
 import Profile, { ChangePassword } from "./pages/Profile"
 
 // Import komponen Penjualan yang baru dibuat
@@ -98,6 +100,8 @@ const router = createBrowserRouter([
 
       { path: "memo-approval", Component: MemoPurchaseApproval },
 
+      { path: "memo-realisasi", Component: MemoRealisasi },
+
       { path: "memo-report/event/:eventName", Component: MemoEventDetail },
 
       { path: "memo-list", Component: SupplierMemoList },
@@ -151,3 +155,6 @@ const router = createBrowserRouter([
 export default function App() {
   return <RouterProvider router={router} />
 }
+
+
+

@@ -237,3 +237,73 @@ body {
     height: 96px !important;
   }
 }
+
+/* Shared application UI language: used by dashboard, memo, accounting, admin, and supplier views. */
+:root {
+  --ui-radius-card: 12px;
+  --ui-radius-control: 10px;
+  --ui-shadow-card: 0 1px 2px rgba(30, 41, 59, .04), 0 5px 18px rgba(30, 41, 59, .04);
+  --ui-control-height: 40px;
+}
+
+.app-shell,
+.app-shell * {
+  font-family: var(--font-sans);
+}
+
+.app-shell input:not([type="checkbox"]):not([type="radio"]),
+.app-shell select,
+.app-shell textarea {
+  border-radius: var(--ui-radius-control);
+  border-color: var(--border);
+  color: var(--foreground);
+  font-size: 13px;
+}
+
+.app-shell input:not([type="checkbox"]):not([type="radio"]),
+.app-shell select {
+  min-height: var(--ui-control-height);
+}
+
+.app-shell input:focus,
+.app-shell select:focus,
+.app-shell textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.app-shell button {
+  border-radius: var(--ui-radius-control);
+  font-family: var(--font-sans);
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.app-shell table thead th {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.app-shell table tbody tr {
+  border-color: var(--border);
+}
+
+.app-shell table tbody tr:hover {
+  background: #fffaf0;
+}
+
+.app-shell > * .shadow-sm,
+.app-shell > .shadow-sm {
+  box-shadow: var(--ui-shadow-card);
+}
+
+/* Supplier wizard lives outside Layout but uses the same font and control language. */
+#root input:not([type="checkbox"]):not([type="radio"]),
+#root select,
+#root textarea,
+#root button {
+  font-family: var(--font-sans);
+}
