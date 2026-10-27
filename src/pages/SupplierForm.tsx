@@ -479,7 +479,11 @@ const STRATA_UNIT_OPTIONS = ["PCS", "KARTON"]
 
 const PPH_RATE_OPTIONS = ["PPh Pasal 23 - 15%", "PPh Pasal 23 - 2%"]
 
-const SEWA_PPH_RATE_OPTIONS = ["PPh Pasal 23 - 2%", "PPh Final 4 Ayat 2 - 10%"]
+const SEWA_PPH_RATE_OPTIONS = [
+  "PPh Pasal 23 - 15%",
+  "PPh Pasal 23 - 2%",
+  "PPh Final 4 Ayat 2 - 10%",
+]
 
 const SEWA_CARA_PEMBAYARAN_OPTIONS = ["Transfer", "Tunai", "Potong Tagihan"]
 
@@ -2298,17 +2302,19 @@ function SewaModeStep({
   const isMemoProgram = memoJenis === "memo-program"
   const renewalOptions = [...SIMULATED_LEASES, ...ADDITIONAL_SIMULATED_LEASES].filter(
     (x) =>
+      x.kind !== "sewa-visibility" &&
       (!memoJenis ||
         (x.memoJenis ||
           (x.kind === "memo-program" ? "memo-program" : "pendapatan-lain")) ===
           memoJenis) &&
       ((!supplierIds.length && !supplierNames.length) ||
         supplierIds.includes(x.supplierId) ||
-        supplierNames.includes(x.supplier)) &&
+        supplierNames.includes(x.supplier) ||
+        (programJenis === "sewa" && x.kind === "sewa")) &&
       (!programJenis ||
         memoJenis === "memo-program" ||
         (programJenis === "sewa"
-          ? ["sewa-visibility", "sewa"].includes(x.kind)
+          ? x.kind === "sewa"
           : x.kind === programJenis)),
   )
   const selectedLease = renewalOptions.find((x) => x.id === selectedId)
@@ -2566,7 +2572,7 @@ const inp =
 const inpErr =
   "w-full px-3.5 py-2.5 border border-red-300 rounded-xl text-[13px] bg-red-50/40 focus:outline-none focus:ring-2 focus:ring-red-400/20 focus:border-red-400 transition-all placeholder:text-slate-400 text-slate-700"
 
-function Label({ children, req }: { children: React.ReactNode req?: boolean }) {
+function Label({ children, req }: { children: React.ReactNode; req?: boolean }) {
   return (
     <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
       {children}
@@ -2723,7 +2729,7 @@ function SingleChoiceChips({
   value,
   onChange,
 }: {
-  options: { key: string label: string tone?: ChipTone }[]
+  options: { key: string; label: string; tone?: ChipTone }[]
   value: string
   onChange: (v: string) => void
 }) {
@@ -2765,7 +2771,7 @@ function MultiChoiceChips({
   value,
   onChange,
 }: {
-  options: { key: string label: string icon?: React.ElementType }[]
+  options: { key: string; label: string; icon?: React.ElementType }[]
   value: string[]
   onChange: (v: string[]) => void
 }) {
@@ -2903,11 +2909,13 @@ function ChangeField({
   newValue,
   onChange,
   placeholder,
+  numeric = false,
 }: {
   oldValue: string
   newValue: string
   onChange: (v: string) => void
   placeholder?: string
+  numeric?: boolean
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 sm:items-end">
@@ -2924,8 +2932,11 @@ function ChangeField({
         <Label req>Data Baru</Label>
         <input
           type="text"
-          value={newValue}
-          onChange={(e) => onChange(e.target.value)}
+          value={numeric ? formatRupiahInput(newValue) : newValue}
+          onChange={(e) =>
+            onChange(numeric ? String(parseRupiahInput(e.target.value)) : e.target.value)
+          }
+          inputMode={numeric ? "numeric" : undefined}
           placeholder={placeholder || "Masukkan data baru..."}
           className={inp}
         />
@@ -3761,6 +3772,9 @@ function periodEndDateValue(start: string, months: number) {
   return endDate.toISOString().slice(0, 10)
 }
 
+const PAYMENT_DUE_EMPTY_MESSAGE =
+  "Batas pembayar maksimal akan tampil setelah Tanggal Jatuh Tempo diisi."
+
 function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
   return (
     <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
@@ -3769,7 +3783,7 @@ function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
         <p className="text-[12px] font-semibold leading-relaxed">
           {dueDate
             ? `Batas pembayar maksimal sampai tanggal ${dueDate}.`
-            : "Batas pembayar maksimal akan tampil setelah Periode Sampai diisi."}
+            : PAYMENT_DUE_EMPTY_MESSAGE}
         </p>
       </div>
     </div>
@@ -3813,34 +3827,28 @@ function DateRangeLikePicker({
 }) {
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <Label req>Tanggal Mulai Sewa</Label>
-          <div className="grid grid-cols-[38px_1fr] rounded-lg border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
-            <div className="flex items-center justify-center bg-slate-100 border-r border-slate-300 text-slate-500">
-              <Calendar className="h-4 w-4" />
-            </div>
-            <input
-              type="date"
-              value={start}
-              onChange={(e) => onStart(e.target.value)}
-              className="px-3 py-2.5 text-[13px] outline-none text-slate-700"
-            />
+          <div className="mb-1.5 flex items-center gap-2">
+            <Label req>Tanggal Mulai Sewa</Label>
           </div>
+          <input
+            type="date"
+            value={start}
+            onChange={(e) => onStart(e.target.value)}
+            className={inp}
+          />
         </div>
         <div>
-          <Label req>Tanggal Selesai Sewa</Label>
-          <div className="grid grid-cols-[38px_1fr] rounded-lg border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
-            <div className="flex items-center justify-center bg-slate-100 border-r border-slate-300 text-slate-500">
-              <Calendar className="h-4 w-4" />
-            </div>
-            <input
-              type="date"
-              value={end}
-              onChange={(e) => onEnd(e.target.value)}
-              className="px-3 py-2.5 text-[13px] outline-none text-slate-700"
-            />
+          <div className="mb-1.5 flex items-center gap-2">
+            <Label req>Tanggal Selesai Sewa</Label>
           </div>
+          <input
+            type="date"
+            value={end}
+            onChange={(e) => onEnd(e.target.value)}
+            className={inp}
+          />
         </div>
       </div>
       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
@@ -3864,6 +3872,15 @@ function formatDateShort(dateValue: string) {
     month: "2-digit",
     year: "numeric",
   })
+}
+
+function formatRupiahInput(value: number | string) {
+  const digits = String(value ?? "").replace(/\D/g, "")
+  return digits ? Number(digits).toLocaleString("id-ID") : ""
+}
+
+function parseRupiahInput(value: string) {
+  return Number(value.replace(/\D/g, "")) || 0
 }
 
 function dateRangeDurationLabel(startValue: string, endValue: string) {
@@ -4637,6 +4654,7 @@ function UpdateInformasiStep({
                                   setProdukValue(product.plu, field, v)
                                 }
                                 placeholder="Harga pokok per pcs sebelum diskon/reguler"
+                                numeric
                               />
                               <p className="mt-1.5 text-[11px] text-slate-400">
                                 Harga pokok per PCS, sudah termasuk PPN, dan
@@ -5396,6 +5414,8 @@ interface ProgramInfoState {
   periodeAwal: string
 
   periodeAkhir: string
+
+  tanggalJatuhTempo: string
 }
 
 /** Independently activatable PPN + PPh chooser. Reused anywhere a transaction may be taxed:
@@ -5424,7 +5444,7 @@ function KetentuanPajakSection({
   onPphAktif: (v: boolean) => void
   onPphRate: (v: string) => void
 
-  errors?: { ppnRate?: string pphRate?: string }
+  errors?: { ppnRate?: string; pphRate?: string }
 
   ppnOptions?: string[]
   pphOptions?: string[]
@@ -5542,7 +5562,7 @@ function ProgramInfoStep({
   errors: FormErrors
   locked?: boolean
 }) {
-  const paymentDueDate = addMonthsDateLabel(state.periodeAkhir, 2)
+  const paymentDueDate = addMonthsDateLabel(state.tanggalJatuhTempo, 2)
 
   return (
     <Card
@@ -5653,6 +5673,16 @@ function ProgramInfoStep({
             "Pilih Periode Dari dan Periode Sampai."}
         </div>
         <FieldError message={errors.periodeAwal || errors.periodeAkhir} />
+        <div className="mt-4 max-w-xs">
+          <Label>Tanggal Jatuh Tempo</Label>
+          <input
+            readOnly={locked}
+            type="date"
+            value={state.tanggalJatuhTempo}
+            onChange={(e) => setField("tanggalJatuhTempo", e.target.value)}
+            className={inp}
+          />
+        </div>
         <PaymentDueWarning dueDate={paymentDueDate} />
       </div>
     </Card>
@@ -5870,11 +5900,11 @@ function OnFakturProductCard({
             }}
           />
           <input
-            type="number"
-            min={0}
-            value={row.diskonValue || ""}
+            type="text"
+            inputMode="numeric"
+            value={row.diskonMode === "persen" ? row.diskonValue || "" : formatRupiahInput(row.diskonValue)}
             onChange={(e) =>
-              setField("diskonValue", parseFloat(e.target.value) || 0)
+              setField("diskonValue", row.diskonMode === "persen" ? parseFloat(e.target.value) || 0 : parseRupiahInput(e.target.value))
             }
             placeholder={
               row.diskonMode === "persen"
@@ -6004,11 +6034,11 @@ function OnFakturProductCard({
         {row.budgetAktif && (
           <div className="mt-3 max-w-xs">
             <input
-              type="number"
-              min={0}
-              value={row.budgetNominal || ""}
+              type="text"
+              inputMode="numeric"
+              value={formatRupiahInput(row.budgetNominal)}
               onChange={(e) =>
-                setField("budgetNominal", parseFloat(e.target.value) || 0)
+                setField("budgetNominal", parseRupiahInput(e.target.value))
               }
               className={inp}
               placeholder="Nominal budget Rp"
@@ -6065,11 +6095,11 @@ function OffFakturProductCard({
             }}
           />
           <input
-            type="number"
-            min={0}
-            value={row.diskonValue || ""}
+            type="text"
+            inputMode="numeric"
+            value={row.diskonMode === "persen" ? row.diskonValue || "" : formatRupiahInput(row.diskonValue)}
             onChange={(e) =>
-              setField("diskonValue", parseFloat(e.target.value) || 0)
+              setField("diskonValue", row.diskonMode === "persen" ? parseFloat(e.target.value) || 0 : parseRupiahInput(e.target.value))
             }
             placeholder={
               row.diskonMode === "persen"
@@ -6169,11 +6199,11 @@ function OffFakturProductCard({
         {row.budgetAktif && (
           <div className="mt-3 max-w-xs">
             <input
-              type="number"
-              min={0}
-              value={row.budgetNominal || ""}
+              type="text"
+              inputMode="numeric"
+              value={formatRupiahInput(row.budgetNominal)}
               onChange={(e) =>
-                setField("budgetNominal", parseFloat(e.target.value) || 0)
+                setField("budgetNominal", parseRupiahInput(e.target.value))
               }
               className={inp}
               placeholder="Nominal budget Rp"
@@ -6619,12 +6649,12 @@ function ProgramDetailStep({
                   />
                 </div>
                 <input
-                  type="number"
-                  min={0}
-                  value={tier.value || ""}
+                type="text"
+                inputMode="numeric"
+                value={tier.mode === "persen" ? tier.value || "" : formatRupiahInput(tier.value)}
                   onChange={(e) => {
                     const next = [...tiers]
-                    next[index] = { ...tier, value: parseFloat(e.target.value) || 0 }
+                    next[index] = { ...tier, value: tier.mode === "persen" ? parseFloat(e.target.value) || 0 : parseRupiahInput(e.target.value) }
                     onTiers(next)
                   }}
                   placeholder={tier.mode === "persen" ? "%" : "Rp"}
@@ -7380,6 +7410,8 @@ interface EventMediaDetailRow {
 
   tanggalSelesai: string
 
+  tanggalJatuhTempo?: string
+
   durasiBulan: number
 }
 
@@ -7509,6 +7541,7 @@ function PendapatanStep({
         caraPembayaran: "",
         tanggalMulai: state.eventPeriodeAwal || "",
         tanggalSelesai: "",
+        tanggalJatuhTempo: "",
         durasiBulan: 0,
       },
     ])
@@ -7711,7 +7744,11 @@ function PendapatanStep({
                 value={state.namaProgram}
                 onChange={(e) => setField("namaProgram", e.target.value)}
                 className={errors.namaProgram ? inpErr : inp}
-                placeholder="cth: Program Event Reguler"
+                placeholder={
+                  state.jenis === "sewa"
+                    ? "cth: Program Akhir Bulan Produk X"
+                    : "cth: Program Event Reguler"
+                }
               />
               <FieldError message={errors.namaProgram} />
             </div>
@@ -7930,13 +7967,13 @@ function PendapatanStep({
                   <div>
                     <Label req>Nominal (Rp)</Label>
                     <input
-                      type="number"
-                      min={0}
-                      value={state.rewardNominal || ""}
+                      type="text"
+                      inputMode="numeric"
+                      value={formatRupiahInput(state.rewardNominal)}
                       onChange={(e) =>
                         setField(
                           "rewardNominal",
-                          parseFloat(e.target.value) || 0,
+                          parseRupiahInput(e.target.value),
                         )
                       }
                       className={inp}
@@ -8317,14 +8354,14 @@ function PendapatanStep({
                       <div>
                         <Label req>Harga per Pcs</Label>
                         <input
-                          type="number"
-                          min={0}
-                          value={row.hargaPerPcs || ""}
+                          type="text"
+                          inputMode="numeric"
+                          value={formatRupiahInput(row.hargaPerPcs)}
                           onChange={(e) =>
                             updateListingRow(
                               i,
                               "hargaPerPcs",
-                              parseFloat(e.target.value) || 0,
+                              parseRupiahInput(e.target.value),
                             )
                           }
                           className={inp}
@@ -8357,13 +8394,13 @@ function PendapatanStep({
                   <div>
                     <Label req>Biaya Listing (Rp)</Label>
                     <input
-                      type="number"
-                      min={0}
-                      value={state.listingNominal || ""}
+                      type="text"
+                      inputMode="numeric"
+                      value={formatRupiahInput(state.listingNominal)}
                       onChange={(e) =>
                         setField(
                           "listingNominal",
-                          parseFloat(e.target.value) || 0,
+                          parseRupiahInput(e.target.value),
                         )
                       }
                       className={inp}
@@ -8593,7 +8630,11 @@ function PendapatanStep({
                       value={state.namaProgram}
                       onChange={(e) => setField("namaProgram", e.target.value)}
                       className={errors.namaProgram ? inpErr : inp}
-                      placeholder="cth: Program Event Reguler"
+                      placeholder={
+                        state.jenis === "sewa"
+                          ? "cth: Program Akhir Bulan Produk X"
+                          : "cth: Program Event Reguler"
+                      }
                     />
                     <FieldError message={errors.namaProgram} />
                   </div>
@@ -8601,13 +8642,13 @@ function PendapatanStep({
                     <div>
                       <Label req>Nilai Sewa per Bulan (Rp)</Label>
                       <input
-                        type="number"
-                        min={0}
-                        value={state.eventNominal || ""}
+                        type="text"
+                        inputMode="numeric"
+                        value={formatRupiahInput(state.eventNominal)}
                         onChange={(e) =>
                           setField(
                             "eventNominal",
-                            parseFloat(e.target.value) || 0,
+                            parseRupiahInput(e.target.value),
                           )
                         }
                         className={inp}
@@ -8681,8 +8722,9 @@ function PendapatanStep({
                       ) || "Pilih tanggal mulai dan tanggal selesai."}
                     </p>
                   </div>
-                  <div className="max-w-[180px]">
-                    <Label req>Durasi</Label>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label req>Durasi</Label>
                     <div
                       className="relative renewal-duration-field"
                       style={{ pointerEvents: "auto" }}
@@ -8713,7 +8755,25 @@ function PendapatanStep({
                         bulan
                       </span>
                     </div>
+                    </div>
+                    <div>
+                      <Label>Tanggal Jatuh Tempo</Label>
+                      <input
+                        type="date"
+                        value={state.eventTanggalJatuhTempo}
+                        onChange={(e) =>
+                          setField("eventTanggalJatuhTempo", e.target.value)
+                        }
+                        className={inp}
+                      />
+                    </div>
                   </div>
+                  <PaymentDueWarning
+                    dueDate={addMonthsDateLabel(
+                      state.eventTanggalJatuhTempo,
+                      2,
+                    )}
+                  />
                   <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                     <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
                       Total
@@ -8850,13 +8910,14 @@ function PendapatanStep({
                                   <div>
                                     <Label req>Nilai Sewa (Rp)</Label>
                                     <input
-                                      type="number"
-                                      min={0}
-                                      value={row.nominal || ""}
+                                      type="text"
+                                      inputMode="numeric"
+                                      value={formatRupiahInput(row.nominal)}
                                       onChange={(e) =>
                                         updateEventMediaDetail(row.id, {
-                                          nominal:
-                                            parseFloat(e.target.value) || 0,
+                                          nominal: parseRupiahInput(
+                                            e.target.value,
+                                          ),
                                         })
                                       }
                                       className={inp}
@@ -8954,8 +9015,9 @@ function PendapatanStep({
                                     })
                                   }
                                 />
-                                <div className="max-w-[180px]">
-                                  <Label req>Durasi</Label>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                  <div>
+                                    <Label req>Durasi</Label>
                                   <div
                                     className="relative renewal-duration-field"
                                     style={
@@ -8995,8 +9057,28 @@ function PendapatanStep({
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">
                                       bulan
                                     </span>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Label>Tanggal Jatuh Tempo</Label>
+                                    <input
+                                      type="date"
+                                      value={row.tanggalJatuhTempo || ""}
+                                      onChange={(e) =>
+                                        updateEventMediaDetail(row.id, {
+                                          tanggalJatuhTempo: e.target.value,
+                                        })
+                                      }
+                                      className={inp}
+                                    />
                                   </div>
                                 </div>
+                                <PaymentDueWarning
+                                  dueDate={addMonthsDateLabel(
+                                    row.tanggalJatuhTempo,
+                                    2,
+                                  )}
+                                />
                                 <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                                   <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
                                     Total
@@ -9075,7 +9157,11 @@ function PendapatanStep({
                   }}
                   pphOptions={
                     state.jenis === "sewa"
-                      ? ["PPh Pasal 23 - 2%", "PPh Final - 10%"]
+                      ? [
+                          "PPh Pasal 23 - 15%",
+                          "PPh Pasal 23 - 2%",
+                          "PPh Final - 10%",
+                        ]
                       : [
                           "PPh Pasal 23 - 15%",
                           "PPh Pasal 23 - 2%",
@@ -9116,7 +9202,7 @@ function NotesStep({
 
   errors: FormErrors
 }) {
-  const paymentDueDate = addMonthsDateLabel(programInfo.periodeAkhir, 2)
+  const paymentDueDate = addMonthsDateLabel(programInfo.tanggalJatuhTempo, 2)
 
   return (
     <Card
@@ -9139,7 +9225,7 @@ function NotesStep({
               <p className="text-[12px] font-semibold leading-relaxed">
                 {paymentDueDate
                   ? `Batas pembayar maksimal sampai tanggal ${paymentDueDate}.`
-                  : "Batas pembayar maksimal akan tampil setelah Periode Sampai diisi."}
+                  : PAYMENT_DUE_EMPTY_MESSAGE}
               </p>
             </div>
           </div>
@@ -9292,7 +9378,7 @@ function SignaturePad({
 
 /* ───────────────────────── Step: Review + Sign ───────────────────────── */
 
-function Row({ label, value }: { label?: string value?: React.ReactNode }) {
+function Row({ label, value }: { label?: string; value?: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 text-[12.5px] py-1.5">
       <span className="text-slate-400">{label}</span>
@@ -9635,10 +9721,12 @@ function CombinedProductDetailTable({
   products,
   onRows,
   offRows,
+  print = false,
 }: {
   products: Product[]
   onRows: Record<string, OnFakturProductRow>
   offRows: Record<string, OffFakturProductRow>
+  print?: boolean
 }) {
   const formatTiers = (row: OnFakturProductRow | OffFakturProductRow) => {
     const tiers = row.diskonTiers?.filter((tier) => tier.value > 0) || []
@@ -9668,8 +9756,8 @@ function CombinedProductDetailTable({
   })
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200">
-      <table className="w-full table-fixed border-collapse text-[10px]">
+    <div className={`${print ? "overflow-visible" : "overflow-hidden rounded-xl border border-slate-200"}`}>
+      <table className={`w-full table-fixed border-collapse ${print ? "text-[8.5px]" : "text-[10px]"}`}>
         <colgroup>
           <col className="w-[9%]" />
           <col className="w-[18%]" />
@@ -9710,7 +9798,7 @@ function CombinedProductDetailTable({
                     )}
                     <td className="border border-slate-200 bg-slate-50 px-1.5 py-2 font-semibold">{label}</td>
                     <td className="break-words border border-slate-200 px-1.5 py-2">
-                      {on ? [
+                    {on ? [
                         formatTiers(on).map((value, tierIndex) => `Diskon ${tierIndex + 1}: ${value}`).join(" | "),
                         on.bandedAktif ? on.banded || "-" : on.strataMinQty ? `${on.strataMinQty} ${on.strataSatuan}` : "-",
                         on.alokasiQty ? `${on.alokasiQty} PCS` : "-",
@@ -10492,8 +10580,8 @@ function ReviewStep({
                 className="mt-0.5 w-4 h-4 rounded border-red-300 text-red-600 focus:ring-red-500"
               />
               <span className="text-[12px] font-semibold text-red-700 leading-relaxed">
-                Saya bersedia melakukan pembayaran sebelum 2 bulan setelah
-                program berakhir.
+                Saya bersedia melakukan pembayaran maksimal sebelum 2 bulan
+                setelah tanggal jatuh tempo.
               </span>
             </label>
             <FieldError message={errors.paymentAgreed} />
@@ -11123,17 +11211,14 @@ function SuccessScreen({
                       value={programInfo.caraPembayaran || "-"}
                     />
                     <PrintInfoRow label="Redaksi" value={programInfo.redaksi} />
-                    {onProducts.length > 0 && (
-                      <OnFakturDetailTable
-                        products={onProducts}
-                        rows={onRows}
-                        print
-                      />
-                    )}
-                    {offProducts.length > 0 && (
-                      <OffFakturDetailTable
-                        products={offProducts}
-                        rows={offRows}
+                    {(onProducts.length > 0 || offProducts.length > 0) && (
+                      <CombinedProductDetailTable
+                        products={[...onProducts, ...offProducts].filter(
+                          (product, index, all) =>
+                            all.findIndex((item) => item.plu === product.plu) === index,
+                        )}
+                        onRows={onRows}
+                        offRows={offRows}
                         print
                       />
                     )}
@@ -11504,8 +11589,8 @@ function SuccessScreen({
               </div>
               {jenisMemo !== "update-informasi" && (
                 <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-1.5 text-[10px] font-bold text-red-800">
-                  Supplier menyatakan bersedia melakukan pembayaran sebelum 2
-                  bulan setelah program berakhir.
+                  Supplier menyatakan bersedia melakukan pembayaran maksimal
+                  sebelum 2 bulan setelah tanggal jatuh tempo.
                 </div>
               )}
             </div>
@@ -11563,6 +11648,7 @@ const INITIAL_PROGRAM_INFO: ProgramInfoState = {
   caraPembayaran: "",
   periodeAwal: "",
   periodeAkhir: "",
+  tanggalJatuhTempo: "",
 }
 
 const INITIAL_BUDGET_LINK: BudgetLinkState = { keterangan: "", nominal: 0 }
@@ -12610,7 +12696,6 @@ export default function SupplierMemoWizard() {
                   row.tanggalMulai &&
                   row.tanggalSelesai &&
                   row.durasiBulan > 0 &&
-                  (!EVENT_MEDIA_AREA_REQUIRED.includes(media) || row.area) &&
                   (media !== "COC" || row.pos.trim()),
               ),
           )
