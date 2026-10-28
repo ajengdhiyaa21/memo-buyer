@@ -874,7 +874,7 @@ export function SettingHarga() {
         ...updated,
         items: flatItems,
         status: m.status === 'Sell Out Generated' ? m.status : 'Sudah Disetting',
-        settingBy: (currentUser as any)?.nama ?? currentUser?.name ?? 'Admin',
+        settingBy: (currentUser as any)?.nama ?? (currentUser as any)?.name ?? 'Admin',
         settingAt: nowLabel(),
       };
     }));
@@ -888,7 +888,7 @@ export function SettingHarga() {
     );
 
     const sellOutId = `SO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const operatorName = (currentUser as any)?.nama ?? currentUser?.name ?? 'Admin';
+    const operatorName = (currentUser as any)?.nama ?? (currentUser as any)?.name ?? 'Admin';
 
     const report: Report = {
       id: sellOutId,

@@ -6575,7 +6575,7 @@ function ProgramDetailStep({
     index: number,
     plu: string,
     field: keyof OnFakturProductRow,
-    val: string | number | boolean,
+    val: string | number | boolean | DiscountTier[],
   ) => void
 
   addOnGroup: () => void
@@ -6598,7 +6598,7 @@ function ProgramDetailStep({
     index: number,
     plu: string,
     field: keyof OffFakturProductRow,
-    val: string | number | boolean,
+    val: string | number | boolean | DiscountTier[],
   ) => void
 
   addOffGroup: () => void
@@ -7326,6 +7326,7 @@ interface PendapatanState {
   promosiCaraPembayaran: string
 
   promosiPeriodeAwal: string
+  promosiPeriodeAkhir: string
 
   promosiDurasiBulan: number
 
@@ -9075,7 +9076,7 @@ function PendapatanStep({
                                 </div>
                                 <PaymentDueWarning
                                   dueDate={addMonthsDateLabel(
-                                    row.tanggalJatuhTempo,
+                                    row.tanggalJatuhTempo || "",
                                     2,
                                   )}
                                 />
@@ -9380,9 +9381,9 @@ function SignaturePad({
 
 function Row({ label, value }: { label?: string; value?: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-4 text-[12.5px] py-1.5">
-      <span className="text-slate-400">{label}</span>
-      <span className="font-semibold text-slate-800 text-right">
+    <div className="grid grid-cols-[minmax(110px,30%)_minmax(0,1fr)] items-start gap-3 py-1.5 text-[12.5px]">
+      <span className="min-w-0 text-slate-400">{label}</span>
+      <span className="min-w-0 break-words whitespace-pre-wrap font-semibold text-left text-slate-800">
         {value || "—"}
       </span>
     </div>
@@ -9551,6 +9552,9 @@ function EventMediaDetailTables({
                     Durasi
                   </th>
                   <th className="border border-slate-300 px-2 py-1 text-left">
+                    Jatuh Tempo
+                  </th>
+                  <th className="border border-slate-300 px-2 py-1 text-left">
                     Total
                   </th>
                 </tr>
@@ -9582,6 +9586,9 @@ function EventMediaDetailTables({
                       </td>
                       <td className="border border-slate-200 px-2 py-1">
                         {row.durasiBulan ? `${row.durasiBulan} bulan` : "-"}
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1">
+                        {row.tanggalJatuhTempo || "-"}
                       </td>
                       <td className="border border-slate-200 px-2 py-1 font-bold">
                         Rp{" "}
@@ -10135,6 +10142,10 @@ function ReviewStep({
               <Row label="Cara Pembayaran" value={programInfo.caraPembayaran} />
               <Row label="Redaksi" value={programInfo.redaksi} />
               <Row
+                label="Tanggal Jatuh Tempo"
+                value={programInfo.tanggalJatuhTempo}
+              />
+              <Row
                 label="Periode"
                 value={
                   programInfo.periodeAwal && programInfo.periodeAkhir
@@ -10437,6 +10448,10 @@ function ReviewStep({
                             ? `${pendapatan.eventDurasiBulan} bulan`
                             : ""
                         }
+                      />
+                      <Row
+                        label="Tanggal Jatuh Tempo"
+                        value={pendapatan.eventTanggalJatuhTempo}
                       />
                       <Row
                         label="Total"
@@ -11701,6 +11716,7 @@ const INITIAL_PENDAPATAN: PendapatanState = {
   promosiHargaPajak: "exclude",
   promosiCaraPembayaran: "",
   promosiPeriodeAwal: "",
+  promosiPeriodeAkhir: "",
   promosiDurasiBulan: 0,
 
   promosiPpnAktif: false,
@@ -11857,7 +11873,7 @@ export default function SupplierMemoWizard() {
         )
       ).slice(0, 3)
 
-      const products =
+      const products: Product[] =
         renewalProducts.length > 0
           ? renewalProducts
           : PRODUCT_CATALOG.filter(
@@ -11866,7 +11882,11 @@ export default function SupplierMemoWizard() {
                 (identity?.principal?.id || identity?.supplier?.id),
             ).slice(0, 3)
 
-      const makeGroup = (id: string, mode: DiskonMode, basis: string) => ({
+      const makeGroup = (
+        id: string,
+        mode: DiskonMode,
+        basis: string,
+      ): OnFakturGroup => ({
         id,
 
         keterangan: "Data kelompok dari sewa sebelumnya",
@@ -11885,11 +11905,14 @@ export default function SupplierMemoWizard() {
         products,
 
         rows: Object.fromEntries(
-          products.map((product) => [product.plu, emptyOnFakturProductRow()]),
+          products.map((product: Product) => [
+            product.plu,
+            emptyOnFakturProductRow(),
+          ]),
         ),
       })
 
-      const makeOffGroup = (id: string) => ({
+      const makeOffGroup = (id: string): OffFakturGroup => ({
         id,
 
         keterangan: "Data kelompok dari sewa sebelumnya",
@@ -11908,7 +11931,10 @@ export default function SupplierMemoWizard() {
         products,
 
         rows: Object.fromEntries(
-          products.map((product) => [product.plu, emptyOffFakturProductRow()]),
+          products.map((product: Product) => [
+            product.plu,
+            emptyOffFakturProductRow(),
+          ]),
         ),
       })
 
@@ -12151,7 +12177,7 @@ export default function SupplierMemoWizard() {
     index: number,
     plu: string,
     field: keyof OnFakturProductRow,
-    val: string | number | boolean,
+    val: string | number | boolean | DiscountTier[],
   ) =>
     setOnGroups((prev) =>
       prev.map((group, i) =>
@@ -12174,7 +12200,7 @@ export default function SupplierMemoWizard() {
     index: number,
     plu: string,
     field: keyof OffFakturProductRow,
-    val: string | number | boolean,
+    val: string | number | boolean | DiscountTier[],
   ) =>
     setOffGroups((prev) =>
       prev.map((group, i) =>
