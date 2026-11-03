@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { FileText, Search } from "lucide-react";
 import {
   ArrowLeft,
   ChevronDown,
@@ -6,7 +7,7 @@ import {
   History,
   LockKeyhole,
 } from "lucide-react";
-import { readMemos, type WorkflowMemo } from "../lib/memoStore";
+import { formatBusinessMemoNumber, readMemos, type WorkflowMemo } from "../lib/memoStore";
 import "../styles/purchasing-admin-surface.css";
 
 const label = (key: string) =>
@@ -149,7 +150,7 @@ function MemoDetail({ memo, back }: { memo: WorkflowMemo; back: () => void }) {
         <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">
           Detail Realisasi Memo
         </p>
-        <h1 className="mt-1 text-2xl font-black">{memo.nomorMemo}</h1>
+        <h1 className="mt-1 text-2xl font-black">{formatBusinessMemoNumber(memo.nomorMemo, memo.jenisMemo, memo.tanggalSubmit)}</h1>
         <p className="mt-1 text-sm text-slate-300">
           {memo.supplierNama} · {kindLabel[memo.jenisMemo] || memo.jenisMemo}
         </p>
@@ -288,6 +289,7 @@ export default function MemoRealisasi() {
   const [allMemos, setAllMemos] = useState<WorkflowMemo[]>([]);
   const [selected, setSelected] = useState<WorkflowMemo | null>(null);
   const [open, setOpen] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   useEffect(() => {
     const all = readMemos();
     setAllMemos(all);
@@ -297,6 +299,7 @@ export default function MemoRealisasi() {
     return <MemoDetail memo={selected} back={() => setSelected(null)} />;
   const parents = allMemos.filter(
     (m) =>
+      (!search || `${m.nomorMemo} ${m.supplierNama}`.toLowerCase().includes(search.toLowerCase())) &&
       !m.parentId &&
       memos.some(
         (approved) => approved.id === m.id || approved.parentId === m.id,
@@ -304,6 +307,7 @@ export default function MemoRealisasi() {
   );
   return (
     <div className="space-y-5">
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-amber-500 focus-within:bg-white"><Search className="h-4 w-4 text-slate-400" /><input className="w-full bg-transparent text-sm outline-none" placeholder="Cari nomor memo atau supplier..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
           Pembelian
@@ -315,7 +319,7 @@ export default function MemoRealisasi() {
       </div>
       <section className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
         <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-muted-foreground">
+          <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-5 py-3">Memo / Supplier</th>
               <th className="px-5 py-3">Jenis</th>
@@ -353,7 +357,7 @@ export default function MemoRealisasi() {
                           <ChevronRight size={16} />
                         )}
                       </button>
-                      <b>{parent.nomorMemo}</b>
+                      <b className="font-mono text-xs font-bold text-indigo-700">{formatBusinessMemoNumber(parent.nomorMemo, parent.jenisMemo, parent.tanggalSubmit)}</b>
                       <p className="ml-7 text-xs text-muted-foreground">
                         {parent.supplierNama}
                       </p>
@@ -361,18 +365,18 @@ export default function MemoRealisasi() {
                     <td className="px-5 py-4">
                       {kindLabel[parent.jenisMemo] || parent.jenisMemo}
                     </td>
-                    <td className="px-5 py-4 text-emerald-700">Approved</td>
-                    <td className="px-5 py-4">{final.editedFields.length}</td>
+                    <td className="px-5 py-4"><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">Approved</span></td>
+                    <td className="px-5 py-4 text-xs text-slate-600">{final.editedFields.length}</td>
                     <td className="px-5 py-4">
                       {final.approvedAt?.slice(0, 10) || "-"}
                     </td>
-                    <td className="px-5 py-4">{final.approvedBy || "-"}</td>
+                    <td className="px-5 py-4 text-xs text-slate-600">{final.approvedBy || "-"}</td>
                     <td className="px-5 py-4">
                       <button
                         onClick={() => setSelected(final)}
-                        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800"
                       >
-                        Lihat Detail
+                        <FileText className="h-3.5 w-3.5" /> Detail
                       </button>
                     </td>
                   </tr>
@@ -391,9 +395,9 @@ export default function MemoRealisasi() {
                         <td className="px-5 py-3">
                           <button
                             onClick={() => setSelected(version)}
-                            className="text-xs font-bold text-emerald-700"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800"
                           >
-                            Lihat Detail
+                            <FileText className="h-3.5 w-3.5" /> Detail
                           </button>
                         </td>
                       </tr>

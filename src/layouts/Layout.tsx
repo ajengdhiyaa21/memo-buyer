@@ -1086,6 +1086,7 @@ export function Layout() {
   const isInternalReportRole =
     sessionRole === "Akuntansi" || sessionRole === "Pembelian" || sessionRole === "EDP"
   const outletLabel = selectedOutlet ?? "Semua Outlet"
+  const showDevelopmentBanner = ["Admin", "Super Admin", "Akuntansi", "Pembelian", "EDP"].includes(roleLabel)
   const internalOnly = ["Akuntansi", "Pembelian", "EDP"].includes(
     localStorage.getItem("bm-role") || "",
   )
@@ -1334,7 +1335,16 @@ export function Layout() {
 
         {/* ── Content ── */}
         {/* PADDING INI YANG MENENTUKAN GAP (p-5 md:p-6) ATAU SEKITAR 20-24px DARI NAVBAR */}
-        <main className="app-shell flex-1 overflow-y-auto p-5 md:p-6 bg-slate-50">
+        <main className="app-shell flex-1 overflow-y-auto bg-slate-50 p-5 md:p-6">
+          {showDevelopmentBanner && (
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3.5 text-amber-900 shadow-sm" role="status">
+              <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div>
+                <p className="text-sm font-black">Fitur masih dalam pengembangan</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-amber-800">Halaman internal ini masih dalam tahap penyempurnaan. Beberapa data atau alur dapat berubah.</p>
+              </div>
+            </div>
+          )}
           <Outlet />
           <CreatedByFooter />
         </main>

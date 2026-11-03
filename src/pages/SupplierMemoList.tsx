@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Edit3, History, KeyRound, Search, X } from "lucide-react";
+import { Check, FileText, History, KeyRound, Search, X } from "lucide-react";
 import { useNavigate } from "react-router";
 import { MemoEditLayout } from "./MemoEditLayout";
 import "../styles/purchasing-admin-surface.css";
@@ -32,6 +32,14 @@ const statusStyle: Record<string, string> = {
   Rejected: "bg-red-50 text-red-700 border-red-200",
 };
 const date = (v?: string) => (v ? v.split("-").reverse().join("/") : "-");
+
+const memoNumber = (memo: WorkflowMemo, fallbackIndex: number) => {
+  const type = memo.jenisMemo === "memo-program" ? "PROGRAM" : memo.jenisMemo === "update-informasi" ? "UPDATE" : "LAIN-LAIN";
+  const datePart = memo.tanggalSubmit ? memo.tanggalSubmit.split("-").reverse().join("").slice(0, 6) : "000000";
+  const match = memo.nomorMemo.match(/(\d{1,})$/);
+  const sequence = match ? match[1].padStart(3, "0") : String(fallbackIndex + 1).padStart(3, "0");
+  return `BM-${type}-${datePart}-${sequence}`;
+};
 
 function Status({ value }: { value: string }) {
   return (
@@ -968,7 +976,7 @@ export default function SupplierMemoList() {
         (m) =>
           (!status || m.status === status) &&
           (!search ||
-            `${m.nomorMemo} ${m.supplierNama} ${m.ringkasan}`
+            `${memoNumber(m, index)} ${m.supplierNama} ${m.ringkasan}`
               .toLowerCase()
               .includes(search.toLowerCase())),
       ),
@@ -1051,19 +1059,19 @@ export default function SupplierMemoList() {
         </button>
       </div>
       <div className="flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border px-3 py-2">
+        <div className="flex h-10 min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-amber-500 focus-within:bg-white">
           <Search size={16} className="text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nomor memo, supplier, atau ringkasan..."
-            className="w-full outline-none"
+            className="w-full bg-transparent text-sm outline-none"
           />
         </div>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-xl border px-3 py-2 text-sm"
+          className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none"
         >
           <option value="">Semua Status</option>
           <option>Draft</option>
@@ -1073,47 +1081,47 @@ export default function SupplierMemoList() {
       </div>
       <section className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
         <table className="w-full min-w-[950px] text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-muted-foreground">
+          <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-4 py-3">No. Memo</th>
-              <th className="px-4 py-3">Supplier</th>
-              <th className="px-4 py-3">Jenis</th>
-              <th className="px-4 py-3">Outlet</th>
-              <th className="px-4 py-3">Periode</th>
-              <th className="px-4 py-3">Pengajuan</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Aksi</th>
+              <th className="px-5 py-3">No Memo</th>
+              <th className="px-5 py-3">Supplier</th>
+              <th className="px-5 py-3">Jenis</th>
+              <th className="px-5 py-3">Outlet</th>
+              <th className="px-5 py-3">Periode</th>
+              <th className="px-5 py-3">Tanggal Pengajuan</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Aksi</th>
             </tr>
           </thead>
           <tbody>
             {!loading &&
-              filtered.map((m) => (
+              filtered.map((m, index) => (
                 <tr key={m.id} className="border-t hover:bg-amber-50/30">
-                  <td className="px-4 py-4 font-bold">
-                    {m.nomorMemo}
+                  <td className="px-5 py-4 font-mono text-xs font-bold text-indigo-700">
+                    {memoNumber(m, index)}
                     <p className="text-xs font-normal text-slate-400">
                       v{m.version} {m.editedFields.length ? "· diedit" : ""}
                     </p>
                   </td>
-                  <td className="px-4 py-4">{m.supplierNama}</td>
-                  <td className="px-4 py-4">
+                  <td className="px-5 py-4 font-semibold text-slate-800">{m.supplierNama}</td>
+                  <td className="px-5 py-4">
                     {kindLabel[m.jenisMemo] || m.jenisMemo}
                   </td>
-                  <td className="px-4 py-4">{m.outlets.join(", ") || "-"}</td>
-                  <td className="px-4 py-4">
+                  <td className="px-5 py-4 text-xs text-slate-600">{m.outlets.join(", ") || "-"}</td>
+                  <td className="px-5 py-4">
                     {date(m.periodeAwal)} – {date(m.periodeAkhir)}
                   </td>
-                  <td className="px-4 py-4">{date(m.tanggalSubmit)}</td>
-                  <td className="px-4 py-4">
+                  <td className="px-5 py-4 text-xs text-slate-500">{date(m.tanggalSubmit)}</td>
+                  <td className="px-5 py-4">
                     <Status value={m.status} />
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-5 py-4">
                     <button
                       onClick={() => setSelected(m)}
-                      className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800"
                     >
-                      <Edit3 size={14} />
-                      {m.status === "Draft" ? "Lihat / Edit" : "Lihat"}
+                      <FileText size={14} />
+                      Detail
                     </button>
                   </td>
                 </tr>

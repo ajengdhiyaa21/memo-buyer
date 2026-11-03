@@ -425,9 +425,9 @@ export function ListMemo() {
                 {memoCategoryCfg[category].label}
               </span>
             </div>
-            <div className="flex items-center bg-muted rounded-lg px-3 py-1.5 w-64 border border-border focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-600/15 transition-all">
+            <div className="flex h-10 w-64 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-amber-500 focus-within:bg-white transition-all">
               <Search className="w-3.5 h-3.5 text-muted-foreground mr-2 shrink-0" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari no memo, supplier..." className="bg-transparent border-none outline-none w-full text-sm placeholder:text-muted-foreground" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari no memo, supplier..." className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg text-[13px] text-muted-foreground bg-card hover:bg-muted hover:text-foreground transition-colors">
@@ -483,7 +483,7 @@ export function ListMemo() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-center items-center gap-1">
-                          <button title="Lihat Detail" onClick={() => navigate(`/program-supplier/memo/${memo.no}`)} className="p-1.5 text-muted-foreground hover:text-amber-700 hover:bg-amber-50 rounded-md transition-colors"><Eye className="w-3.5 h-3.5" /></button>
+                          <button title="Lihat Detail" onClick={() => navigate(`/program-supplier/memo/${memo.no}`)} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors"><Eye className="w-3.5 h-3.5" /> Detail</button>
                           <button title="Preview Excel" onClick={() => navigate(`/program-supplier/memo/${memo.no}`)} className="p-1.5 text-muted-foreground hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"><Table2 className="w-3.5 h-3.5" /></button>
                           <button title="Preview PDF" onClick={() => navigate(`/program-supplier/memo/${memo.no}`)} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"><Printer className="w-3.5 h-3.5" /></button>
                           <button title="Lihat Memo" onClick={() => navigate(`/program-supplier/memo/${memo.no}`)} className="p-1.5 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"><FileText className="w-3.5 h-3.5" /></button>

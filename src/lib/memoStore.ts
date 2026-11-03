@@ -24,6 +24,14 @@ export function createEditedMemo(parent: WorkflowMemo, values: Partial<WorkflowM
   writeMemos([...existing, edited])
   return edited
 }
+export const formatBusinessMemoNumber = (nomorMemo: string, jenisMemo: string, tanggalSubmit?: string, fallbackIndex = 0) => {
+  const type = jenisMemo === "memo-program" ? "PROGRAM" : jenisMemo === "update-informasi" ? "UPDATE" : jenisMemo === "listing" ? "LISTING" : "LAIN-LAIN"
+  const datePart = tanggalSubmit ? String(tanggalSubmit).slice(0, 10).split("-").reverse().join("").slice(0, 6) : "000000"
+  const match = String(nomorMemo || "").match(/[0-9]+$/)
+  const sequence = match ? match[0].padStart(3, "0") : String(fallbackIndex + 1).padStart(3, "0")
+  return `BM-${type}-${datePart}-${sequence}`
+}
+
 export const getCurrentRole = () => localStorage.getItem("bm-role") || ""
 export const fieldValue = (memo: Memo, key: string) => key === "outlets" ? memo.outlets.join(", ") : text((memo as any)[key] ?? (memo.data as any)?.[key])
 

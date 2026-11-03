@@ -1,5 +1,5 @@
 export type ListingApprovalStatus = "Draft" | "Approved" | "Released" | "Rejected"
-export type ListingApprovalProduct = { plu: string; namaProduk: string }
+export type ListingApprovalProduct = { plu: string; namaProduk: string; barcodePcs?: string; barcodeKarton?: string; konversiQty1?: number; konversiSatuan1?: string; konversiQty2?: number; konversiSatuan2?: string; konversiQty3?: number; konversiSatuan3?: string; hargaPerPcs?: number; diskonReguler?: number; statusPajak?: string }
 export type ListingApproval = {
   id: string
   memoId: string
@@ -8,6 +8,7 @@ export type ListingApproval = {
   submittedAt: string
   status: ListingApprovalStatus
   products: ListingApprovalProduct[]
+  listingDetails?: Record<string, unknown>
   purchaseNote?: string
   edpNote?: string
   purchaseDecisionAt?: string
@@ -29,9 +30,12 @@ export const readListingApprovals = (): ListingApproval[] => {
   const byMemo = new Map(stored.map((item) => [item.memoId, item]))
   const actual = readHistory().filter((memo) => memo?.data?.jenisMemo === "pendapatan-lain" && memo?.data?.pendapatan?.jenis === "listing")
   const nextActual = actual.map((memo) => {
+    const listing = memo.data.pendapatan || {}
+    const listingDetails = { listingPkp: listing.listingPkp, listingReturn: listing.listingReturn, listingBiayaLabel: listing.listingBiayaLabel, listingNominal: listing.listingNominal, listingHargaPajak: listing.listingHargaPajak, listingTempoPembayaran: listing.listingTempoPembayaran, listingCaraPembayaran: listing.listingCaraPembayaran, listingPpnAktif: listing.listingPpnAktif, listingPpnRate: listing.listingPpnRate, listingPphAktif: listing.listingPphAktif, listingPphRate: listing.listingPphRate }
     const existing = byMemo.get(memo.id)
-    const products = (memo.data.pendapatan.listingProducts || []).map((product: any) => ({ plu: product.plu || product.barcodePcs || "-", namaProduk: product.namaProduk || "-" }))
-    return existing ? { ...existing, products: existing.products.length ? existing.products : products } : { id: `LIST-${memo.id}`, memoId: memo.id, nomorMemo: memo.nomorMemo || memo.id, supplierNama: memo.supplierNama || "-", submittedAt: memo.tanggalSubmit || new Date().toISOString(), status: "Draft" as const, products }
+    const products = (listing.listingProducts || []).map((product: any) => ({ plu: product.plu || product.barcodePcs || "-", namaProduk: product.namaProduk || "-", barcodePcs: product.barcodePcs || "", barcodeKarton: product.barcodeKarton || "", konversiQty1: product.konversiQty1 || 0, konversiSatuan1: product.konversiSatuan1 || "", konversiQty2: product.konversiQty2 || 0, konversiSatuan2: product.konversiSatuan2 || "", konversiQty3: product.konversiQty3 || 0, konversiSatuan3: product.konversiSatuan3 || "", hargaPerPcs: product.hargaPerPcs || 0, diskonReguler: product.diskonReguler || 0, statusPajak: product.statusPajak || "" }))
+    const mergedProducts = products.map((product: ListingApprovalProduct) => ({ ...product, ...(existing?.products.find((saved) => saved.plu === product.plu) || {}) }))
+    return existing ? { ...existing, products: mergedProducts, listingDetails } : { id: `LIST-${memo.id}`, memoId: memo.id, nomorMemo: memo.nomorMemo || memo.id, supplierNama: memo.supplierNama || "-", submittedAt: memo.tanggalSubmit || new Date().toISOString(), status: "Draft" as const, products: mergedProducts, listingDetails }
   })
   const next = [...nextActual, ...stored.filter((item) => !actual.some((memo) => memo.id === item.memoId))]
   const changed = JSON.stringify(next) !== JSON.stringify(stored)
