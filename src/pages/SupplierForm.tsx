@@ -7426,6 +7426,12 @@ interface EventMediaDetailRow {
   durasiBulan: number
 }
 
+const calculateAnnualLeaseDiscount = (monthlyNominal: number, durationMonths: number) => {
+  const normalTotal = (monthlyNominal || 0) * (durationMonths || 0)
+  const eligible = durationMonths === 12 && monthlyNominal > 0
+  const discount = eligible ? monthlyNominal : 0
+  return { normalTotal, eligible, discount, discountedTotal: normalTotal - discount }
+}
 function PendapatanStep({
   state,
   setField,
@@ -8713,12 +8719,15 @@ function PendapatanStep({
                         />
                       </div>
                     </div>
-                    <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-semibold text-blue-700">
-                      Durasi:{" "}
+                    <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
+                      Periode:{" "}
                       {dateRangeDurationLabel(
                         state.eventPeriodeAwal,
                         state.eventPeriodeAkhir,
                       ) || "Pilih tanggal mulai dan tanggal selesai."}
+                      {state.eventDurasiBulan > 0 && (
+                        <> — Durasi yang diisi: {state.eventDurasiBulan} bulan.</>
+                      )}
                     </p>
                   </div>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -8770,21 +8779,32 @@ function PendapatanStep({
                   <PaymentDueWarning
                     dueDate={leasePaymentDeadline(state.eventPeriodeAwal, state.eventPeriodeAkhir)}
                   />
-                  <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
-                      Total
-                    </p>
-                    <p className="mt-1 text-[15px] font-black text-emerald-800">
-                      Rp{" "}
-                      {(
-                        (state.eventNominal || 0) *
-                        (state.eventDurasiBulan || 0)
-                      ).toLocaleString("id-ID")}
-                    </p>
-                    <p className="mt-1 text-[11px] text-emerald-700">
-                      Nilai sewa x durasi bulan
-                    </p>
-                  </div>
+                  {(() => {
+                    const discount = calculateAnnualLeaseDiscount(state.eventNominal, state.eventDurasiBulan)
+                    return (
+                      <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Total Normal</p>
+                            <p className="mt-1 text-[15px] font-black text-emerald-800">Rp {discount.normalTotal.toLocaleString("id-ID")}</p>
+                            <p className="mt-1 text-[11px] text-emerald-700">Nilai sewa x durasi bulan</p>
+                          </div>
+                          {discount.eligible && (
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Total Setelah Potongan</p>
+                              <p className="mt-1 text-[15px] font-black text-emerald-800">Rp {discount.discountedTotal.toLocaleString("id-ID")}</p>
+                              <p className="mt-1 text-[11px] font-semibold text-emerald-700">Potongan 1 bulan: Rp {discount.discount.toLocaleString("id-ID")}</p>
+                            </div>
+                          )}
+                        </div>
+                        {discount.eligible && (
+                          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
+                            Potongan 1 bulan berlaku apabila pembayaran dilakukan di awal dan paling lambat 3 bulan setelah periode mulai.
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })()}
                   <div>
                     <Label>Keterangan</Label>
                     <textarea
