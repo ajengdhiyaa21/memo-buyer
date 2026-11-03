@@ -1,0 +1,67 @@
+.memo-edit-layout {
+  --memo-border: #e2e8f0;
+  --memo-muted: #64748b;
+}
+
+.memo-edit-layout > aside > section,
+.memo-edit-layout > div > section {
+  background: #fff;
+  border-color: var(--memo-border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.memo-edit-layout section > div:first-child {
+  border-color: #f1f5f9;
+}
+
+.memo-edit-layout .border-b,
+.memo-edit-layout .border-l,
+.memo-edit-layout .border-t {
+  border-color: #f1f5f9;
+}
+
+.memo-edit-layout aside > section > div:first-child,
+.memo-edit-layout > div > section > div:first-child {
+  background: linear-gradient(135deg, #fafafa, #fef9f0);
+}
+
+.memo-edit-layout input,
+.memo-edit-layout select {
+  border-color: #e2e8f0;
+  border-radius: 0.5rem;
+  color: #334155;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.memo-edit-layout input:focus,
+.memo-edit-layout select:focus {
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+
+.memo-edit-layout .overflow-x-auto > .min-w-\[900px\] > div:first-child {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.memo-edit-layout .overflow-x-auto > .min-w-\[900px\] > div:not(:first-child) {
+  border-color: #f1f5f9;
+  transition: background-color 150ms ease;
+}
+
+.memo-edit-layout .overflow-x-auto > .min-w-\[900px\] > div:not(:first-child):hover {
+  background: #f8fafc;
+}
+
+.memo-edit-layout .overflow-x-auto > .min-w-\[900px\] > div:not(:first-child) > div:first-child {
+  background: #fffdf8;
+}
+
+.memo-edit-layout dt {
+  color: #94a3b8;
+}
+
+.memo-edit-layout dd {
+  color: #1e293b;
+}

@@ -25,6 +25,10 @@ import { SellOutDetail } from "./pages/SellOutDetail"
 import { SettingHarga } from "./pages/SettingHarga"
 
 import SupplierForm from "./pages/SupplierForm"
+import SupplierRegistrationPage from "./pages/SupplierRegistrationPage"
+import SupplierOnboardingApproval from "./pages/SupplierOnboardingApproval"
+import ListingApproval from "./pages/ListingApproval"
+import EdpDashboard from "./pages/EdpDashboard"
 
 import { CredentialPage } from "./pages/CredentialPage"
 
@@ -56,10 +60,19 @@ import { CetakPenjualanPage } from "./pages/CetakPenjualanPage"
 
 function DashboardRoute() {
   const role = localStorage.getItem("bm-role")
+  if (role === "EDP") return <EdpDashboard />
   return role === "Akuntansi" || role === "Pembelian" ? (
     <MemoReport />
   ) : (
     <Dashboard />
+  )
+}
+
+function PurchaseMemoRoute() {
+  return localStorage.getItem("bm-role") === "Pembelian" ? (
+    <SupplierMemoList />
+  ) : (
+    <Navigate to="/dashboard" replace />
   )
 }
 
@@ -74,6 +87,12 @@ const router = createBrowserRouter([
     path: "/supplier/form",
 
     Component: SupplierForm,
+  },
+
+  {
+    path: "/supplier/register",
+
+    Component: SupplierRegistrationPage,
   },
 
   {
@@ -104,7 +123,11 @@ const router = createBrowserRouter([
 
       { path: "memo-report/event/:eventName", Component: MemoEventDetail },
 
-      { path: "memo-list", Component: SupplierMemoList },
+      { path: "memo-list", Component: PurchaseMemoRoute },
+
+      { path: "supplier-onboarding", Component: SupplierOnboardingApproval },
+
+      { path: "listing-approval", Component: ListingApproval },
 
       { path: "profile", Component: Profile },
 

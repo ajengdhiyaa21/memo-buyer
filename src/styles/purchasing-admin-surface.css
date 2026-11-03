@@ -1,0 +1,56 @@
+/* Shared purchase-list surface: mirrors the neutral cards and tables in Admin/Setting Harga. */
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm {
+  overflow: hidden;
+  border-color: #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm table thead,
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm table thead tr {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm table th {
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm table tbody tr {
+  border-color: #f1f5f9;
+  transition: background-color 150ms ease;
+}
+
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm table tbody tr:hover {
+  background: #f8fafc;
+}
+
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm table td {
+  color: #334155;
+}
+
+section.rounded-xl.border.bg-card.shadow-sm {
+  border-color: #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+section.rounded-xl.border.bg-card.shadow-sm > h2:first-child {
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+section.rounded-xl.border.bg-card.shadow-sm .border-b,
+section.rounded-xl.border.bg-card.shadow-sm .border-l,
+section.rounded-xl.border.bg-card.shadow-sm .border-t,
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm .border-b,
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm .border-l,
+section.overflow-x-auto.rounded-xl.border.border-border.bg-card.shadow-sm .border-t {
+  border-color: #f1f5f9;
+}

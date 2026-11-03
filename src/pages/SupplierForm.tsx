@@ -32,6 +32,8 @@ import {
 } from "lucide-react"
 
 import mannaKampusLogo from "../../logo.png"
+import SharedFormCard from "../components/supplier-form/FormCard"
+import SharedSignaturePad from "../components/supplier-form/SignaturePad"
 
 import "../renewal-lock.css"
 
@@ -2657,24 +2659,7 @@ function Card({
   children: React.ReactNode
   className?: string
 }) {
-  return (
-    <div
-      className={`bg-white rounded-2xl border border-slate-200 shadow-sm relative ${className}`}
-    >
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-amber-50/50 rounded-t-2xl">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-600/10 shrink-0">
-          <Icon className="w-4 h-4 text-amber-700" />
-        </div>
-        <div>
-          <h2 className="text-[13px] font-bold text-slate-800">{title}</h2>
-          {subtitle && (
-            <p className="text-[11px] text-slate-400 mt-0.5">{subtitle}</p>
-          )}
-        </div>
-      </div>
-      <div className="p-6 space-y-5">{children}</div>
-    </div>
-  )
+  return <SharedFormCard title={title} icon={Icon} subtitle={subtitle} className={className}>{children}</SharedFormCard>
 }
 
 function OutletChip({
@@ -3253,10 +3238,12 @@ function StepIndicator({
 function ScanIdStep({
   identity,
   onScanned,
+  onRegisterSupplier,
   error,
 }: {
   identity: IdCardData | null
   onScanned: (card: IdCardData) => void
+  onRegisterSupplier: () => void
   error?: string
 }) {
   const [scanning, setScanning] = useState(false)
@@ -3309,7 +3296,7 @@ function ScanIdStep({
       subtitle="Scan kartu ID supplier atau masukkan ID supplier secara manual"
     >
       <div className="flex flex-col items-center gap-6 py-4">
-        <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-1 w-full max-w-md">
+        <div className="grid grid-cols-3 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-1 w-full max-w-xl">
           <button
             type="button"
             onClick={() => setMode("scan")}
@@ -3331,6 +3318,13 @@ function ScanIdStep({
             }`}
           >
             Input ID
+          </button>
+          <button
+            type="button"
+            onClick={onRegisterSupplier}
+            className="rounded-xl px-4 py-2.5 text-[12px] font-bold text-slate-500 transition-all hover:bg-white hover:text-amber-700"
+          >
+            Supplier Baru
           </button>
         </div>
 
@@ -3772,8 +3766,24 @@ function periodEndDateValue(start: string, months: number) {
   return endDate.toISOString().slice(0, 10)
 }
 
+// Batas pembayaran mengikuti SOP kerja sama sewa: periode tahunan masuk
+// maksimal bulan ke-3, sedangkan semester/kuartal maksimal bulan ke-2.
+function leasePaymentDeadline(start: string, end: string) {
+  if (!start) return ""
+  const startDate = new Date(`${start}T00:00:00`)
+  if (Number.isNaN(startDate.getTime())) return ""
+  const endDate = end ? new Date(`${end}T00:00:00`) : null
+  const months = endDate && !Number.isNaN(endDate.getTime())
+    ? (endDate.getFullYear() - startDate.getFullYear()) * 12 + endDate.getMonth() - startDate.getMonth() + 1
+    : 0
+  const offset = months >= 12 ? 2 : 1
+  const deadline = new Date(startDate)
+  deadline.setMonth(deadline.getMonth() + offset + 1, 0)
+  return deadline.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })
+}
+
 const PAYMENT_DUE_EMPTY_MESSAGE =
-  "Batas pembayar maksimal akan tampil setelah Tanggal Jatuh Tempo diisi."
+  "Batas pembayaran maksimal akan tampil setelah periode sewa dan tanggal jatuh tempo diisi."
 
 function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
   return (
@@ -3782,7 +3792,7 @@ function PaymentDueWarning({ dueDate }: { dueDate?: string }) {
         <Info className="warning-info-animate mt-0.5 h-4 w-4 shrink-0" />
         <p className="text-[12px] font-semibold leading-relaxed">
           {dueDate
-            ? `Batas pembayar maksimal sampai tanggal ${dueDate}.`
+            ? `Batas pembayaran maksimal sampai tanggal ${dueDate}.`
             : PAYMENT_DUE_EMPTY_MESSAGE}
         </p>
       </div>
@@ -3794,10 +3804,12 @@ function MemoDueDateField({
   value,
   onChange,
   error,
+  paymentDeadline,
 }: {
   value: string
   onChange: (value: string) => void
   error?: string
+  paymentDeadline?: string
 }) {
   return (
     <div>
@@ -3809,7 +3821,7 @@ function MemoDueDateField({
         className={error ? inpErr : inp}
       />
       <FieldError message={error} />
-      <PaymentDueWarning dueDate={addMonthsDateLabel(value, 2)} />
+      <PaymentDueWarning dueDate={paymentDeadline || addMonthsDateLabel(value, 2)} />
     </div>
   )
 }
@@ -5830,6 +5842,26 @@ interface DiscountTier {
 const emptyDiscountTiers = (): DiscountTier[] =>
   Array.from({ length: 5 }, () => ({ mode: "rp", basis: "", value: 0 }))
 
+function ProductDiscountTiers({ tiers, onChange, showBasis = false }: { tiers: DiscountTier[]; onChange: (tiers: DiscountTier[]) => void; showBasis?: boolean }) {
+  const values = tiers.length ? tiers : emptyDiscountTiers()
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-2">
+      <Label>Nilai Potongan Produk</Label>
+      <p className="mb-2 text-[10px] text-slate-400">Isi diskon yang diperlukan. Setiap tingkat dapat menggunakan % atau Rp.</p>
+      <div className="grid grid-cols-5 overflow-hidden rounded-lg border border-slate-200 divide-x divide-slate-200">
+        {values.slice(0, 5).map((tier, index) => (
+          <div key={index} className="min-w-0 bg-slate-50 p-1.5">
+            <p className="mb-1 text-center text-[9px] font-bold text-slate-600">Diskon {index + 1}</p>
+            <DiskonModeToggle value={tier.mode} onChange={(mode) => onChange(values.map((item, i) => i === index ? { ...item, mode, basis: mode === "persen" ? item.basis : "" } : item))} />
+            <input type="text" inputMode="numeric" value={tier.mode === "persen" ? tier.value || "" : formatRupiahInput(tier.value)} onChange={(event) => onChange(values.map((item, i) => i === index ? { ...item, value: item.mode === "persen" ? parseFloat(event.target.value) || 0 : parseRupiahInput(event.target.value) } : item))} placeholder={tier.mode === "persen" ? "%" : "0"} className={`${inp} mt-1 !rounded-lg !py-1.5 text-center text-[11px]`} />
+          </div>
+        ))}
+      </div>
+      {showBasis && values.some((tier) => tier.mode === "persen" && tier.value > 0) && <div className="mt-2"><Label>Basis Persentase</Label><select value={values.find((tier) => tier.mode === "persen")?.basis || ""} onChange={(event) => onChange(values.map((tier) => tier.mode === "persen" ? { ...tier, basis: event.target.value } : tier))} className={`${inp} !py-2`}><option value="">Pilih basis persentase</option>{DISKON_BASIS_OPTIONS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select></div>}
+    </div>
+  )
+}
+
 const emptyOnFakturGroup = (): OnFakturGroup => ({
   id: `on-${Date.now()}-${Math.random().toString(36).slice(2)}`,
 
@@ -6293,6 +6325,7 @@ function OnFakturProductDetailCard({
           {product.plu}
         </span>
       </div>
+      <ProductDiscountTiers tiers={row.diskonTiers} onChange={(tiers) => setField("diskonTiers", tiers)} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label>Banded</Label>
@@ -6441,6 +6474,7 @@ function OffFakturProductDetailCard({
           {product.plu}
         </span>
       </div>
+      <ProductDiscountTiers tiers={row.diskonTiers} onChange={(tiers) => setField("diskonTiers", tiers)} showBasis />
       <div>
         <Label>Kupon dan Voucher</Label>
         <YesNoToggle
@@ -6755,18 +6789,6 @@ function ProgramDetailStep({
                     placeholder="Keterangan tambahan untuk kelompok ini..."
                   />
                 </div>
-                {renderDiscountFields(
-                  group.diskonTiers,
-                  (tiers) => {
-                    updateOnGroup(index, "diskonTiers", tiers)
-                    const first = tiers.find((tier) => tier.value > 0) || tiers[0]
-                    updateOnGroup(index, "diskonMode", first.mode)
-                    updateOnGroup(index, "diskonBasis", first.basis)
-                    updateOnGroup(index, "diskonValue", first.value)
-                  },
-
-                  false,
-                )}
                 <div>
                   <Label req>Tambah Produk ke Kelompok Ini</Label>
                   <PluMultiSelect
@@ -6854,18 +6876,6 @@ function ProgramDetailStep({
                     placeholder="Keterangan tambahan untuk kelompok ini..."
                   />
                 </div>
-                {renderDiscountFields(
-                  group.diskonTiers,
-                  (tiers) => {
-                    updateOffGroup(index, "diskonTiers", tiers)
-                    const first = tiers.find((tier) => tier.value > 0) || tiers[0]
-                    updateOffGroup(index, "diskonMode", first.mode)
-                    updateOffGroup(index, "diskonBasis", first.basis)
-                    updateOffGroup(index, "diskonValue", first.value)
-                  },
-
-                  true,
-                )}
                 <div>
                   <Label req>Tambah Produk ke Kelompok Ini</Label>
                   <PluMultiSelect
@@ -7858,13 +7868,7 @@ function PendapatanStep({
                 </div>
               </div>
               <PaymentDueWarning
-                dueDate={addMonthsDateLabel(
-                  periodEndDateValue(
-                    state.sewaPeriodeAwal,
-                    state.sewaDurasiBulan,
-                  ),
-                  2,
-                )}
+                dueDate={leasePaymentDeadline(state.sewaPeriodeAwal, periodEndDateValue(state.sewaPeriodeAwal, state.sewaDurasiBulan))}
               />
               <div>
                 <Label>Keterangan</Label>
@@ -8189,13 +8193,7 @@ function PendapatanStep({
                 </div>
               </div>
               <PaymentDueWarning
-                dueDate={addMonthsDateLabel(
-                  periodEndDateValue(
-                    state.promosiPeriodeAwal,
-                    state.promosiDurasiBulan,
-                  ),
-                  2,
-                )}
+                dueDate={leasePaymentDeadline(state.promosiPeriodeAwal, periodEndDateValue(state.promosiPeriodeAwal, state.promosiDurasiBulan))}
               />
               <div>
                 <Label>Keterangan Media</Label>
@@ -8770,10 +8768,7 @@ function PendapatanStep({
                     </div>
                   </div>
                   <PaymentDueWarning
-                    dueDate={addMonthsDateLabel(
-                      state.eventTanggalJatuhTempo,
-                      2,
-                    )}
+                    dueDate={leasePaymentDeadline(state.eventPeriodeAwal, state.eventPeriodeAkhir)}
                   />
                   <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                     <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
@@ -9075,10 +9070,7 @@ function PendapatanStep({
                                   </div>
                                 </div>
                                 <PaymentDueWarning
-                                  dueDate={addMonthsDateLabel(
-                                    row.tanggalJatuhTempo || "",
-                                    2,
-                                  )}
+                                  dueDate={leasePaymentDeadline(row.tanggalMulai, row.tanggalSelesai)}
                                 />
                                 <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                                   <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
@@ -9132,6 +9124,14 @@ function PendapatanStep({
                     ? errors.sewaTanggalJatuhTempo
                     : errors.eventTanggalJatuhTempo
                 }
+                paymentDeadline={leasePaymentDeadline(
+                  state.jenis === "sewa"
+                    ? state.sewaPeriodeAwal
+                    : state.eventPeriodeAwal,
+                  state.jenis === "sewa"
+                    ? state.sewaPeriodeAkhir
+                    : state.eventPeriodeAkhir,
+                )}
               />
               <div className="border-t border-slate-100 pt-5">
                 <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
@@ -9225,7 +9225,7 @@ function NotesStep({
               <Info className="warning-info-animate mt-0.5 h-4 w-4 shrink-0" />
               <p className="text-[12px] font-semibold leading-relaxed">
                 {paymentDueDate
-                  ? `Batas pembayar maksimal sampai tanggal ${paymentDueDate}.`
+                  ? `Batas pembayaran maksimal sampai tanggal ${paymentDueDate}.`
                   : PAYMENT_DUE_EMPTY_MESSAGE}
               </p>
             </div>
@@ -10566,7 +10566,7 @@ function ReviewStep({
         icon={PenLine}
         subtitle="Bubuhkan tanda tangan sebagai persetujuan atas isi memo di atas"
       >
-        <SignaturePad
+        <SharedSignaturePad
           value={signature}
           onChange={setSignature}
           error={errors.signature}
@@ -10595,8 +10595,7 @@ function ReviewStep({
                 className="mt-0.5 w-4 h-4 rounded border-red-300 text-red-600 focus:ring-red-500"
               />
               <span className="text-[12px] font-semibold text-red-700 leading-relaxed">
-                Saya bersedia melakukan pembayaran maksimal sebelum 2 bulan
-                setelah tanggal jatuh tempo.
+                Saya bersedia melakukan pembayaran paling lambat sesuai batas pembayaran berdasarkan periode sewa dan tanggal jatuh tempo.
               </span>
             </label>
             <FieldError message={errors.paymentAgreed} />
@@ -11604,8 +11603,7 @@ function SuccessScreen({
               </div>
               {jenisMemo !== "update-informasi" && (
                 <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-1.5 text-[10px] font-bold text-red-800">
-                  Supplier menyatakan bersedia melakukan pembayaran maksimal
-                  sebelum 2 bulan setelah tanggal jatuh tempo.
+                  Supplier menyatakan bersedia melakukan pembayaran paling lambat sesuai batas pembayaran berdasarkan periode sewa dan tanggal jatuh tempo.
                 </div>
               )}
             </div>
@@ -12778,7 +12776,7 @@ export default function SupplierMemoWizard() {
 
       if (jenisMemo !== "update-informasi" && !paymentAgreed)
         e.paymentAgreed =
-          "Centang pernyataan kesediaan pembayaran sebelum 2 bulan."
+          "Centang pernyataan kesediaan pembayaran sesuai batas periode sewa."
     }
 
     return e
@@ -12908,6 +12906,7 @@ export default function SupplierMemoWizard() {
           <ScanIdStep
             identity={identity}
             onScanned={onScanned}
+            onRegisterSupplier={() => window.location.assign("/supplier/register")}
             error={errors.scan}
           />
         )}

@@ -16,15 +16,17 @@ export function Login() {
     const accounts = {
       akuntansi: { password: 'akuntansi123', role: 'Akuntansi' },
       pembelian: { password: 'pembelian123', role: 'Pembelian' },
+      edp: { password: 'edp123', role: 'EDP' },
       'akuntansi@bm.co.id': { password: 'akuntansi123', role: 'Akuntansi' },
       'pembelian@bm.co.id': { password: 'pembelian123', role: 'Pembelian' },
+      'edp@bm.co.id': { password: 'edp123', role: 'EDP' },
     } as Record<string, { password: string; role: string }>
     const account = accounts[username.trim().toLowerCase()]
     if (account) {
       const savedPassword = localStorage.getItem(`bm-password-${account.role}`)
       if ((savedPassword || account.password) !== password) { setError('Username atau password salah.'); return }
       localStorage.setItem('bm-role', account.role)
-      navigate('/dashboard')
+        navigate('/dashboard')
       return
     }
     // Akun internal memakai kredensial khusus di atas. Login lain dianggap

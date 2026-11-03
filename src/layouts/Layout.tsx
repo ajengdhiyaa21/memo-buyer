@@ -19,6 +19,7 @@ import {
   HelpCircle,
   KeyRound,
   User,
+  UserPlus,
   Eye,
   EyeOff,
   X,
@@ -38,6 +39,7 @@ import { useApp } from "../context/AppContext"
 import { memos } from "../data/memoData"
 import { reports } from "../data/sellOutData"
 import { demoRows, type Memo as SupplierMemo } from "../pages/MemoReportGrouped"
+import { readSupplierOnboarding } from "../lib/supplierOnboardingStore"
 import mannaKampusLogo from "../../logo.png"
 
 const pendingStatuses = ["Menunggu Buyer", "Menunggu Checker", "Setting Harga"]
@@ -83,6 +85,19 @@ function buildNotifications(
   supplierMemos: SupplierMemo[] = [],
 ) {
   const isInternalReportRole = role === "Akuntansi"
+  if (role === "EDP") {
+    return readSupplierOnboarding()
+      .filter((supplier) => supplier.status === "Menunggu EDP")
+      .slice(0, 8)
+      .map((supplier) => ({
+        id: `supplier-onboarding-${supplier.id}`,
+        title: "Supplier baru menunggu approval EDP",
+        message: supplier.namaSupplier,
+        meta: `NPWP ${supplier.npwp} · ${supplier.kota}`,
+        tone: "amber",
+        href: "/supplier-onboarding",
+      }))
+  }
   if (role === "Pembelian") {
     return supplierMemos.slice(0, 8).map((memo) => ({
       id: `approval-${memo.id}`,
@@ -144,7 +159,7 @@ function buildNotifications(
       if (!match) return null
       const end = new Date(`${match[6]}-${match[5]}-${match[4]}T00:00:00`)
       const days = Math.ceil((end.getTime() - Date.now()) / 86400000)
-      if (days > 30) return null
+      if (days > 14) return null
       return {
         id: `renewal-${memo.no}`,
         title: isInternalReportRole
@@ -153,7 +168,7 @@ function buildNotifications(
             : "Memo sewa mendekati jatuh tempo"
           : days < 0
             ? "Sewa sudah berakhir"
-            : "Sewa mendekati jatuh tempo",
+            : "Perpanjangan sewa wajib diajukan H-14",
         message: `${memo.supplier} - ${memo.program}`,
         meta:
           days < 0
@@ -274,6 +289,7 @@ function UbahPasswordModal({ onClose }: { onClose: () => void }) {
   const defaults: Record<string, string> = {
     Akuntansi: "akuntansi123",
     Pembelian: "pembelian123",
+    EDP: "edp123",
   }
   const inputCls =
     "w-full px-3 py-2.5 border border-slate-200 rounded-xl text-[13px] bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 transition-all placeholder:text-slate-400"
@@ -752,6 +768,7 @@ function SidebarContent({
   internalOnly?: boolean
 }) {
   const canViewPaymentMonitoring = localStorage.getItem("bm-role") === "Akuntansi"
+  const canApproveSupplierOnboarding = ["Pembelian", "EDP"].includes(localStorage.getItem("bm-role") || "")
 
   if (internalOnly)
     return (
@@ -772,7 +789,7 @@ function SidebarContent({
             <BarChart2 className="h-4 w-4 text-amber-600" />
             Dashboard
           </NavLink>
-          {localStorage.getItem("bm-role") !== "Akuntansi" && (
+          {localStorage.getItem("bm-role") === "Pembelian" && (
           <NavLink
             to="/memo-list"
             onClick={onNavClick}
@@ -827,6 +844,18 @@ function SidebarContent({
             <NavLink to="/memo-realisasi" onClick={onNavClick} className={({ isActive }) => clsx("flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150", isActive ? "font-bold text-amber-700 bg-[#FEF3C7]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium")}>
               <FileText className="h-4 w-4 text-emerald-600" />
               Realisasi Memo
+            </NavLink>
+          )}
+          {canApproveSupplierOnboarding && (
+            <NavLink to="/supplier-onboarding" onClick={onNavClick} className={({ isActive }) => clsx("flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150", isActive ? "font-bold text-amber-700 bg-[#FEF3C7]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium")}>
+              <UserPlus className="h-4 w-4 text-amber-600" />
+              Approval Supplier Baru
+            </NavLink>
+          )}
+          {canApproveSupplierOnboarding && (
+            <NavLink to="/listing-approval" onClick={onNavClick} className={({ isActive }) => clsx("flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150", isActive ? "font-bold text-amber-700 bg-[#FEF3C7]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium")}>
+              <ClipboardCheck className="h-4 w-4 text-amber-600" />
+              Approval Listing Produk
             </NavLink>
           )}
         </nav>
@@ -1055,9 +1084,9 @@ export function Layout() {
   const sessionRole = localStorage.getItem("bm-role")
   const roleLabel = sessionRole || currentUser.role
   const isInternalReportRole =
-    sessionRole === "Akuntansi" || sessionRole === "Pembelian"
+    sessionRole === "Akuntansi" || sessionRole === "Pembelian" || sessionRole === "EDP"
   const outletLabel = selectedOutlet ?? "Semua Outlet"
-  const internalOnly = ["Akuntansi", "Pembelian"].includes(
+  const internalOnly = ["Akuntansi", "Pembelian", "EDP"].includes(
     localStorage.getItem("bm-role") || "",
   )
   const supplierMemos = (() => {
