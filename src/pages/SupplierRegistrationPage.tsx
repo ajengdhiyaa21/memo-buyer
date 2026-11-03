@@ -184,13 +184,13 @@ export default function SupplierRegistrationPage() {
         card.appendChild(removeButton)
       })
       bankSection.querySelector("[data-bank-add]")?.remove()
-      if (data.banks.length < 3) {
+      {
         const addButton = document.createElement("button")
         addButton.type = "button"
         addButton.dataset.bankAdd = "true"
         addButton.className = "mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100"
         addButton.textContent = "+ Tambah Rekening Bank"
-        addButton.onclick = () => setData((old) => old.banks.length < 3 ? { ...old, banks: [...old.banks, { bank: "", account: "", holder: "" }] } : old)
+        addButton.onclick = () => setData((old) => ({ ...old, banks: [...old.banks, { bank: "", account: "", holder: "" }] }))
         bankSection.appendChild(addButton)
       }
     }
