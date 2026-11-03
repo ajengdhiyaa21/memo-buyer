@@ -3831,11 +3831,13 @@ function DateRangeLikePicker({
   end,
   onStart,
   onEnd,
+  durationMonths,
 }: {
   start: string
   end: string
   onStart: (v: string) => void
   onEnd: (v: string) => void
+  durationMonths?: number
 }) {
   return (
     <div>
@@ -3864,9 +3866,7 @@ function DateRangeLikePicker({
         </div>
       </div>
       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
-        {start && end
-          ? `${start} sampai ${end}`
-          : "Pilih tanggal pemakaian dan tanggal selesai sewa."}
+        {start && end ? "Periode: " + start + " sampai " + end + " — Durasi: " + dateRangeMonthCount(start, end) + " bulan." : "Pilih tanggal pemakaian dan tanggal selesai sewa."}
       </div>
     </div>
   )
@@ -3932,6 +3932,17 @@ function dateRangeDurationLabel(startValue: string, endValue: string) {
   }${months && days ? " " : ""}${days ? `${days} hari` : ""})`
 }
 
+function dateRangeMonthCount(startValue: string, endValue: string) {
+  if (!startValue || !endValue) return 0
+  const start = new Date(startValue + "T00:00:00")
+  const end = new Date(endValue + "T00:00:00")
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return 0
+  let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
+  const anchor = new Date(start)
+  anchor.setMonth(anchor.getMonth() + months)
+  if (anchor > end) months -= 1
+  return Math.max(0, months)
+}
 function parseKassaNumber(value: string) {
   return (value.match(/\d+/g) || [])[0] || ""
 }
@@ -4344,8 +4355,7 @@ function DualCalendarRangePicker({
         )}
       </div>
       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
-        {dateRangeDurationLabel(start, end) ||
-          "Pilih tanggal mulai dan tanggal selesai."}
+        {start && end && durationMonths ? "Periode: " + start + " sampai " + end + " — Durasi: " + durationMonths + " bulan." : dateRangeDurationLabel(start, end) || "Pilih tanggal mulai dan tanggal selesai."}
       </div>
     </div>
   )
@@ -8720,14 +8730,7 @@ function PendapatanStep({
                       </div>
                     </div>
                     <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
-                      Periode:{" "}
-                      {dateRangeDurationLabel(
-                        state.eventPeriodeAwal,
-                        state.eventPeriodeAkhir,
-                      ) || "Pilih tanggal mulai dan tanggal selesai."}
-                      {state.eventDurasiBulan > 0 && (
-                        <> — Durasi yang diisi: {state.eventDurasiBulan} bulan.</>
-                      )}
+                      Periode: {state.eventPeriodeAwal || "Pilih tanggal mulai"} sampai {state.eventPeriodeAkhir || "pilih tanggal selesai"} — Durasi: {dateRangeMonthCount(state.eventPeriodeAwal, state.eventPeriodeAkhir)} bulan.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -8782,25 +8785,24 @@ function PendapatanStep({
                   {(() => {
                     const discount = calculateAnnualLeaseDiscount(state.eventNominal, state.eventDurasiBulan)
                     return (
-                      <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Total Normal</p>
-                            <p className="mt-1 text-[15px] font-black text-emerald-800">Rp {discount.normalTotal.toLocaleString("id-ID")}</p>
-                            <p className="mt-1 text-[11px] text-emerald-700">Nilai sewa x durasi bulan</p>
-                          </div>
-                          {discount.eligible && (
-                            <div>
-                              <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Total Setelah Potongan</p>
-                              <p className="mt-1 text-[15px] font-black text-emerald-800">Rp {discount.discountedTotal.toLocaleString("id-ID")}</p>
-                              <p className="mt-1 text-[11px] font-semibold text-emerald-700">Potongan 1 bulan: Rp {discount.discount.toLocaleString("id-ID")}</p>
-                            </div>
-                          )}
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">Total Sewa Normal</p>
+                          <p className="mt-1 text-[16px] font-black text-emerald-900">Rp {discount.normalTotal.toLocaleString("id-ID")}</p>
+                          <p className="mt-1 text-[11px] text-emerald-700">Nilai sewa x durasi bulan</p>
                         </div>
                         {discount.eligible && (
-                          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
-                            Potongan 1 bulan berlaku apabila pembayaran dilakukan di awal dan paling lambat 3 bulan setelah periode mulai.
-                          </p>
+                          <>
+                            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                              <p className="text-[10px] font-black uppercase tracking-wider text-blue-700">Total Sewa Setelah Potongan</p>
+                              <p className="mt-1 text-[16px] font-black text-blue-900">Rp {discount.discountedTotal.toLocaleString("id-ID")}</p>
+                              <p className="mt-1 text-[11px] font-semibold text-blue-700">Potongan 1 bulan: Rp {discount.discount.toLocaleString("id-ID")}</p>
+                            </div>
+                            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[11px] font-semibold leading-relaxed text-red-800 sm:col-span-2">
+                              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 animate-bounce text-red-600" />
+                              <span>Potongan 1 bulan berlaku apabila pembayaran dilakukan di awal dan paling lambat 3 bulan setelah periode mulai.</span>
+                            </div>
+                          </>
                         )}
                       </div>
                     )
@@ -9030,7 +9032,11 @@ function PendapatanStep({
                                       tanggalSelesai: value,
                                     })
                                   }
+                                                                  durationMonths={row.durasiBulan}
                                 />
+                                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
+                                  Periode: {row.tanggalMulai || "Pilih tanggal mulai"} sampai {row.tanggalSelesai || "pilih tanggal selesai"} — Durasi: {row.durasiBulan || 0} bulan.
+                                </p>
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                   <div>
                                     <Label req>Durasi</Label>
@@ -9092,21 +9098,31 @@ function PendapatanStep({
                                 <PaymentDueWarning
                                   dueDate={leasePaymentDeadline(row.tanggalMulai, row.tanggalSelesai)}
                                 />
-                                <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
-                                    Total
-                                  </p>
-                                  <p className="mt-1 text-[15px] font-black text-emerald-800">
-                                    Rp{" "}
-                                    {(
-                                      (row.nominal || 0) *
-                                      (row.durasiBulan || 0)
-                                    ).toLocaleString("id-ID")}
-                                  </p>
-                                  <p className="mt-1 text-[11px] text-emerald-700">
-                                    Nilai sewa x durasi bulan
-                                  </p>
-                                </div>
+                                {(() => {
+                                  const discount = calculateAnnualLeaseDiscount(row.nominal, row.durasiBulan)
+                                  return (
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">Total Sewa Normal</p>
+                                        <p className="mt-1 text-[16px] font-black text-emerald-900">Rp {discount.normalTotal.toLocaleString("id-ID")}</p>
+                                        <p className="mt-1 text-[11px] text-emerald-700">Nilai sewa x durasi bulan</p>
+                                      </div>
+                                      {discount.eligible && (
+                                        <>
+                                          <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-blue-700">Total Sewa Setelah Potongan</p>
+                                            <p className="mt-1 text-[16px] font-black text-blue-900">Rp {discount.discountedTotal.toLocaleString("id-ID")}</p>
+                                            <p className="mt-1 text-[11px] font-semibold text-blue-700">Potongan 1 bulan: Rp {discount.discount.toLocaleString("id-ID")}</p>
+                                          </div>
+                                          <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[11px] font-semibold leading-relaxed text-red-800 sm:col-span-2">
+                                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 animate-bounce text-red-600" />
+                                            <span>Potongan 1 bulan berlaku apabila pembayaran dilakukan di awal dan paling lambat 3 bulan setelah periode mulai.</span>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
                               </div>
                               )
                             })}
