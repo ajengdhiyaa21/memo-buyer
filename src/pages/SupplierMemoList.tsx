@@ -34,10 +34,19 @@ const statusStyle: Record<string, string> = {
 const date = (v?: string) => (v ? v.split("-").reverse().join("/") : "-");
 
 const memoNumber = (memo: WorkflowMemo, fallbackIndex: number) => {
-  const type = memo.jenisMemo === "memo-program" ? "PROGRAM" : memo.jenisMemo === "update-informasi" ? "UPDATE" : "LAIN-LAIN";
-  const datePart = memo.tanggalSubmit ? memo.tanggalSubmit.split("-").reverse().join("").slice(0, 6) : "000000";
+  const type =
+    memo.jenisMemo === "memo-program"
+      ? "PROGRAM"
+      : memo.jenisMemo === "update-informasi"
+        ? "UPDATE"
+        : "LAIN-LAIN";
+  const datePart = memo.tanggalSubmit
+    ? memo.tanggalSubmit.split("-").reverse().join("").slice(0, 6)
+    : "000000";
   const match = memo.nomorMemo.match(/(\d{1,})$/);
-  const sequence = match ? match[1].padStart(3, "0") : String(fallbackIndex + 1).padStart(3, "0");
+  const sequence = match
+    ? match[1].padStart(3, "0")
+    : String(fallbackIndex + 1).padStart(3, "0");
   return `BM-${type}-${datePart}-${sequence}`;
 };
 
@@ -976,7 +985,7 @@ export default function SupplierMemoList() {
         (m) =>
           (!status || m.status === status) &&
           (!search ||
-            `${memoNumber(m, index)} ${m.supplierNama} ${m.ringkasan}`
+            `${memoNumber(m, rows.indexOf(m))} ${m.supplierNama} ${m.ringkasan}`
               .toLowerCase()
               .includes(search.toLowerCase())),
       ),
@@ -1103,15 +1112,21 @@ export default function SupplierMemoList() {
                       v{m.version} {m.editedFields.length ? "· diedit" : ""}
                     </p>
                   </td>
-                  <td className="px-5 py-4 font-semibold text-slate-800">{m.supplierNama}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-800">
+                    {m.supplierNama}
+                  </td>
                   <td className="px-5 py-4">
                     {kindLabel[m.jenisMemo] || m.jenisMemo}
                   </td>
-                  <td className="px-5 py-4 text-xs text-slate-600">{m.outlets.join(", ") || "-"}</td>
+                  <td className="px-5 py-4 text-xs text-slate-600">
+                    {m.outlets.join(", ") || "-"}
+                  </td>
                   <td className="px-5 py-4">
                     {date(m.periodeAwal)} – {date(m.periodeAkhir)}
                   </td>
-                  <td className="px-5 py-4 text-xs text-slate-500">{date(m.tanggalSubmit)}</td>
+                  <td className="px-5 py-4 text-xs text-slate-500">
+                    {date(m.tanggalSubmit)}
+                  </td>
                   <td className="px-5 py-4">
                     <Status value={m.status} />
                   </td>

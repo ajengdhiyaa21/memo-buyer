@@ -3866,7 +3866,7 @@ function DateRangeLikePicker({
         </div>
       </div>
       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
-        {start && end ? "Periode: " + start + " sampai " + end + " — Durasi: " + dateRangeMonthCount(start, end) + " bulan." : "Pilih tanggal pemakaian dan tanggal selesai sewa."}
+        Periode: {start || "Pilih tanggal mulai"} sampai {end || "pilih tanggal selesai"} — Durasi: {start && end ? dateRangeMonthCount(start, end) : 0} bulan.
       </div>
     </div>
   )
@@ -7852,7 +7852,7 @@ function PendapatanStep({
                   />
                 </div>
                 <div>
-                  <Label req>Durasi Sewa</Label>
+                  <Label req>Durasi</Label>
                   <div
                     className="relative renewal-duration-field"
                     style={{ pointerEvents: "auto" }}
@@ -7874,10 +7874,10 @@ function PendapatanStep({
                         position: "relative",
                         zIndex: 20,
                       }}
-                      className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700`}
+                      className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !text-slate-700`}
                       placeholder="cth: 3"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">
+                    <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 bg-white px-1 text-[12px] font-bold text-slate-400">
                       bulan
                     </span>
                   </div>
@@ -8177,7 +8177,7 @@ function PendapatanStep({
                   />
                 </div>
                 <div>
-                  <Label req>Durasi Sewa</Label>
+                  <Label req>Durasi</Label>
                   <div
                     className="relative renewal-duration-field"
                     style={{ pointerEvents: "auto" }}
@@ -8199,10 +8199,10 @@ function PendapatanStep({
                         position: "relative",
                         zIndex: 20,
                       }}
-                      className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700`}
+                      className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !text-slate-700`}
                       placeholder="cth: 3"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">
+                    <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 bg-white px-1 text-[12px] font-bold text-slate-400">
                       bulan
                     </span>
                   </div>
@@ -8479,7 +8479,7 @@ function PendapatanStep({
                         className={`${inp} pr-14`}
                         placeholder="cth: 30"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">
+                      <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 bg-white px-1 text-[12px] font-bold text-slate-400">
                         hari
                       </span>
                     </div>
@@ -8759,7 +8759,7 @@ function PendapatanStep({
                           position: "relative",
                           zIndex: 20,
                         }}
-                        className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700`}
+                        className={`${inp} pr-16 renewal-editable !pointer-events-auto !bg-white !text-slate-700`}
                         placeholder="cth: 3"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">
@@ -8816,7 +8816,7 @@ function PendapatanStep({
                         setField("eventKeterangan", e.target.value)
                       }
                       className={`${inp} min-h-24 resize-y`}
-                      placeholder="Catatan tambahan terkait event..."
+                      placeholder="Catatan tambahan terkait sewa dan jasa..."
                     />
                   </div>
                 </>
@@ -9034,9 +9034,6 @@ function PendapatanStep({
                                   }
                                                                   durationMonths={row.durasiBulan}
                                 />
-                                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
-                                  Periode: {row.tanggalMulai || "Pilih tanggal mulai"} sampai {row.tanggalSelesai || "pilih tanggal selesai"} — Durasi: {row.durasiBulan || 0} bulan.
-                                </p>
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                   <div>
                                     <Label req>Durasi</Label>
@@ -9071,12 +9068,12 @@ function PendapatanStep({
                                       }
                                       className={`${inp} pr-16 ${
                                         locked
-                                          ? "renewal-editable !pointer-events-auto !bg-white !border-amber-400 !text-slate-700"
+                                          ? "renewal-editable !pointer-events-auto !bg-white !text-slate-700"
                                           : ""
                                       }`}
                                       placeholder="cth: 3"
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">
+                                    <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 bg-white px-1 text-[12px] font-bold text-slate-400">
                                       bulan
                                     </span>
                                     </div>
@@ -9141,34 +9138,6 @@ function PendapatanStep({
                   ))}
                 </div>
               )}
-              <MemoDueDateField
-                value={
-                  state.jenis === "sewa"
-                    ? state.sewaTanggalJatuhTempo
-                    : state.eventTanggalJatuhTempo
-                }
-                onChange={(value) =>
-                  setField(
-                    state.jenis === "sewa"
-                      ? "sewaTanggalJatuhTempo"
-                      : "eventTanggalJatuhTempo",
-                    value,
-                  )
-                }
-                error={
-                  state.jenis === "sewa"
-                    ? errors.sewaTanggalJatuhTempo
-                    : errors.eventTanggalJatuhTempo
-                }
-                paymentDeadline={leasePaymentDeadline(
-                  state.jenis === "sewa"
-                    ? state.sewaPeriodeAwal
-                    : state.eventPeriodeAwal,
-                  state.jenis === "sewa"
-                    ? state.sewaPeriodeAkhir
-                    : state.eventPeriodeAkhir,
-                )}
-              />
               <div className="border-t border-slate-100 pt-5">
                 <p className="flex items-center gap-2 text-[13px] font-bold text-slate-800 mb-1">
                   <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-[11px] font-black">
