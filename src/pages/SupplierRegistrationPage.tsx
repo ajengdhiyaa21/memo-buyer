@@ -63,7 +63,7 @@ export default function SupplierRegistrationPage() {
       taxLabel.textContent = "Status Pajak *"
       const taxSelect = document.createElement("select")
       taxSelect.className = "mt-0 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13px] text-slate-700 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-      taxSelect.innerHTML = '<option value="">Pilih status pajak</option><option value="PKP">PKP</option><option value="PTKP">PTKP</option>'
+      taxSelect.innerHTML = '<option value="">Pilih status pajak</option><option value="PKP">PKP</option><option value="BTKP">BTKP</option>'
       taxSelect.value = data.statusPajak
       taxSelect.onchange = () => setData((old) => ({ ...old, statusPajak: taxSelect.value }))
       taxLabel.appendChild(taxSelect)
