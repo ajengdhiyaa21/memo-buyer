@@ -3782,6 +3782,34 @@ function leasePaymentDeadline(start: string, end: string) {
   return deadline.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })
 }
 
+function mediaDisplayPaymentDeadline(
+  start: string,
+  end: string,
+  durationMonths: number,
+) {
+  if (start) {
+    const startDate = new Date(`${start}T00:00:00`)
+
+    if (!Number.isNaN(startDate.getTime())) {
+      if (durationMonths >= 1 && durationMonths <= 2) {
+        startDate.setDate(startDate.getDate() + 14)
+      } else if (durationMonths >= 3 && durationMonths <= 6) {
+        startDate.setMonth(startDate.getMonth() + 2)
+      } else {
+        return leasePaymentDeadline(start, end)
+      }
+
+      return startDate.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
+    }
+  }
+
+  return leasePaymentDeadline(start, end)
+}
+
 const PAYMENT_DUE_EMPTY_MESSAGE =
   "Batas pembayaran maksimal akan tampil setelah periode sewa dan tanggal jatuh tempo diisi."
 
@@ -9093,7 +9121,11 @@ function PendapatanStep({
                                   </div>
                                 </div>
                                 <PaymentDueWarning
-                                  dueDate={leasePaymentDeadline(row.tanggalMulai, row.tanggalSelesai)}
+                                  dueDate={mediaDisplayPaymentDeadline(
+                                    row.tanggalMulai,
+                                    row.tanggalSelesai,
+                                    row.durasiBulan,
+                                  )}
                                 />
                                 {(() => {
                                   const discount = calculateAnnualLeaseDiscount(row.nominal, row.durasiBulan)
