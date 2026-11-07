@@ -3985,6 +3985,7 @@ function DualCalendarRangePicker({
   onStart,
   onEnd,
   minDate,
+  durationMonths,
 
   /** Opsional (format YYYY-MM-DD). Tanggal sebelum ini dicoret & tidak bisa dipilih. */
 }: {
@@ -3994,6 +3995,7 @@ function DualCalendarRangePicker({
   onEnd: (v: string) => void
 
   minDate?: string
+  durationMonths?: number
 }) {
   const monthNames = [
     "Januari",
@@ -12419,7 +12421,14 @@ export default function SupplierMemoWizard() {
       if (hasOn) {
         const emptyGroup = onGroups.some((group) => group.products.length === 0)
 
-        const invalid = onGroups.some((group) => !(group.diskonValue > 0))
+        const invalid = onGroups.some((group) =>
+          group.products.some(
+            (product) =>
+              !group.rows[product.plu]?.diskonTiers.some(
+                (tier) => tier.value > 0,
+              ),
+          ),
+        )
 
         const bandedInvalid = onGroups.some((group) =>
           group.products.some(
@@ -12474,10 +12483,21 @@ export default function SupplierMemoWizard() {
           (group) => group.products.length === 0,
         )
 
-        const invalid = offGroups.some((group) => !(group.diskonValue > 0))
+        const invalid = offGroups.some((group) =>
+          group.products.some(
+            (product) =>
+              !group.rows[product.plu]?.diskonTiers.some(
+                (tier) => tier.value > 0,
+              ),
+          ),
+        )
 
-        const basisInvalid = offGroups.some(
-          (group) => group.diskonMode === "persen" && !group.diskonBasis,
+        const basisInvalid = offGroups.some((group) =>
+          group.products.some((product) =>
+            group.rows[product.plu]?.diskonTiers.some(
+              (tier) => tier.mode === "persen" && tier.value > 0 && !tier.basis,
+            ),
+          ),
         )
 
         const kuponInvalid = offGroups.some((group) =>
